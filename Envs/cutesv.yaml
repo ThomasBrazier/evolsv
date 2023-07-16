@@ -1,0 +1,6 @@
+name: cutesv
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - cutesv

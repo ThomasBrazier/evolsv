@@ -1,0 +1,25 @@
+rule nanoplot:
+	"""
+	Quality control of raw data
+	"""
+	input:
+		"{wdir}/{sra}_fastq.gz"
+	output:
+		"{wdir}/{sra}_nanoplotstats.txt
+	conda:
+		"Envs/nanoplot.yaml"
+	shell:
+		"Scripts/nanoplot.sh {sra}"
+
+rule samtools_stats:
+	"""
+	Quality control of the mapping
+	"""
+	input:
+		"{wdir}/{sra}_sorted.bam"
+	output:
+		"{wdir}/{sra}_mapping.stats"
+	conda:
+		"Envs/samtools.yaml"
+	shell:
+		"Scripts/samtools_stats.sh {sra}"

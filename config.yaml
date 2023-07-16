@@ -1,0 +1,7 @@
+workingdir: ''
+
+sra: ERR6412368 # SRA number of the reads to download
+genome: GCA_910589525.2 # GCA number of the reference genome to download
+
+min_coverage: 10 # minimum of coverage for the SV callers
+min_sv_size: 50 # minimum SV length to detect
