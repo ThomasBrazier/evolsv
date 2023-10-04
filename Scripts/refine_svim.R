@@ -7,8 +7,8 @@ if (length(args) != 3) {
   stop("<vcf sniffles>, <outfile> and <ins_bed> must be passed in argument", call.=FALSE)
 }
 vcf_svim = args[1]
-outfile = args[2]
-ins_bed = args[3]
+outfile = args[3]
+ins_bed = args[2]
 
 
 add_readnames_svim <- function(svim_vcf,ins_bed,outfile){ 
