@@ -21,17 +21,18 @@ rule all:
 	input:
 		target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
 
-rule download:
-	"""
-	Download the reads from the NCBI database
-	"""
-	output:
-		"{wdir}/{sra}.fastq.gz",
-		"{wdir}/ref_{sra}.fna.gz"
-	conda:
-		"Envs/download.yaml"
-	shell:
-		"Scripts/download.sh {sra} {genome}"
+#rule download:
+#	"""
+#	Download the reads from the NCBI database
+#	"""
+#	output:
+#		"{wdir}/{sra}.fastq.gz",
+#		"{wdir}/ref_{sra}.fna.gz"
+#	conda:
+#		"Envs/download.yaml"
+#	shell:
+#		"Scripts/download.sh {sra} {genome}"
+
 
 rule mapping:
 	"""
