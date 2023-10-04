@@ -86,6 +86,7 @@ rule samtools_index:
 	shell:
 		"Scripts/samtools_index.sh {sra}"
 
+
 rule svim:
 	"""
 	Call SVs with the SVIM tool
@@ -98,6 +99,7 @@ rule svim:
 		"Envs/svim.yaml"
 	shell:
 		"Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+
 
 rule sniffles:
 	"""
@@ -112,6 +114,7 @@ rule sniffles:
 	shell:
 		"Scripts/sniffles.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
+
 rule cutesv:
 	"""
 	Call SVs with the Cutesv tool
@@ -120,11 +123,47 @@ rule cutesv:
 		"{wdir}/{sra}_sniffles.vcf"
 	output:
 		"{wdir}/{sra}_cutesv.vcf",
-                temporary("{wdir}/ref_{sra}.fna")
+        temporary("{wdir}/ref_{sra}.fna")
 	conda:
 		"Envs/cutesv.yaml"
 	shell:
 		"Scripts/cutesv.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+
+
+
+rule refine_svim:
+	"""
+	Refine the SVIM VCF for Jasmine
+	"""
+	input:
+		"{wdir}/{sra}_svim.vcf"
+	output:
+		"{wdir}/{sra}_svim_refined.vcf"
+	conda:
+		"Envs/Renv.yaml"
+	shell:
+        """
+		Rscript Scripts/refine_svim.sh {wdir}/{sra}_svim.vcf {wdir}/candidates/candidates_inversions.bed {wdir}/{sra}_svim_refined.vcf
+        """
+
+
+
+rule refine_sniffles:
+	"""
+	Refine the Sniffles VCF for Jasmine
+	"""
+	input:
+		"{wdir}/{sra}_sniffles.vcf"
+	output:
+		"{wdir}/{sra}_sniffles_refined.vcf"
+	conda:
+		"Envs/Renv.yaml"
+	shell:
+		"""
+        Rscript Scripts/refine_sniffles.sh {wdir}/{sra}_sniffles.vcf {wdir}/{sra}_sniffles_refined.vcf
+        """
+
+
 
 rule vcf_list:
         """
@@ -136,8 +175,8 @@ rule vcf_list:
                 "{wdir}/{sra}_vcf_list.txt"
         shell:
                 """
-                echo '{wdir}/{sra}_svim.vcf' > {wdir}/{sra}_vcf_list.txt
-                echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_svim_refined.vcf' > {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_sniffles_refined.vcf' >> {wdir}/{sra}_vcf_list.txt
                 echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
                 """
 
