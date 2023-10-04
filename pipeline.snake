@@ -144,7 +144,7 @@ rule refine_svim:
 		"Envs/Renv.yaml"
 	shell:
         """
-		Rscript Scripts/refine_svim.sh {wdir}/{sra}_svim.vcf {wdir}/candidates/candidates_inversions.bed {wdir}/{sra}_svim_refined.vcf
+		Rscript Scripts/refine_svim.R {wdir}/{sra}_svim.vcf {wdir}/candidates/candidates_inversions.bed {wdir}/{sra}_svim_refined.vcf
         """
 
 
@@ -161,7 +161,7 @@ rule refine_sniffles:
 		"Envs/Renv.yaml"
 	shell:
 		"""
-        Rscript Scripts/refine_sniffles.sh {wdir}/{sra}_sniffles.vcf {wdir}/{sra}_sniffles_refined.vcf
+        Rscript Scripts/refine_sniffles.R {wdir}/{sra}_sniffles.vcf {wdir}/{sra}_sniffles_refined.vcf
         """
 
 
@@ -171,7 +171,9 @@ rule vcf_list:
         Create the txt file containing the list of the VCF files to merge
         """
         input:
-                "{wdir}/{sra}_cutesv.vcf"
+                "{wdir}/{sra}_cutesv.vcf",
+                "{wdir}/{sra}_sniffles_refined.vcf",
+                "{wdir}/{sra}_svim_refined.vcf"
         output:
                 "{wdir}/{sra}_vcf_list.txt"
         shell:

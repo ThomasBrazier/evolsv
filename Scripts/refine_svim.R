@@ -3,7 +3,7 @@
 args = commandArgs(trailingOnly=TRUE)
 
 # test if there is one argument: if not, return an error
-if (length(args) != 2) {
+if (length(args) != 3) {
   stop("<vcf sniffles>, <outfile> and <ins_bed> must be passed in argument", call.=FALSE)
 }
 vcf_svim = args[1]
