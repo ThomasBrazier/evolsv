@@ -99,7 +99,7 @@ rule svim:
 	conda:
 		"Envs/svim.yaml"
 	shell:
-		"Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+		"Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]} {config[svim_quality]}"
 
 
 rule sniffles:
