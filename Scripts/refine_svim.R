@@ -18,7 +18,7 @@ outfile = paste0(accession, "/", accession, "_svim_refined.vcf")
 add_readnames_svim <- function(vcf_svim,ins_bed,outfile){ 
 
   library(tidyverse)
-  library("glue")
+  # library("glue")
   rn = read.table(ins_bed)
   
   #Extract the read names from the ins_bed
@@ -109,16 +109,15 @@ add_readnames_svim <- function(vcf_svim,ins_bed,outfile){
   # #Remove text from info-field
   # data %>% unite(info, SVTYPE,READNAMES2,END ,SVLEN,sep = ";") %>% select(CHR,START,a,b,c,d,e,info,f,g) -> vcf
   # 
-  # paste(vcf$CHR,vcf$START,vcf$a,vcf$b,vcf$c,vcf$d,vcf$e,vcf$info,vcf$f,vcf$g,sep = "\t" ) -> h
-  # 
-  # 
-  as.data.frame(header) -> k
-  as.data.frame(h) -> h
+  d = apply(data1, 1, paste, collapse = "\t" )
 
-  colnames(k) <- "a"
-  colnames(h) <- "a"
+  header = as.data.frame(header)
+  d = as.data.frame(d)
 
-  dplyr::bind_rows(k,h) -> final
+  colnames(header) = "a"
+  colnames(d) = "a"
+
+  dplyr::bind_rows(header,d) -> final
   
   write.table(final,outfile,quote = F,row.names = F, col.names = F)
 }
