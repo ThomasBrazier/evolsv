@@ -137,7 +137,8 @@ rule refine_svim:
 	Refine the SVIM VCF for Jasmine
 	"""
 	input:
-		"{wdir}/{sra}_svim.vcf"
+		"{wdir}/{sra}_svim.vcf",
+        "{wdir}/{sra}_svim_noBND.vcf"
 	output:
 		"{wdir}/{sra}_svim_refined.vcf"
 	conda:
@@ -172,14 +173,14 @@ rule vcf_list:
         """
         input:
                 "{wdir}/{sra}_cutesv.vcf",
-                "{wdir}/{sra}_sniffles_refined.vcf",
-                "{wdir}/{sra}_svim_refined.vcf"
+                "{wdir}/{sra}_sniffles.vcf",
+                "{wdir}/{sra}_svim_noBND.vcf"
         output:
                 "{wdir}/{sra}_vcf_list.txt"
         shell:
                 """
-                echo '{wdir}/{sra}_svim_refined.vcf' > {wdir}/{sra}_vcf_list.txt
-                echo '{wdir}/{sra}_sniffles_refined.vcf' >> {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_svim_noBND.vcf' > {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
                 echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
                 """
 
@@ -194,8 +195,8 @@ rule bam_list:
 	shell:
 		"""
 		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
-		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
-		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
+		echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
+		echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
 		"""
 
 rule jasmine:
