@@ -212,3 +212,19 @@ rule jasmine:
         shell:
                 "Scripts/jasmine.sh {sra}"
 
+
+rule svjedi_jasmine:
+    """
+    Use SVjedi-graph on the merged dataset to genotype SVs
+    """
+    input:
+        "{wdir}/{sra}_merged.vcf"
+    output:
+        ""
+    conda:
+        "Envs/svjediigraph.yaml"
+    shell:
+        """
+        Scripts/svjedi.sh {sra}
+        """
+

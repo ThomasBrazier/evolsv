@@ -1,4 +1,6 @@
 #!/bin/bash
+sra=$1
+
 
 # Genotyping
-svjedi -v Vcf/merged.vcf -r Ref/ref_v_cardui_ERR6608653.fna -i Fastq/v_cardui_ERR6608653.fastq.gz -o Vcf/genotypes.vcf
+svjedi -v $sra/${sra}_merged.vcf -r $sra/ref_${sra}.fna -i $sra/${sra}.fastq.gz -o $sra/${sra}_genotypes.vcf
