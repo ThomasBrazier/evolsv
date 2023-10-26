@@ -187,9 +187,9 @@ rule svjedi_jasmine:
     output:
         ""
     conda:
-        "Envs/svjediigraph.yaml"
+        "Envs/svjedi-graph.yaml"
     shell:
         """
-        Scripts/svjedi.sh {sra}
+        Scripts/svjedi.sh {sra} merged
         """
 

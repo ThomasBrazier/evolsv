@@ -1,4 +1,4 @@
-name: svjedigraph
+name: svjedi-graph
 channels:
  - conda-forge
  - bioconda
