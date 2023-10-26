@@ -132,41 +132,6 @@ rule cutesv:
 
 
 
-rule refine_svim:
-	"""
-	Refine the SVIM VCF for Jasmine
-	"""
-	input:
-		"{wdir}/{sra}_svim.vcf",
-        "{wdir}/{sra}_svim_noBND.vcf"
-	output:
-		"{wdir}/{sra}_svim_refined.vcf"
-	conda:
-		"Envs/Renv.yaml"
-	shell:
-        """
-		    Rscript Scripts/refine_svim.R {sra}
-        """
-
-
-
-rule refine_sniffles:
-	"""
-	Refine the Sniffles VCF for Jasmine
-	"""
-	input:
-		"{wdir}/{sra}_sniffles.vcf"
-	output:
-		"{wdir}/{sra}_sniffles_refined.vcf"
-	conda:
-		"Envs/Renv.yaml"
-	shell:
-		"""
-		Rscript Scripts/refine_sniffles.R {sra}
-    """
-
-
-
 rule vcf_list:
         """
         Create the txt file containing the list of the VCF files to merge
