@@ -20,4 +20,4 @@ tool=$2 # one of 'sniffles', 'cutesv', 'svim' or 'merged' for jasmine
 #bcftools annotate -s smpl1 -a annot.txt.gz -h hdr.txt -c CHROM,POS,FORMAT/DP test.vcf
 
 # Genotyping
-svjedi-graph -v $sra/{$sra}_${tool}.vcf -r $sra/ref_${sra}.fna -i $sra/${sra}.fastq.gz -p $sra/${sra}_${tool}
+svjedi-graph.py -v $sra/${sra}_${tool}.vcf -r $sra/ref_${sra}.fna -q $sra/${sra}.fastq.gz -p $sra/${sra}_${tool}
