@@ -8,4 +8,4 @@
 
 . /local/env/envsnakemake-7.28.3.sh
 
-snakemake -s pipeline.snake --use-conda --conda-frontend "mamba" --cores 8 --rerun-incomplete --stats statistiques.json
+snakemake -s pipeline.snake --use-conda --cores 8 --rerun-incomplete --stats statistiques.json

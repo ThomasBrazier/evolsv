@@ -18,164 +18,163 @@ wildcard_constraints:
 
 
 rule all:
-	input:
-		target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
+    input:
+        target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
 
 #rule download:
-#	"""
-#	Download the reads from the NCBI database
-#	"""
-#	output:
-#		"{wdir}/{sra}.fastq.gz",
-#		"{wdir}/ref_{sra}.fna.gz"
-#	conda:
-#		"Envs/download.yaml"
-#	shell:
-#		"Scripts/download.sh {sra} {genome}"
+#    """
+#    Download the reads from the NCBI database
+#    """
+#    output:
+#        "{wdir}/{sra}.fastq.gz",
+#        "{wdir}/ref_{sra}.fna.gz"
+#    conda:
+#        "Envs/download.yaml"
+#    shell:
+#        "Scripts/download.sh {sra} {genome}"
 
 
 rule mapping:
-	"""
-	Map reads to the reference genome
-	"""
-	input:
-		"{wdir}/{sra}.fastq.gz",
-		"{wdir}/ref_{sra}.fna.gz"
-	output:
-		"{wdir}/{sra}.sam"
-	conda:
-		"Envs/minimap2.yaml"
-	shell:
-		"Scripts/minimap2.sh {sra}"
+    """
+    Map reads to the reference genome
+    """
+    input:
+        "{wdir}/{sra}.fastq.gz",
+        "{wdir}/ref_{sra}.fna.gz"
+    output:
+        "{wdir}/{sra}.sam"
+    conda:
+        "Envs/minimap2.yaml"
+    shell:
+        "Scripts/minimap2.sh {sra}"
 
 rule samtools_view:
-	"""
-	Transform the sam file to a bam file
-	"""
-	input:
-		"{wdir}/{sra}.sam"
-	output:
-		"{wdir}/{sra}.bam"
-	conda:
-		"Envs/samtools.yaml"
-	shell:
-		"Scripts/samtools_view.sh {sra}"
+    """
+    Transform the sam file to a bam file
+    """
+    input:
+        "{wdir}/{sra}.sam"
+    output:
+        "{wdir}/{sra}.bam"
+    conda:
+        "Envs/samtools.yaml"
+    shell:
+        "Scripts/samtools_view.sh {sra}"
 
 rule samtools_sort:
-	"""
-	Sort the bam file
-	"""
-	input:
-		"{wdir}/{sra}.bam"
-	output:
-		"{wdir}/{sra}_sorted.bam"
-	conda:
-		"Envs/samtools.yaml"
-	shell:
-		"Scripts/samtools_sort.sh {sra}"
+    """
+    Sort the bam file
+    """
+    input:
+        "{wdir}/{sra}.bam"
+    output:
+        "{wdir}/{sra}_sorted.bam"
+    conda:
+        "Envs/samtools.yaml"
+    shell:
+        "Scripts/samtools_sort.sh {sra}"
 
 rule samtools_index:
-	"""
-	Create an index related file of the sorted bam file
-	"""
-	input:
-		"{wdir}/{sra}_sorted.bam"
-	output:
-		"{wdir}/{sra}_sorted.bam.bai"
-	conda:
-		"Envs/samtools.yaml"
-	shell:
-		"Scripts/samtools_index.sh {sra}"
+    """
+    Create an index related file of the sorted bam file
+    """
+    input:
+        "{wdir}/{sra}_sorted.bam"
+    output:
+        "{wdir}/{sra}_sorted.bam.bai"
+    conda:
+        "Envs/samtools.yaml"
+    shell:
+        "Scripts/samtools_index.sh {sra}"
 
 
 rule svim:
-	"""
-	Call SVs with the SVIM tool
-	"""
-	input:
-		"{wdir}/{sra}_sorted.bam.bai"
-	output:
-		"{wdir}/{sra}_svim.vcf"
-	conda:
-		"Envs/svim.yaml"
-	shell:
-		"Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]} {config[svim_quality]}"
+    """
+    Call SVs with the SVIM tool
+    """
+    input:
+        "{wdir}/{sra}_sorted.bam.bai"
+    output:
+        "{wdir}/{sra}_svim.vcf"
+    conda:
+        "Envs/svim.yaml"
+    shell:
+        "Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]} {config[svim_quality]}"
 
 
 rule sniffles:
-	"""
-	Call SVs with the Sniffles tool
-	"""
-	input:
-		"{wdir}/{sra}_svim.vcf"
-	output:
-		"{wdir}/{sra}_sniffles.vcf"
-	conda:
-		"Envs/sniffles.yaml"
-	shell:
-		"Scripts/sniffles.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+    """
+    Call SVs with the Sniffles tool
+    """
+    input:
+        "{wdir}/{sra}_svim.vcf"
+    output:
+        "{wdir}/{sra}_sniffles.vcf"
+    conda:
+        "Envs/sniffles.yaml"
+    shell:
+        "Scripts/sniffles.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
 
 rule cutesv:
-	"""
-	Call SVs with the Cutesv tool
-	"""
-	input:
-		"{wdir}/{sra}_sniffles.vcf"
-	output:
-		"{wdir}/{sra}_cutesv.vcf",
-        temporary("{wdir}/ref_{sra}.fna")
-	conda:
-		"Envs/cutesv.yaml"
-	shell:
-		"Scripts/cutesv.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+    """
+    Call SVs with the Cutesv tool
+    """
+    input:
+        "{wdir}/{sra}_sniffles.vcf"
+    output:
+        "{wdir}/{sra}_cutesv.vcf"
+    conda:
+        "Envs/cutesv.yaml"
+    shell:
+        "Scripts/cutesv.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
 
 
 rule vcf_list:
+    """
+    Create the txt file containing the list of the VCF files to merge
+    """
+    input:
+        "{wdir}/{sra}_cutesv.vcf",
+        "{wdir}/{sra}_sniffles.vcf",
+        "{wdir}/{sra}_svim_noBND.vcf"
+    output:
+        "{wdir}/{sra}_vcf_list.txt"
+    shell:
         """
-        Create the txt file containing the list of the VCF files to merge
+        echo '{wdir}/{sra}_svim_noBND.vcf' > {wdir}/{sra}_vcf_list.txt
+        echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
+        echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
         """
-        input:
-                "{wdir}/{sra}_cutesv.vcf",
-                "{wdir}/{sra}_sniffles.vcf",
-                "{wdir}/{sra}_svim_noBND.vcf"
-        output:
-                "{wdir}/{sra}_vcf_list.txt"
-        shell:
-                """
-                echo '{wdir}/{sra}_svim_noBND.vcf' > {wdir}/{sra}_vcf_list.txt
-                echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
-                echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
-                """
 
 rule bam_list:
-	"""
-	Create the txt file containing the list of the bam files for IRIS
-	"""
-	input :
-		"{wdir}/{sra}_vcf_list.txt"
-	output:
-		"{wdir}/{sra}_bam_list.txt"
-	shell:
-		"""
-		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
-		echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
-		echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
-		"""
+    """
+    Create the txt file containing the list of the bam files for IRIS
+    """
+    input :
+        "{wdir}/{sra}_vcf_list.txt"
+    output:
+        "{wdir}/{sra}_bam_list.txt"
+    shell:
+        """
+        echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
+        echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
+        echo '{wdir}/{sra}_sorted.bam' >> {wdir}/{sra}_bam_list.txt
+        """
 
 rule jasmine:
-        """
-        Merge the VCF files obtained by the three SV callers
-        """
-        input:
-                "{wdir}/{sra}_bam_list.txt"
-        output:
-                "{wdir}/{sra}_merged.vcf"
-        conda:
-                "Envs/jasminesv.yaml"
-        shell:
-                "Scripts/jasmine.sh {sra}"
+    """
+    Merge the VCF files obtained by the three SV callers
+    """
+    input:
+        "{wdir}/{sra}_bam_list.txt"
+    output:
+        "{wdir}/{sra}_merged.vcf"
+    conda:
+        "Envs/jasminesv.yaml"
+    shell:
+        "Scripts/jasmine.sh {sra}"
 
 
 rule svjedi_jasmine:
