@@ -75,11 +75,12 @@ rule samtools_stats:
         "{wdir}/{sra}_sorted.bam.bai"
 	output:
 		stats = "{wdir}/mapping/{sra}_mapping.stats",
-        plot = "{wdir}/mapping/{sra}_mapping_plot"
+        plot = "{wdir}/mapping/{sra}_mapping_plot.html"
 	conda:
 		"workflow/envs/samtools.yaml"
 	shell:
 		"""
+        mkdir -p {wdir}/mapping
         samtools stats {input.bam} > {output.stats}
         # QC visualization
         plot-bamstats -p {output.plot} {output.stats}

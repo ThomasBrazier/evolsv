@@ -64,3 +64,25 @@ rule cutesv:
          --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
          --max_size [config[max_size]] --min_support {config[min_coverage]} --min_size {config[min_sv_size]} {input.bam} {input.fasta} {output} {sra}/cutesv/
         """
+
+
+rule debreak:
+    """
+    SV calling with DeBreak
+    """
+    input:
+        sniffles = "{wdir}/{sra}_sniffles.vcf",
+        svim = "{wdir}/{sra}_svim.vcf",
+        cutesv = "{wdir}/{sra}_cutesv.vcf",
+        bam = "{wdir}/{sra}_sorted.bam",
+        bai = "{wdir}/{sra}_sorted.bam.bai",
+        fasta = "{wdir}/{sra}.fna"
+    output:
+        "{wdir}/{sra}_debreak.vcf"
+    conda:
+        "workflow/envs/debreak.yaml"
+    shell:
+        """
+        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {workflow.threads} \
+        --min_size {config[min_sv_size]} --poa --ref {input.fasta}
+        """

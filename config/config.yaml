@@ -1,7 +1,6 @@
 # CONFIG
 # Directory setup
-datadir: 'data/' # The directory where data must be stored
-outdir: 'results/' # The directory where final results must be stored
+datadir: 'data/' # The directory where data and results must be stored
 
 # SAMPLE
 sra: ERR6608653 # SRA number of the long-read SRA archive

@@ -6,7 +6,8 @@ rule vcf_list:
         sniffles = "{wdir}/{sra}_sniffles.vcf",
         svim = "{wdir}/{sra}_svim.vcf",
         nobnd = "$sra/${sra}_svim_noBND.vcf",
-        cutesv = "{wdir}/{sra}_cutesv.vcf"
+        cutesv = "{wdir}/{sra}_cutesv.vcf",
+        debreak = "{wdir}/{sra}_debreak.vcf"
     output:
         "{wdir}/{sra}_vcf_list.txt"
     shell:
@@ -14,6 +15,7 @@ rule vcf_list:
         echo '{input.nobnd}' > {output}
         echo '{input.sniffles}' >> {output}
         echo '{input.cutesv}' >> {output}
+        echo '{input.debreak}' >> {output}
         """
 
 rule bam_list:
@@ -30,6 +32,7 @@ rule bam_list:
         echo '{input.bam}' > {output}
         echo '{input.bam}' >> {output}
         echo '{input.bam}' >> {output}
+        echo '{input.bam}' >> {output}
         """
 
 rule jasmine:
@@ -43,6 +46,7 @@ rule jasmine:
         svim = "{wdir}/{sra}_svim.vcf",
         nobnd = "$sra/${sra}_svim_noBND.vcf",
         cutesv = "{wdir}/{sra}_cutesv.vcf",
+        debreak = "$sra/${sra}_debreak.vcf",
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_merged.vcf"

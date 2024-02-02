@@ -2,10 +2,9 @@
 Pipeline for calling and genotyping Structural Variants from long-read sequencing in a single individual
 """
 
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
 wdir = config['datadir'] + config['sra']
-outdir = config['outdir'] + config['sra']
 sra = config['sra']
 genome = config['genome']
 
