@@ -1,0 +1,7 @@
+name: debreak
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - debreak
+ - gzip>=1.10
