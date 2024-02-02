@@ -27,5 +27,5 @@ include: "worklow/rules/report.smk"
 
 rule all:
     input:
-        target = expand("{wdir}/{sra}_finalcallset.vcf", wdir=wdir, sra=sra)
+        target = expand("{wdir}/{sra}_merged_genotype.vcf", wdir=wdir, sra=sra)
 

@@ -13,4 +13,4 @@ fastq-dump -v --gzip --outdir $wdir/$sra $sra
 datasets download genome accession $genome --filename $wdir/$sra/$sra.zip
 unzip $wdir/$sra/$sra.zip -d $wdir/$sra/
 mv $wdir/$sra/ncbi_dataset/data/$genome/*_genomic.fna $wdir/$sra/$sra.fna
-bgzip $wdir/$sra/$sra.fna
+# bgzip $wdir/$sra/$sra.fna

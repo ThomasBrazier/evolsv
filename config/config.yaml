@@ -1,23 +1,32 @@
 # CONFIG
 # Directory setup
-workingdir: '' # The directory where data/ and results must be stored
+datadir: 'data/' # The directory where data must be stored
+outdir: 'results/' # The directory where final results must be stored
 
 # SAMPLE
 sra: ERR6608653 # SRA number of the long-read SRA archive
 genome: GCA_910589525.2 # GCA number of the reference genome
-name: e_quercinarius # name of the sample to study
-
 
 # Mapping on the reference genome
-
+minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
 
 # SV calling
+# Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 50 # minimum SV length to detect
+
+# SVIM specific
 svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
 
+# CuteSV specific
+max_cluster_bias_INS: 1000
+diff_ratio_merging_INS: 0.9
+max_cluster_bias_DEL: 1000
+diff_ratio_merging_DEL: 0.5
+max_size: -1
 
 # Merging with Jasmine/IRIS
 
 
 # Genotyping with SVJedi-graph
+minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)

@@ -1,40 +1,66 @@
 rule svim:
     """
-    Call SVs with the SVIM tool
+    SV calling with SVIM
     """
     input:
-        "{wdir}/{sra}_sorted.bam.bai"
+        bam = "{wdir}/{sra}_sorted.bam",
+        bai = "{wdir}/{sra}_sorted.bam.bai",
+        fasta = "{wdir}/{sra}.fna",
+        stats = "{wdir}/mapping/{sra}_mapping.stats",
+        plot = "{wdir}/mapping/{sra}_mapping_plot"
     output:
-        "{wdir}/{sra}_svim.vcf"
+        vcf = "{wdir}/{sra}_svim.vcf",
+        nobnd = "$sra/${sra}_svim_noBND.vcf",
+        temporary("${sra}/variants.vcf")
     conda:
-        "Envs/svim.yaml"
+        "workflow/envs/svim.yaml"
     shell:
-        "Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]} {config[svim_quality]}"
+        """
+        svim alignment {sra} {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} --minimum_depth {config[min_coverage]}
+        # SVIM does not filter SV itself and outputs all variants
+        bcftools view -i "QUAL >= {config[svim_quality]}" ${sra}/variants.vcf > {output.vcf}
+        cat {output.vcf} | grep -v svim.BND > {output.nobnd}
+        """
 
 
 rule sniffles:
     """
-    Call SVs with the Sniffles tool
+    SV calling with Sniffles
     """
     input:
-        "{wdir}/{sra}_svim.vcf"
+        svim = "{wdir}/{sra}_svim.vcf",
+        bam = "{wdir}/{sra}_sorted.bam",
+        bai = "{wdir}/{sra}_sorted.bam.bai",
+        fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_sniffles.vcf"
     conda:
-        "Envs/sniffles.yaml"
+        "workflow/envs/sniffles.yaml"
     shell:
-        "Scripts/sniffles.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+        """
+        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {workflow.threads} --allow-overwrite --minsvlen {config[min_sv_size]} --qc-coverage {config[min_coverage]} --output-rnames
+        """
 
 
 rule cutesv:
     """
-    Call SVs with the Cutesv tool
+    SV calling with CuteSV
     """
     input:
-        "{wdir}/{sra}_sniffles.vcf"
+        sniffles = "{wdir}/{sra}_sniffles.vcf",
+        svim = "{wdir}/{sra}_svim.vcf",
+        bam = "{wdir}/{sra}_sorted.bam",
+        bai = "{wdir}/{sra}_sorted.bam.bai",
+        fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_cutesv.vcf"
     conda:
-        "Envs/cutesv.yaml"
+        "workflow/envs/cutesv.yaml"
     shell:
-        "Scripts/cutesv.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
+        """
+        mkdir -p {wdir}/cutesv
+        rm -rf sra/cutesv/*
+        cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
+         --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
+         --max_size [config[max_size]] --min_support {config[min_coverage]} --min_size {config[min_sv_size]} {input.bam} {input.fasta} {output} {sra}/cutesv/
+        """

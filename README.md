@@ -32,7 +32,7 @@ snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda
 
 ## Data directory setup
 
-In the case of a single project data can be stored in the current `EvolSV` git directory. The place where are the *data/* and *results/* directories must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* and *results/* to be in te current *evolsv/* directory (see below).
+In the case of a single project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
 
 ```
 .
@@ -41,36 +41,6 @@ In the case of a single project data can be stored in the current `EvolSV` git d
 │   │   ├── config.yaml
 │   ├── workflow/
 │   ├── data/
-│   └── results/
-```
-
-
-To maintain organization across many different projects, you may consider creating a new directory for each project you run using EvolSV. This way, each of your project directories will contain the configuration files used for that run. Below is an example directory structure:
-
-```
-.
-├── evolsv
-├── project_1/
-│   ├── config/
-│   │   ├── config.yaml
-│   │   ├── resources.yaml
-│   │   └── samples.csv
-│   ├── data
-│   └── results
-└── project_2/
-    ├── config/
-    │   ├── config.yaml
-    │   ├── resources.yaml
-    │   └── samples.csv
-    └── data
-```
-
-When creating a new directory for an analysis, ensure that you copy the config directory from the snpArcher directory to your new directory.
-
-Then, to run `EvolSV` on project_2 from our example, we would execute the command:
-
-```
-snakemake -s ./evolsv/workflow/Snakefile -d ./project_2 --cores <num cores to use> --use-conda
 ```
 
 
@@ -81,16 +51,9 @@ A YAML configuration file named *config/config.yaml* is used to specify the sett
 
 ### Core configuration
 
-The following options in *config/config.yaml* must be set before running snpArcher:
-
-
-
-### Input data
-
-The input data are the accession numbers of the long-reads (ERR) and the reference genome (GCA). The sample sheet is a tab-separated csv file with three columns (no header):
-* SAMPLE ID
-* GCA
-* ERR
+The following options in *config/config.yaml* must be set before running EvolSV:
+* sra, the ERR accession from SRA database
+* genome, the GCA accession from NCBI Assembly database
 
 
 ## Output file

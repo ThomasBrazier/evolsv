@@ -1,16 +1,22 @@
 rule mapping:
     """
-    Map reads to the reference genome
+    Map reads to the reference genome with Minimap2
     """
     input:
-        "{wdir}/{sra}.fastq.gz",
-        "{wdir}/ref_{sra}.fna.gz"
+        fastq = "{wdir}/{sra}.fastq.gz",
+        fasta = "{wdir}/{sra}.fna.gz",
+        "{wdir}/fastqc/{sra}_fastqc.html",
+        "{wdir}/fastqc/{sra}_fastqc.zip",
+        "{wdir}/nanoplot/"
     output:
         "{wdir}/{sra}.sam"
     conda:
-        "Envs/minimap2.yaml"
+        "workflow/envs/minimap2.yaml"
     shell:
-        "Scripts/minimap2.sh {sra}"
+        """
+        minimap2 -ax {config[minimap_ax]} --MD --eqX -t {workflow.threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        """
+
 
 rule samtools_view:
     """
@@ -21,9 +27,12 @@ rule samtools_view:
     output:
         "{wdir}/{sra}.bam"
     conda:
-        "Envs/samtools.yaml"
+        "workflow/envs/samtools.yaml"
     shell:
-        "Scripts/samtools_view.sh {sra}"
+        """
+        samtools view -S -b {input} > {output}
+        """
+
 
 rule samtools_sort:
     """
@@ -34,9 +43,12 @@ rule samtools_sort:
     output:
         "{wdir}/{sra}_sorted.bam"
     conda:
-        "Envs/samtools.yaml"
+        "workflow/envs/samtools.yaml"
     shell:
-        "Scripts/samtools_sort.sh {sra}"
+        """
+        samtools sort {input} -o {output}
+        """
+
 
 rule samtools_index:
     """
@@ -47,6 +59,28 @@ rule samtools_index:
     output:
         "{wdir}/{sra}_sorted.bam.bai"
     conda:
-        "Envs/samtools.yaml"
+        "workflow/envs/samtools.yaml"
     shell:
-        "Scripts/samtools_index.sh {sra}"
+        """
+        samtools index {input}
+        """
+
+
+rule samtools_stats:
+	"""
+	Mapping QC
+	"""
+	input:
+		bam = "{wdir}/{sra}_sorted.bam",
+        "{wdir}/{sra}_sorted.bam.bai"
+	output:
+		stats = "{wdir}/mapping/{sra}_mapping.stats",
+        plot = "{wdir}/mapping/{sra}_mapping_plot"
+	conda:
+		"workflow/envs/samtools.yaml"
+	shell:
+		"""
+        samtools stats {input.bam} > {output.stats}
+        # QC visualization
+        plot-bamstats -p {output.plot} {output.stats}
+        """

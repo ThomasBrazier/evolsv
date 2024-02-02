@@ -5,7 +5,7 @@ rule download:
     """
     output:
         "{wdir}/{sra}.fastq.gz",
-        "{wdir}/{sra}.fna.gz",
+        "{wdir}/{sra}.fna",
         temporary("{wdir}/{sra}/"),
         temporary("{wdir}/{sra}.zip")
     conda:
