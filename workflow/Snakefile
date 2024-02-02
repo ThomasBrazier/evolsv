@@ -1,0 +1,31 @@
+"""
+Pipeline for calling and genotyping Structural Variants from long-read sequencing in a single individual
+"""
+
+configfile: "config.yaml"
+
+wdir = config['datadir'] + config['sra']
+outdir = config['outdir'] + config['sra']
+sra = config['sra']
+genome = config['genome']
+
+
+wildcard_constraints:
+    wdir = wdir,
+    sra = sra
+
+
+
+include: "worklow/rules/data_download.smk"
+include: "worklow/rules/data_qc.smk"
+include: "worklow/rules/mapping.smk"
+include: "worklow/rules/ensemblecalling.smk"
+include: "worklow/rules/merging.smk"
+include: "worklow/rules/genotyping.smk"
+include: "worklow/rules/report.smk"
+
+
+rule all:
+    input:
+        target = expand("{wdir}/{sra}_finalcallset.vcf", wdir=wdir, sra=sra)
+

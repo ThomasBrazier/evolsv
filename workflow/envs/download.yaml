@@ -1,0 +1,7 @@
+name: download
+channels:
+ - bioconda
+ - conda-forge
+dependencies:
+ - sra-tools
+ - ncbi-datasets-cli

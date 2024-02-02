@@ -1,0 +1,23 @@
+# CONFIG
+# Directory setup
+workingdir: '' # The directory where data/ and results must be stored
+
+# SAMPLE
+sra: ERR6608653 # SRA number of the long-read SRA archive
+genome: GCA_910589525.2 # GCA number of the reference genome
+name: e_quercinarius # name of the sample to study
+
+
+# Mapping on the reference genome
+
+
+# SV calling
+min_coverage: 10 # minimum of coverage for the SV callers
+min_sv_size: 50 # minimum SV length to detect
+svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
+
+
+# Merging with Jasmine/IRIS
+
+
+# Genotyping with SVJedi-graph
