@@ -1,6 +1,0 @@
-name: gnuplot
-channels:
- - conda-forge
- - bioconda
-dependencies:
- - gnuplot

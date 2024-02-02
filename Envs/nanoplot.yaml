@@ -1,6 +1,0 @@
-name: nanoplot
-channels:
- - conda-forge
- - bioconda
-dependencies:
- - nanoplot

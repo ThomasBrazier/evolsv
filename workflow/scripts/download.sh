@@ -1,15 +1,16 @@
 #!/bin/bash
 
-# Variables
+# Sample
 sra=$1
 genome=$2
+wdir=$3
 
-# Téléchargement des reads
-mkdir --parents $sra
-fastq-dump -v --gzip --outdir $sra $sra
+# Download long reads
+mkdir --parents $wdir/$sra
+fastq-dump -v --gzip --outdir $wdir/$sra $sra
 
-# Téléchargement du génome de référence
-datasets download genome accession $genome --filename $sra/ref_$sra.zip
-unzip $sra/ref_$sra.zip -d $sra/
-mv $sra/ncbi_dataset/data/$genome/*_genomic.fna $sra/ref_$sra.fna
-bgzip $sra/ref_$sra.fna
+# Download reference genome assembly
+datasets download genome accession $genome --filename $wdir/$sra/$sra.zip
+unzip $wdir/$sra/$sra.zip -d $wdir/$sra/
+mv $wdir/$sra/ncbi_dataset/data/$genome/*_genomic.fna $wdir/$sra/$sra.fna
+bgzip $wdir/$sra/$sra.fna

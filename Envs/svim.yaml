@@ -1,7 +1,0 @@
-name: svim
-channels:
- - conda-forge
- - bioconda
-dependencies:
- - svim
- - bcftools

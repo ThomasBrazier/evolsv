@@ -1,7 +1,0 @@
-name: cutesv
-channels:
- - conda-forge
- - bioconda
-dependencies:
- - cutesv
- - gzip>=1.10

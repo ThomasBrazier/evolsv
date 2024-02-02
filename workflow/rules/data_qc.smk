@@ -1,11 +1,9 @@
-rule download:
+rule fastqc:
     """
-    Download the long read fastq from the SRA archive
-    and the genome from the NCBI genome assembly database
+    Report data quality for long reads
     """
     input:
-        "{wdir}/{sra}.fastq.gz",
-        "{wdir}/{sra}.fna.gz"
+        "{wdir}/{sra}.fastq.gz"
     output:
         "{wdir}/fastqc/{sra}"
     conda:
