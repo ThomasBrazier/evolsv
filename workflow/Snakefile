@@ -15,13 +15,13 @@ wildcard_constraints:
 
 
 
-include: "worklow/rules/data_download.smk"
-include: "worklow/rules/data_qc.smk"
-include: "worklow/rules/mapping.smk"
-include: "worklow/rules/ensemblecalling.smk"
-include: "worklow/rules/merging.smk"
-include: "worklow/rules/genotyping.smk"
-include: "worklow/rules/report.smk"
+include: "rules/data_download.smk"
+include: "rules/data_qc.smk"
+include: "rules/mapping.smk"
+include: "rules/ensemblecalling.smk"
+include: "rules/merging.smk"
+include: "rules/genotyping.smk"
+include: "rules/report.smk"
 
 
 rule all:
