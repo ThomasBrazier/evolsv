@@ -7,11 +7,11 @@ rule svim:
         bai = "{wdir}/{sra}_sorted.bam.bai",
         fasta = "{wdir}/{sra}.fna",
         stats = "{wdir}/mapping/{sra}_mapping.stats",
-        plot = "{wdir}/mapping/{sra}_mapping_plot"
+        plot = "{wdir}/mapping/{sra}_mapping_plot.html"
     output:
         temporary("{wdir}/{sra}_svim/variants.vcf"),
         vcf = "{wdir}/{sra}_svim.vcf",
-        nobnd = "{wdir}/${sra}_svim_noBND.vcf"
+        nobnd = "{wdir}/{sra}_svim_noBND.vcf"
     conda:
         "workflow/envs/svim.yaml"
     shell:
