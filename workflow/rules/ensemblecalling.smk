@@ -16,7 +16,8 @@ rule svim:
         "workflow/envs/svim.yaml"
     shell:
         """
-        svim alignment {sra} {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} --minimum_depth {config[min_coverage]}
+        svim alignment {sra} {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
+        --minimum_depth {config[min_coverage]} --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
         # SVIM does not filter SV itself and outputs all variants
         bcftools view -i "QUAL >= {config[svim_quality]}" ${sra}/variants.vcf > {output.vcf}
         cat {output.vcf} | grep -v svim.BND > {output.nobnd}
@@ -38,7 +39,8 @@ rule sniffles:
         "workflow/envs/sniffles.yaml"
     shell:
         """
-        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {workflow.threads} --allow-overwrite --minsvlen {config[min_sv_size]} --qc-coverage {config[min_coverage]} --output-rnames
+        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {workflow.threads} --allow-overwrite \
+        --minsvlen {config[min_sv_size]} --qc-coverage {config[min_coverage]} --output-rnames
         """
 
 
@@ -84,5 +86,6 @@ rule debreak:
     shell:
         """
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {workflow.threads} \
-        --min_size {config[min_sv_size]} --poa --ref {input.fasta}
+        --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
+        cp {wdir}/debreak/debreak.vcf {wdir}/{sra}_debreak.vcf
         """

@@ -16,6 +16,8 @@ min_sv_size: 50 # minimum SV length to detect
 
 # SVIM specific
 svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
+segment_gap_tolerance: 10 #  Maximum tolerated gap between adjacent alignment segments (default: 10)
+segment_overlap_tolerance: 5 # Maximum tolerated overlap between adjacent alignment (default: 5)
 
 # CuteSV specific
 max_cluster_bias_INS: 1000
