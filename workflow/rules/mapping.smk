@@ -5,9 +5,9 @@ rule mapping:
     input:
         fastq = "{wdir}/{sra}.fastq.gz",
         fasta = "{wdir}/{sra}.fna.gz",
-        "{wdir}/fastqc/{sra}_fastqc.html",
-        "{wdir}/fastqc/{sra}_fastqc.zip",
-        "{wdir}/nanoplot/"
+        html = "{wdir}/fastqc/{sra}_fastqc.html",
+        zip = "{wdir}/fastqc/{sra}_fastqc.zip",
+        nanoplot = "{wdir}/nanoplot/"
     output:
         "{wdir}/{sra}.sam"
     conda:
@@ -72,7 +72,7 @@ rule samtools_stats:
     """
     input:
         bam = "{wdir}/{sra}_sorted.bam",
-        "{wdir}/{sra}_sorted.bam.bai"
+        bai = "{wdir}/{sra}_sorted.bam.bai"
     output:
         stats = "{wdir}/mapping/{sra}_mapping.stats",
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"

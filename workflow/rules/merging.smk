@@ -23,7 +23,7 @@ rule bam_list:
     Create the txt file containing the list of the bam files for IRIS
     """
     input :
-        "{wdir}/{sra}_vcf_list.txt",
+        vcflist = "{wdir}/{sra}_vcf_list.txt",
         bam = "{wdir}/{sra}_sorted.bam"
     output:
         "{wdir}/{sra}_bam_list.txt"
