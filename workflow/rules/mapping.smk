@@ -4,10 +4,10 @@ rule mapping:
     """
     input:
         fastq = "{wdir}/{sra}.fastq.gz",
-        fasta = "{wdir}/{sra}.fna.gz",
+        fasta = "{wdir}/{sra}.fna",
         html = "{wdir}/fastqc/{sra}_fastqc.html",
         zip = "{wdir}/fastqc/{sra}_fastqc.zip",
-        nanoplot = "{wdir}/nanoplot/"
+        nanoplot = "{wdir}/nanoplot/{sra}_NanoStats.txt"
     output:
         "{wdir}/{sra}.sam"
     conda:
