@@ -6,3 +6,4 @@ dependencies:
  - samtools
  - bcftools
  - htslib
+ - gnuplot
