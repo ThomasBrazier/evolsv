@@ -22,8 +22,8 @@ rule nanoplot:
     """
     input:
         fastq = "{wdir}/{sra}.fastq.gz",
-        "{wdir}/fastqc/{sra}_fastqc.html",
-        "{wdir}/fastqc/{sra}_fastqc.zip"
+        html = "{wdir}/fastqc/{sra}_fastqc.html",
+        zip = "{wdir}/fastqc/{sra}_fastqc.zip"
     output:
         "{wdir}/nanoplot/{sra}_NanoStats.txt",
         "{wdir}/nanoplot/{sra}_LengthvsQualityScatterPlot_dot.html",
