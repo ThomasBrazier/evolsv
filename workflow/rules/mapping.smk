@@ -67,19 +67,19 @@ rule samtools_index:
 
 
 rule samtools_stats:
-	"""
-	Mapping QC
-	"""
-	input:
-		bam = "{wdir}/{sra}_sorted.bam",
+    """
+    Mapping QC
+    """
+    input:
+        bam = "{wdir}/{sra}_sorted.bam",
         "{wdir}/{sra}_sorted.bam.bai"
-	output:
-		stats = "{wdir}/mapping/{sra}_mapping.stats",
+    output:
+        stats = "{wdir}/mapping/{sra}_mapping.stats",
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"
-	conda:
-		"workflow/envs/samtools.yaml"
-	shell:
-		"""
+    conda:
+        "workflow/envs/samtools.yaml"
+    shell:
+        """
         mkdir -p {wdir}/mapping
         samtools stats {input.bam} > {output.stats}
         # QC visualization
