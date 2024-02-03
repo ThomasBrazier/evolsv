@@ -20,6 +20,9 @@ rule svim:
         --minimum_depth {config[min_coverage]} --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
         # SVIM does not filter SV itself and outputs all variants
         bcftools view -i "QUAL >= {config[svim_quality]}" {wdir}/{sra}_svim/variants.vcf > {output.vcf}
+        # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
+        sed -i 's/DUP:INT/DUP/g' {output.vcf}
+        sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
         cat {output.vcf} | grep -v svim.BND > {output.nobnd}
         """
 
@@ -88,4 +91,30 @@ rule debreak:
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {workflow.threads} \
         --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
         cp {wdir}/debreak/debreak.vcf {wdir}/{sra}_debreak.vcf
+        """
+
+
+rule sniffles2plot:
+    """
+    Run sniffles2-plot for each SV caller
+    The sniffles2-lot package output a set of QC summary plots for a single VCF
+    """
+    input:
+        sniffles = "{wdir}/{sra}_sniffles.vcf",
+        svim = "{wdir}/{sra}_svim.vcf",
+        cutesv = "{wdir}/{sra}_cutesv.vcf",
+        debreak = "{wdir}/{sra}_debreak.vcf"
+    output:
+        "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
+        "{wdir}/{sra}_svim_QC/variant_count.jpg",
+        "{wdir}/{sra}_cutesv_QC/variant_count.jpg",
+        "{wdir}/{sra}_debreak_QC/variant_count.jpg"
+    conda:
+        "../envs/sniffles.yaml"
+    shell:
+        """
+        python3 -m sniffles2_plot -i {input.sniffles} -o {wdir}/{sra}_sniffles_QC/
+        python3 -m sniffles2_plot -i {input.svim} -o {wdir}/{sra}_svim_QC/
+        python3 -m sniffles2_plot -i {input.cutesv} -o {wdir}/{sra}_cutesv_QC/
+        python3 -m sniffles2_plot -i {input.debreak} -o {wdir}/{sra}_debreak_QC/
         """

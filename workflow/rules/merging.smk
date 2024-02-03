@@ -7,7 +7,11 @@ rule vcf_list:
         svim = "{wdir}/{sra}_svim.vcf",
         nobnd = "{wdir}/{sra}_svim_noBND.vcf",
         cutesv = "{wdir}/{sra}_cutesv.vcf",
-        debreak = "{wdir}/{sra}_debreak.vcf"
+        debreak = "{wdir}/{sra}_debreak.vcf",
+        snifflesQC = "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
+        svimQC = "{wdir}/{sra}_svim_QC/variant_count.jpg",
+        cutesvQC = "{wdir}/{sra}_cutesv_QC/variant_count.jpg",
+        debreakQC = "{wdir}/{sra}_debreak_QC/variant_count.jpg"
     output:
         "{wdir}/{sra}_vcf_list.txt"
     shell:
