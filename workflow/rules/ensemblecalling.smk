@@ -9,17 +9,17 @@ rule svim:
         stats = "{wdir}/mapping/{sra}_mapping.stats",
         plot = "{wdir}/mapping/{sra}_mapping_plot"
     output:
-        temporary("${sra}/variants.vcf"),
+        temporary("{wdir}/{sra}_svim/variants.vcf"),
         vcf = "{wdir}/{sra}_svim.vcf",
-        nobnd = "$sra/${sra}_svim_noBND.vcf"
+        nobnd = "{wdir}/${sra}_svim_noBND.vcf"
     conda:
         "workflow/envs/svim.yaml"
     shell:
         """
-        svim alignment {sra} {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
+        svim alignment {wdir}/{sra}_svim {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
         --minimum_depth {config[min_coverage]} --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
         # SVIM does not filter SV itself and outputs all variants
-        bcftools view -i "QUAL >= {config[svim_quality]}" ${sra}/variants.vcf > {output.vcf}
+        bcftools view -i "QUAL >= {config[svim_quality]}" {wdir}/{sra}_svim/variants.vcf > {output.vcf}
         cat {output.vcf} | grep -v svim.BND > {output.nobnd}
         """
 
