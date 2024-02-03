@@ -17,15 +17,15 @@ rule fastqc:
 
 
 rule nanoplot:
-	"""
-	Quality control of raw data
-	"""
-	input:
-		fastq = "{wdir}/{sra}.fastq.gz",
+    """
+    Quality control of raw data
+    """
+    input:
+        fastq = "{wdir}/{sra}.fastq.gz",
         "{wdir}/fastqc/{sra}_fastqc.html",
         "{wdir}/fastqc/{sra}_fastqc.zip"
-	output:
-		"{wdir}/nanoplot/{sra}_NanoStats.txt",
+    output:
+        "{wdir}/nanoplot/{sra}_NanoStats.txt",
         "{wdir}/nanoplot/{sra}_LengthvsQualityScatterPlot_dot.html",
         "{wdir}/nanoplot/{sra}_LengthvsQualityScatterPlot_dot.png",
         "{wdir}/nanoplot/{sra}_LengthvsQualityScatterPlot_dot_kde.html",
@@ -41,10 +41,10 @@ rule nanoplot:
         "{wdir}/nanoplot/{sra}_WeightedLogTransformed_HistogramReadlength.png",
         "{wdir}/nanoplot/{sra}_Yield_By_Length.html",
         "{wdir}/nanoplot/{sra}_Yield_By_Length.png"
-	conda:
-		"workflow/envs/nanoplot.yaml"
-	shell:
-		"""
+    conda:
+        "workflow/envs/nanoplot.yaml"
+    shell:
+        """
         NanoPlot --fastq {input.fastq} -t {workflow.threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{sra}_' --N50 --verbose --title {sra}
         """
 
