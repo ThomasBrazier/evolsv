@@ -51,7 +51,7 @@ rule jasmine:
     output:
         "{wdir}/{sra}_merged.vcf"
     conda:
-        "workflow/envs/jasminesv.yaml"
+        "../envs/jasminesv.yaml"
     shell:
         """
         jasmine file_list={input.vcflist} out_file={output} genome_file={input.fasta} \

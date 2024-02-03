@@ -11,7 +11,7 @@ rule mapping:
     output:
         "{wdir}/{sra}.sam"
     conda:
-        "workflow/envs/minimap2.yaml"
+        "../envs/minimap2.yaml"
     shell:
         """
         minimap2 -ax {config[minimap_ax]} --MD --eqX -t {workflow.threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
@@ -27,7 +27,7 @@ rule samtools_view:
     output:
         "{wdir}/{sra}.bam"
     conda:
-        "workflow/envs/samtools.yaml"
+        "../envs/samtools.yaml"
     shell:
         """
         samtools view -S -b {input} > {output}
@@ -43,7 +43,7 @@ rule samtools_sort:
     output:
         "{wdir}/{sra}_sorted.bam"
     conda:
-        "workflow/envs/samtools.yaml"
+        "../envs/samtools.yaml"
     shell:
         """
         samtools sort {input} -o {output}
@@ -59,7 +59,7 @@ rule samtools_index:
     output:
         "{wdir}/{sra}_sorted.bam.bai"
     conda:
-        "workflow/envs/samtools.yaml"
+        "../envs/samtools.yaml"
     shell:
         """
         samtools index {input}
@@ -77,7 +77,7 @@ rule samtools_stats:
         stats = "{wdir}/mapping/{sra}_mapping.stats",
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"
     conda:
-        "workflow/envs/samtools.yaml"
+        "../envs/samtools.yaml"
     shell:
         """
         mkdir -p {wdir}/mapping

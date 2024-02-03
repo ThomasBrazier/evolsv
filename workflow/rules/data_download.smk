@@ -10,7 +10,7 @@ rule download:
         temporary("{wdir}/{sra}.zip"),
         "{wdir}/{sra}_config.yaml"
     conda:
-        "workflow/envs/download.yaml"
+        "../envs/download.yaml"
     shell:
         """
         scripts/download.sh {sra} {genome} {wdir}

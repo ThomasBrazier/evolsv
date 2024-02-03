@@ -42,7 +42,7 @@ rule nanoplot:
         "{wdir}/nanoplot/{sra}_Yield_By_Length.html",
         "{wdir}/nanoplot/{sra}_Yield_By_Length.png"
     conda:
-        "workflow/envs/nanoplot.yaml"
+        "../envs/nanoplot.yaml"
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {workflow.threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{sra}_' --N50 --verbose --title {sra}

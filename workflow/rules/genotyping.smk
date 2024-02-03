@@ -12,7 +12,7 @@ rule svjedi_jasmine:
         "{wdir}/{sra}_merged.gaf",
         "{wdir}/{sra}_merged_informative_aln.json"
     conda:
-        "workflow/envs/svjedi-graph.yaml"
+        "../envs/svjedi-graph.yaml"
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.fastq} -p {wdir}/{sra}_merged -t {workflow.threads} --minsupport {config.minsupport}

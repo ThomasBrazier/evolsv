@@ -13,7 +13,7 @@ rule svim:
         vcf = "{wdir}/{sra}_svim.vcf",
         nobnd = "{wdir}/{sra}_svim_noBND.vcf"
     conda:
-        "workflow/envs/svim.yaml"
+        "../envs/svim.yaml"
     shell:
         """
         svim alignment {wdir}/{sra}_svim {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
@@ -36,7 +36,7 @@ rule sniffles:
     output:
         "{wdir}/{sra}_sniffles.vcf"
     conda:
-        "workflow/envs/sniffles.yaml"
+        "../envs/sniffles.yaml"
     shell:
         """
         sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {workflow.threads} --allow-overwrite \
@@ -57,7 +57,7 @@ rule cutesv:
     output:
         "{wdir}/{sra}_cutesv.vcf"
     conda:
-        "workflow/envs/cutesv.yaml"
+        "../envs/cutesv.yaml"
     shell:
         """
         mkdir -p {wdir}/cutesv
@@ -82,7 +82,7 @@ rule debreak:
     output:
         "{wdir}/{sra}_debreak.vcf"
     conda:
-        "workflow/envs/debreak.yaml"
+        "../envs/debreak.yaml"
     shell:
         """
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {workflow.threads} \
