@@ -9,9 +9,9 @@ rule svim:
         stats = "{wdir}/mapping/{sra}_mapping.stats",
         plot = "{wdir}/mapping/{sra}_mapping_plot"
     output:
+        temporary("${sra}/variants.vcf"),
         vcf = "{wdir}/{sra}_svim.vcf",
-        nobnd = "$sra/${sra}_svim_noBND.vcf",
-        temporary("${sra}/variants.vcf")
+        nobnd = "$sra/${sra}_svim_noBND.vcf"
     conda:
         "workflow/envs/svim.yaml"
     shell:
