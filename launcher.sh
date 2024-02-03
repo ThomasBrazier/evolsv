@@ -8,4 +8,4 @@
 
 conda activate snakemake
 
-snakemake -s workflow/Snakefile --config config/config.yaml --use-conda --conda-frontend "mamba" --cores 8
+snakemake -s workflow/Snakefile --config config/config.yaml --use-conda --cores 8
