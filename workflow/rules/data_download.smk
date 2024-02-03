@@ -8,11 +8,11 @@ rule download:
         "{wdir}/{sra}.fna",
         temporary("{wdir}/{sra}/"),
         temporary("{wdir}/{sra}.zip"),
-        "{wdir}/config.yaml"
+        "{wdir}/{sra}_config.yaml"
     conda:
         "workflow/envs/download.yaml"
     shell:
         """
-        worklow/scripts/download.sh {sra} {genome} {wdir}
-        cp config/config.yaml {wdir}/config.yaml
+        scripts/download.sh {sra} {genome} {wdir}
+        cp config/config.yaml {wdir}/{sra}_config.yaml
         """
