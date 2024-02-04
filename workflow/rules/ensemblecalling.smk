@@ -12,6 +12,7 @@ rule svim:
         temporary("{wdir}/{sra}_svim/variants.vcf"),
         vcf = "{wdir}/{sra}_svim.vcf",
         nobnd = "{wdir}/{sra}_svim_noBND.vcf"
+    threads: workflow.cores
     conda:
         "../envs/svim.yaml"
     shell:
@@ -38,11 +39,12 @@ rule sniffles:
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_sniffles.vcf"
+    threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
     shell:
         """
-        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {workflow.threads} --allow-overwrite \
+        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
         --minsvlen {config[min_sv_size]} --qc-coverage {config[min_coverage]} --output-rnames
         """
 
@@ -59,6 +61,7 @@ rule cutesv:
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_cutesv.vcf"
+    threads: workflow.cores
     conda:
         "../envs/cutesv.yaml"
     shell:
@@ -84,11 +87,12 @@ rule debreak:
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_debreak.vcf"
+    threads: workflow.cores
     conda:
         "../envs/debreak.yaml"
     shell:
         """
-        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {workflow.threads} \
+        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {threads} \
         --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
         cp {wdir}/debreak/debreak.vcf {wdir}/{sra}_debreak.vcf
         """
@@ -109,6 +113,7 @@ rule sniffles2plot:
         "{wdir}/{sra}_svim_QC/variant_count.jpg",
         "{wdir}/{sra}_cutesv_QC/variant_count.jpg",
         "{wdir}/{sra}_debreak_QC/variant_count.jpg"
+    threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
     shell:

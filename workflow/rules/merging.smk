@@ -54,6 +54,7 @@ rule jasmine:
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_merged.vcf"
+    threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
     shell:

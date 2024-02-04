@@ -10,11 +10,12 @@ rule mapping:
         nanoplot = "{wdir}/nanoplot/{sra}_NanoStats.txt"
     output:
         "{wdir}/{sra}.sam"
+    threads: workflow.cores
     conda:
         "../envs/minimap2.yaml"
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD --eqX -t {workflow.threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        minimap2 -ax {config[minimap_ax]} --MD --eqX -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
         """
 
 

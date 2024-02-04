@@ -41,10 +41,11 @@ rule nanoplot:
         "{wdir}/nanoplot/{sra}_WeightedLogTransformed_HistogramReadlength.png",
         "{wdir}/nanoplot/{sra}_Yield_By_Length.html",
         "{wdir}/nanoplot/{sra}_Yield_By_Length.png"
+    threads: workflow.cores
     conda:
         "../envs/nanoplot.yaml"
     shell:
         """
-        NanoPlot --fastq {input.fastq} -t {workflow.threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{sra}_' --N50 --verbose --title {sra}
+        NanoPlot --fastq {input.fastq} -t {threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{sra}_' --N50 --verbose --title {sra}
         """
 

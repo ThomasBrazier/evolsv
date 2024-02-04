@@ -11,6 +11,7 @@ rule svjedi_jasmine:
         "{wdir}/{sra}_merged.gfa",
         "{wdir}/{sra}_merged.gaf",
         "{wdir}/{sra}_merged_informative_aln.json"
+    threads: workflow.cores
     conda:
         "../envs/svjedi-graph.yaml"
     shell:
@@ -31,5 +32,5 @@ rule svjedi_jasmine:
 
         # Transfer the annotation to sample 'smpl1'
         #bcftools annotate -s smpl1 -a annot.txt.gz -h hdr.txt -c CHROM,POS,FORMAT/DP test.vcf
-        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.fastq} -p {wdir}/{sra}_merged -t {workflow.threads} --minsupport {config.minsupport}
+        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.fastq} -p {wdir}/{sra}_merged -t {threads} --minsupport {config.minsupport}
         """
