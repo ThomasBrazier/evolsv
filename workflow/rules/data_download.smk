@@ -6,13 +6,12 @@ rule download:
     output:
         "{wdir}/{sra}.fastq.gz",
         "{wdir}/{sra}.fna",
-        temporary("{wdir}/{sra}/"),
         temporary("{wdir}/{sra}.zip"),
         "{wdir}/{sra}_config.yaml"
     conda:
         "../envs/download.yaml"
     shell:
         """
-        scripts/download.sh {sra} {genome} {wdir}
+        bash workflow/scripts/download.sh {sra} {genome} {wdir}
         cp config/config.yaml {wdir}/{sra}_config.yaml
         """

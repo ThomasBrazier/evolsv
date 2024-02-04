@@ -8,11 +8,11 @@ rule fastqc:
         "{wdir}/fastqc/{sra}_fastqc.html",
         "{wdir}/fastqc/{sra}_fastqc.zip"
     conda:
-        "workflow/envs/fastqc.yaml"
+        "../envs/fastqc.yaml"
     shell:
         """
         mkdir -p {wdir}/fastqc
-        fastqc --outdir {wdir}/fastqc/ *.fastq.gz
+        fastqc --outdir {wdir}/fastqc/ {input}
         """
 
 

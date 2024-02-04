@@ -6,11 +6,11 @@ genome=$2
 wdir=$3
 
 # Download long reads
-mkdir --parents $wdir/$sra
-fastq-dump -v --gzip --outdir $wdir/$sra $sra
+mkdir --parents $wdir
+fastq-dump -v --gzip --outdir $wdir $sra
 
 # Download reference genome assembly
-datasets download genome accession $genome --filename $wdir/$sra/$sra.zip
-unzip $wdir/$sra/$sra.zip -d $wdir/$sra/
-mv $wdir/$sra/ncbi_dataset/data/$genome/*_genomic.fna $wdir/$sra/$sra.fna
+datasets download genome accession $genome --filename $wdir/$sra.zip
+unzip $wdir/$sra.zip -d $wdir/
+mv $wdir/ncbi_dataset/data/$genome/*_genomic.fna $wdir/$sra.fna
 # bgzip $wdir/$sra/$sra.fna
