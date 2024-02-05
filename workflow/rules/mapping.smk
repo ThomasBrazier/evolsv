@@ -15,7 +15,7 @@ rule mapping:
         "../envs/minimap2.yaml"
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD --eqX -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        minimap2 -ax {config[minimap_ax]} --MD --eqx -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
         """
 
 
@@ -84,5 +84,5 @@ rule samtools_stats:
         mkdir -p {wdir}/mapping
         samtools stats {input.bam} > {output.stats}
         # QC visualization
-        plot-bamstats -p {output.plot} {output.stats}
+        plot-bamstats -p {wdir}/mapping/{sra}_mapping_plot {output.stats}
         """

@@ -70,7 +70,7 @@ rule cutesv:
         rm -rf sra/cutesv/*
         cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
          --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
-         --max_size [config[max_size]] --min_support {config[min_coverage]} --min_size {config[min_sv_size]} {input.bam} {input.fasta} {output} {sra}/cutesv/
+         --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} {input.bam} {input.fasta} {output} {sra}/cutesv/
         """
 
 
@@ -111,8 +111,7 @@ rule sniffles2plot:
     output:
         "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
         "{wdir}/{sra}_svim_QC/variant_count.jpg",
-        "{wdir}/{sra}_cutesv_QC/variant_count.jpg",
-        "{wdir}/{sra}_debreak_QC/variant_count.jpg"
+        "{wdir}/{sra}_cutesv_QC/variant_count.jpg"
     threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
@@ -121,5 +120,4 @@ rule sniffles2plot:
         python3 -m sniffles2_plot -i {input.sniffles} -o {wdir}/{sra}_sniffles_QC/
         python3 -m sniffles2_plot -i {input.svim} -o {wdir}/{sra}_svim_QC/
         python3 -m sniffles2_plot -i {input.cutesv} -o {wdir}/{sra}_cutesv_QC/
-        python3 -m sniffles2_plot -i {input.debreak} -o {wdir}/{sra}_debreak_QC/
         """
