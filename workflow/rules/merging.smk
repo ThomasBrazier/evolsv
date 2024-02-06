@@ -17,10 +17,10 @@ rule removeBND:
         sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
     shell:
         """
-        cat {input.svim} | grep -v svim.BND > {output.svim}
-        cat {input.cutesv} | grep -v svim.BND > {output.cutesv}
-        cat {input.debreak} | grep -v svim.BND > {output.debreak}
-        cat {input.sniffles} | grep -v svim.BND > {output.sniffles}
+        cat {input.svim} | grep -v '[a-zA-Z]*.BND' > {output.svim}
+        cat {input.cutesv} | grep -v '[a-zA-Z]*.BND' > {output.cutesv}
+        cat {input.debreak} | grep -v '[a-zA-Z]*.BND' > {output.debreak}
+        cat {input.sniffles} | grep -v '[a-zA-Z]*.BND' > {output.sniffles}
         """
         
         
