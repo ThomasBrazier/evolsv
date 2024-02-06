@@ -78,6 +78,7 @@ rule samtools_stats:
         bai = "{wdir}/{sra}_sorted.bam.bai"
     output:
         stats = "{wdir}/mapping/{sra}_mapping.stats",
+        stattsv = "{wdir}/mapping/{sra}_mapping.stats.tsv",
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
@@ -87,6 +88,7 @@ rule samtools_stats:
         """
         mkdir -p {wdir}/mapping
         samtools stats {input.bam} > {output.stats}
+        cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
         plot-bamstats -p {wdir}/mapping/{sra}_mapping_plot {output.stats}
         """

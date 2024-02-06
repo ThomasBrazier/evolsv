@@ -91,32 +91,38 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 
 
 ```{r mapping, echo = F}
+mapping = readLines(paste0(wdir, "/", sra, "/mapping/", sa, "_mapping.stats.tsv"))
 
+print(gsub("\t", " ", mapping))
 ```
+
+
+The diagnostic plots for mapping are in the `mapping/` directory.
+
 
 
 # SV calling
 
 ```{r loadingSV, echo = F}
-sniffles = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_sniffles.vcf")
+sniffles = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_sniffles_noBND.vcf"))
 gt.sniffles = as.data.frame(sniffles@gt)
 fix.sniffles = as.data.frame(sniffles@fix)
 gt.sniffles$Caller = "sniffles"
 fix.sniffles$Caller = "sniffles"
 
-svim = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_svim_noBND.vcf")
+svim = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_svim_noBND.vcf"))
 gt.svim = as.data.frame(svim@gt)
 fix.svim = as.data.frame(svim@fix)
 gt.svim$Caller = "svim"
 fix.svim$Caller = "svim"
 
-cutesv = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_cutesv.vcf")
+cutesv = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_cutesv_noBND.vcf"))
 gt.cutesv = as.data.frame(cutesv@gt)
 fix.cutesv = as.data.frame(cutesv@fix)
 gt.cutesv$Caller = "cutesv"
 fix.cutesv$Caller = "cutesv"
 
-debreak = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_sniffles.vcf")
+debreak = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_sniffles_noBND.vcf"))
 gt.debreak = as.data.frame(debreak@gt)
 fix.debreak = as.data.frame(debreak@fix)
 gt.debreak$Caller = "debreak"
@@ -239,7 +245,7 @@ ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, 
 # Merging with Jasmine
 
 ```{r loadingSV, echo = F}
-merged = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_merged_noBND.vcf")
+merged = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_merged_noBND.vcf"))
 gt.merged = as.data.frame(merged@gt)
 fix.merged = as.data.frame(merged@fix)
 
@@ -260,20 +266,24 @@ fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) =
 ## Number of SV for each tool before/after merging (and per SV type)
 
 
+
+Number of SV supported by at least two tools:
+
+
+
+Number of SV supported by at least three tools:
+
+
+Number of SV supported by the four tools:
+
+
 ## Venn diagram
 
 ```{r venndiag, echo = F}
-id.svim = fix.merged$ID[which(fix.merged$svim == 1)]
-id.cutesv = fix.merged$ID[which(fix.merged$cutesv == 1)]
-id.sniffles = fix.merged$ID[which(fix.merged$sniffles == 1)]
-id.debreak = fix.merged$ID[which(fix.merged$debreak == 1)]
-
-library(VennDiagram)
-venn.plot  = venn.diagram(list(svim = id.svim,
-                               cutesv = id.cutesv,
-                               sniffles = id.sniffles,
-                               debreak = id.debreak),
-                          filename = NULL)
+library(eulerr)
+plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
+     quantities = TRUE,
+     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
 ```
 
 
@@ -289,7 +299,7 @@ plot(grid.draw(venn.plot))
 
 
 ```{r loadingFinal, echo = F}
-geno = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_merged_genotype.vcf")
+geno = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_merged_genotype.vcf"))
 gt.geno = as.data.frame(geno@gt)
 fix.geno = as.data.frame(geno@fix)
 
@@ -298,34 +308,234 @@ fix.geno = as.data.frame(geno@fix)
 
 
 ```{r genotyping, echo = F}
-
+geno
 ```
-
-
-## Number of SV
 
 
 ## SV type
 
+```{r formatGeno, echo = F}
+fix.geno$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.geno$INFO, "SVTYPE=[A-Z]+")))
+fix.geno$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.geno$INFO, "SVLEN=[+-]*[0-9]+"))))
+
+fix.geno$sv_support = as.numeric(as.vector(gsub("SUPPORT=", "", str_match(fix.geno$INFO, "SUPPORT=[+-]*[0-9]+"))))
+```
+
+
+
+```{r SVtablefinal}
+table(fix.geno$sv_type)
+```
+
+
+The stacked barplot of SV count for each SV type and SV length (no filter on quality scores and quality score > 10).
+
+```{r SVtypefinal, echo = T}
+p1 = ggplot(fix.geno, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlim(0, 1000) +
+  theme_bw()
+
+p2 = ggplot(fix.geno, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlim(0, 50000) +
+  theme_bw()
+
+ggarrange(p1, p2, nrow = 2)
+```
+
+
+
+After filtering at QC > 10.
+
+
+```{r SVtablefinal}
+table(fix.geno$sv_type[which(fix.geno$QUAL > 10)])
+```
+
+
+
+```{r SVtypefinal, echo = T}
+p1 = ggplot(fix.geno[which(fix.geno$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlim(0, 1000) +
+  theme_bw()
+
+p2 = ggplot(fix.geno[which(fix.geno$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlim(0, 50000) +
+  theme_bw()
+
+ggarrange(p1, p2, nrow = 2)
+```
 
 ## SV length
 
+```{r SVlengthfinal, echo = T}
+p1 = ggplot(fix.geno, aes(y = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_boxplot() +
+  ylab("SV Length (bp)") +
+  theme_bw()
+
+
+p2 = ggplot(fix.geno, aes(y = log10(abs(sv_length)), fill = sv_type, colour = sv_type)) +
+  geom_boxplot() +
+  ylab("SV Length (log10 scale)") +
+  theme_bw()
+
+ggarrange(p1, p2, nrow = 2)
+```
 
 ## Missing data
 
 
+```{r parsinggeno}
+gt.geno$GT = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 1))
+gt.geno$AD = as.numeric(unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 2)))
+gt.geno$DP = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 3))
+gt.geno$DP_REF = as.numeric(unlist(lapply(strsplit(gt.geno$DP, ","), `[[`, 1)))
+gt.geno$DP_ALT = as.numeric(unlist(lapply(strsplit(gt.geno$DP, ","), `[[`, 2)))
+gt.geno$PL = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 4))
+gt.geno$PL_HOMREF = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 1)))
+gt.geno$PL_HET = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 2)))
+gt.geno$PL_HOMALT = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 3)))
+```
+
+
+```{r missinggeno}
+cat("Proportion of missing data (./.):", sum(gt.geno$GT == "./.")/nrow(gt.geno), "\n")
+
+cat("Proportion of partially missing data (./?):", sum(gt.geno$GT %in% c("./0", "0/.", "1/.", "./1"))/nrow(gt.geno), "(should be 0 if everything is ok) \n")
+```
+
 ## Heterozygosity
 
 
-## Supporting reads (DP:AD:PL)
+```{r missinggeno}
+cat("Proportion of heterozygous SV (0/1 or 1/0):", sum(gt.geno$GT %in% c("1/0", "0/1"))/nrow(gt.geno), "\n")
+```
 
 
 
 
-# SV landscapes
+DP: Approximate read depth; some reads may have been filtered
+AD: Allelic depths for the ref and alt alleles in the order listed
+PL: Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification (lower score is better, lower score = most likely genotype)
 
-The distribution of SVs along the genome.
 
+## Supporting reads (DP:AD)
+
+
+
+Approximate read depth (should be balanced between reference and variant if unbiased).
+
+
+```{r SV_DP, echo = T}
+ggplot(gt.geno, aes(x = DP_REF, y = DP_ALT, group = GT, colour = GT)) +
+  geom_point(alpha = 0.3) +
+  xlab("Reference allele read depth (DP)") + ylab("Variant allele read depth (DP)") +
+  theme_bw()
+```
+
+
+Variant allelic depth (higher for heterozygotes is better).
+
+
+```{r SV_DP, echo = T}
+p1 = ggplot(gt.geno, aes(y = AD, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("Variant allelic depth (AD)") +
+  theme_bw()
+
+p2 = ggplot(gt.geno, aes(y = AD, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("Variant allelic depth (AD)") +
+  ylim(0, 100) +
+  theme_bw()
+
+ggarrange(p1, p2, ncol = 2)
+```
+
+
+## Phred-scale likelihoods for heterozygotes
+
+Lower phred-scale likelihood for heterozygote genotype is better.
+
+
+```{r PL, echo = T}
+df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/1", "1/0"))),
+                       rep("0/1", sum(gt.geno$GT %in% c("0/1", "1/0"))),
+                       rep("1/0", sum(gt.geno$GT %in% c("0/1", "1/0")))),
+                PL = c(gt.geno$PL_HOMREF[which(gt.geno$GT %in% c("0/1", "1/0"))],
+                       gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1", "1/0"))],
+                       gt.geno$PL_HOMALT[which(gt.geno$GT %in% c("0/1", "1/0"))]))
+
+p1 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("Phred-scaled genotype likelihood") +
+  theme_bw()
+
+p2 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("Phred-scaled genotype likelihood") +
+  ylim(0, 1000) +
+  theme_bw()
+
+ggarrange(p1, p2, ncol = 2)
+```
+
+
+# SV and genomic landscapes
+
+
+
+## Quality and support along the genome
+
+Quality scores and allele support are expected to homogeneous along the genome.
+
+
+Quality Score.
+
+```{r QClandscape}
+ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "gam", se = T) +
+  xlab("Position (Mb)") + ylab("SV Quality score") +
+  facet_wrap(~ CHROM, scales = "free_y") +
+  theme_bw()
+```
+
+
+Support for variant allele.
+
+```{r suppportlandscape}
+ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "gam", se = T) +
+  xlab("Position (Mb)") + ylab("SV Quality score") +
+  facet_wrap(~ CHROM, scales = "free_y") +
+  theme_bw()
+
+```
+
+
+
+
+
+
+## The distribution of SVs along the genome
+
+
+```{r SVlandscape}
+ggplot(fix.geno, aes(x = as.numeric(POS)/10^6)) +
+  geom_histogram(bins = 1000) +
+  xlab("Position (Mb)") + ylab("SV count") +
+  facet_wrap(~ CHROM)
+```
 
 
 

@@ -32,4 +32,4 @@ dependencies:
   - r-purr
   - r-tidyjson
   - r-kableExtra
-  - r-venndiagramm
+  - r-eulerr
