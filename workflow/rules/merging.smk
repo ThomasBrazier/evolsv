@@ -15,7 +15,6 @@ rule removeBND:
         cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
         debreak = "{wdir}/{sra}_debreak_noBND.vcf",
         sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
-    conda:
     shell:
         """
         cat {input.svim} | grep -v svim.BND > {output.svim}
