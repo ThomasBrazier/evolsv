@@ -13,9 +13,11 @@ rule mapping:
     threads: workflow.cores
     conda:
         "../envs/minimap2.yaml"
+    log:
+        "{wdir}/logs/{sra}_mapping.log"
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD --eqx -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        minimap2 -ax {config[minimap_ax]} --MD -2 --seed {config[minimap_seed]} --eqx -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
         """
 
 
@@ -79,6 +81,8 @@ rule samtools_stats:
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
+    log:
+        "{wdir}/logs/{sra}_samtoolsstats.log"
     shell:
         """
         mkdir -p {wdir}/mapping

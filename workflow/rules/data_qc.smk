@@ -9,6 +9,8 @@ rule fastqc:
         "{wdir}/fastqc/{sra}_fastqc.zip"
     conda:
         "../envs/fastqc.yaml"
+    log:
+        "{wdir}/logs/{sra}_fastqc.log"
     shell:
         """
         mkdir -p {wdir}/fastqc
@@ -44,6 +46,8 @@ rule nanoplot:
     threads: workflow.cores
     conda:
         "../envs/nanoplot.yaml"
+    log:
+        "{wdir}/logs/{sra}_nanoplot.log"
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{sra}_' --N50 --verbose --title {sra}

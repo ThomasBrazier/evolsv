@@ -1,0 +1,332 @@
+---
+title: "SV calling from long reads in a single individual"
+date: "`r Sys.Date()`"
+output: html_document
+params:
+  wdir: ""
+  sra: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=FALSE}
+require(rmarkdown)
+require(vcfR)
+require(adegenet)
+require(poppr)
+library(jsonlite)
+library(tidyjson)
+library(kableExtra)
+library(vcfR)
+library(ggplot2)
+library(ggpubr)
+```
+
+
+# Assembly
+
+
+## Assembly summary statistics
+
+```{r assemblysummary, echo = F}
+# json = read_json("assembly_data_report.jsonl")
+json = read_json(paste0(wdir, "/", sra, "_assembly_data_report.jsonl"))
+
+
+cat("Accession:", json$accession, "\n")
+
+cat("Bioproject Accession:", json$assemblyInfo$bioprojectAccession, "\n")
+
+cat("Total sequence length:", json$assemblyStats$totalSequenceLength, "\n")
+cat("Total ungapped length:", json$assemblyStats$totalUngappedLength, "\n")
+
+cat("Genome coverage:", json$assemblyStats$genomeCoverage, "\n")
+
+cat("Number of contigs:", json$assemblyStats$numberOfContigs, "\n")
+cat("Contig N50 length (Mb):", json$assemblyStats$contigN50/10^6, "\n")
+
+cat("Number of scaffolds:", json$assemblyStats$numberOfScaffolds, "\n")
+cat("Scaffold N50 length (Mb):", json$assemblyStats$scaffoldN50/10^6, "\n")
+
+cat("GC percent:", json$assemblyStats$gcPercent, "\n")
+```
+
+## Chromosomes
+
+
+```{r chromosomes, echo = F}
+# dat = tidyjson::read_json("~/Academic/tmp/ncbi_dataset/data/GCA_905220365.2/sequence_report.jsonl", format = "jsonl")
+chromosomes = read_json(paste0(wdir, "/", sra, "_sequence_report.jsonl"))
+
+dat = tidyjson::read_json(paste0(wdir, "/", sra, "_sequence_report.jsonl"), format = "jsonl")
+chr = data.frame(idx = dat$document.id)
+
+chr$seqname = NA
+chr$genbankaccession = NA
+chr$type = NA
+chr$length = NA
+chr$gcpercent = NA
+
+for (i in 1:nrow(chr)) {
+  chr$seqname[i] = dat$..JSON[[i]]$chrName
+  chr$length[i] = dat$..JSON[[i]]$length/10^6
+  chr$type[i] = dat$..JSON[[i]]$assignedMoleculeLocationType
+  chr$gcpercent[i] = ifelse(!is.null(dat$..JSON[[i]]$gcPercent), dat$..JSON[[i]]$gcPercent, NA)
+  chr$genbankaccession[i] = dat$..JSON[[i]]$genbankAccession
+}
+
+genome_size = sum(chr$length)
+```
+
+
+
+```{r chromosometable, echo=TRUE, message=FALSE, warning=FALSE}
+kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assembly.", col.names = c("Name", "Genbank Accession", "Type", "Length (Mb)", "GC percent"), format = "html", table.attr = "style='width:80%;'") %>% kableExtra::kable_styling()
+```
+
+
+# Mapping
+
+
+```{r mapping, echo = F}
+
+```
+
+
+# SV calling
+
+```{r loadingSV, echo = F}
+sniffles = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_sniffles.vcf")
+gt.sniffles = as.data.frame(sniffles@gt)
+fix.sniffles = as.data.frame(sniffles@fix)
+gt.sniffles$Caller = "sniffles"
+fix.sniffles$Caller = "sniffles"
+
+svim = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_svim_noBND.vcf")
+gt.svim = as.data.frame(svim@gt)
+fix.svim = as.data.frame(svim@fix)
+gt.svim$Caller = "svim"
+fix.svim$Caller = "svim"
+
+cutesv = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_cutesv.vcf")
+gt.cutesv = as.data.frame(cutesv@gt)
+fix.cutesv = as.data.frame(cutesv@fix)
+gt.cutesv$Caller = "cutesv"
+fix.cutesv$Caller = "cutesv"
+
+debreak = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_sniffles.vcf")
+gt.debreak = as.data.frame(debreak@gt)
+fix.debreak = as.data.frame(debreak@fix)
+gt.debreak$Caller = "debreak"
+fix.debreak$Caller = "debreak"
+
+colnames(gt.sniffles) = c("Format", "Sample", "Caller")
+colnames(gt.svim) = c("Format", "Sample", "Caller")
+colnames(gt.cutesv) = c("Format", "Sample", "Caller")
+colnames(gt.debreak) = c("Format", "Sample", "Caller")
+
+gt = rbind(gt.sniffles,
+           gt.svim,
+           gt.cutesv,
+           gt.debreak)
+
+fix = rbind(fix.sniffles,
+           fix.svim,
+           fix.cutesv,
+           fix.debreak)
+
+rm(fix.sniffles,
+           fix.svim,
+           fix.cutesv,
+           fix.debreak)
+
+rm(gt.sniffles,
+           gt.svim,
+           gt.cutesv,
+           gt.debreak)
+gc()
+```
+
+
+```{r parseSV, echo = F}
+fix$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix$INFO, "SVTYPE=[A-Z]+")))
+fix$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix$INFO, "SVLEN=[+-]*[0-9]+"))))
+```
+
+
+## Number of SV detected by each caller
+
+```{r SVcalling, echo = T}
+table(fix$Caller)
+```
+
+## SV quality score
+
+
+*Note that all SV callers do not use the same way of calculating the Quality Score and they are not all on the same scale (e.g. log/phred-scale).*
+
+
+```{r SVquality, echo = T}
+ggplot(fix, aes(x = Caller, y = as.numeric(QUAL), colour = Caller, group = Caller)) +
+  geom_boxplot() +
+  xlab("SV caller") + ylab("Quality Score") +
+  theme_bw()
+```
+
+
+```{r SVqualitydensity, echo = T}
+ggplot(fix, aes(x = as.numeric(QUAL), colour = Caller, group = Caller)) +
+  geom_density() +
+  xlab("Quality Score") + ylab("Density") +
+  facet_wrap(~ Caller, scales = "free") +
+  theme_bw()
+```
+
+
+## Average number of reads supporting SVs
+
+
+## SV type
+
+```{r SVtypetable, echo = T}
+table(fix$sv_type, fix$Caller)
+
+# sum(is.na(fix$sv_type))
+
+```
+
+
+
+```{r SVtype, echo = T}
+ggplot(fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("SV type") + ylab("Count") +
+  facet_wrap(~ Caller, scales = "fixed") +
+  theme_bw()
+```
+
+
+## SV length
+
+
+```{r SVlength, echo = T}
+df = aggregate(sv_length ~ sv_type + Caller, fix, function(x) {sum(abs(x))})
+
+ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type)) +
+  geom_bar(stat = "identity") +
+  xlab("SV type") + ylab("Total absolute length (Mb)") +
+  facet_wrap(~ Caller, scales = "fixed") +
+  theme_bw()
+```
+
+
+
+
+```{r SVproportion, echo = T}
+ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, colour = sv_type)) +
+  geom_bar(stat = "identity") +
+  xlab("SV type") + ylab("Proportion of the genome") +
+  facet_wrap(~ Caller, scales = "fixed") +
+  ylim(0, 1) +
+  theme_bw()
+```
+
+
+
+
+# Merging with Jasmine
+
+```{r loadingSV, echo = F}
+merged = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_merged_noBND.vcf")
+gt.merged = as.data.frame(merged@gt)
+fix.merged = as.data.frame(merged@fix)
+
+fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
+fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
+
+fix.merged$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-9]+")))
+fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-9]+"))))
+
+
+fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1", 1, 0)
+fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1", 1, 0)
+fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1", 1, 0)
+fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1", 1, 0)
+```
+
+
+## Number of SV for each tool before/after merging (and per SV type)
+
+
+## Venn diagram
+
+```{r venndiag, echo = F}
+id.svim = fix.merged$ID[which(fix.merged$svim == 1)]
+id.cutesv = fix.merged$ID[which(fix.merged$cutesv == 1)]
+id.sniffles = fix.merged$ID[which(fix.merged$sniffles == 1)]
+id.debreak = fix.merged$ID[which(fix.merged$debreak == 1)]
+
+library(VennDiagram)
+venn.plot  = venn.diagram(list(svim = id.svim,
+                               cutesv = id.cutesv,
+                               sniffles = id.sniffles,
+                               debreak = id.debreak),
+                          filename = NULL)
+```
+
+
+
+```{r vennplot}
+plot(grid.draw(venn.plot))
+```
+
+
+
+
+# Genotyping and final callset
+
+
+```{r loadingFinal, echo = F}
+geno = read.vcfR("~/Academic/evolsv/ERR6608653/ERR6608653_merged_genotype.vcf")
+gt.geno = as.data.frame(geno@gt)
+fix.geno = as.data.frame(geno@fix)
+
+```
+
+
+
+```{r genotyping, echo = F}
+
+```
+
+
+## Number of SV
+
+
+## SV type
+
+
+## SV length
+
+
+## Missing data
+
+
+## Heterozygosity
+
+
+## Supporting reads (DP:AD:PL)
+
+
+
+
+# SV landscapes
+
+The distribution of SVs along the genome.
+
+
+
+
+

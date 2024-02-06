@@ -1,4 +1,4 @@
-rule svjedi_jasmine:
+rule svjedigraph:
     """
     Use SVjedi-graph on the merged dataset to genotype SVs
     """
@@ -14,6 +14,8 @@ rule svjedi_jasmine:
     threads: workflow.cores
     conda:
         "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/logs/{sra}_svjedigraph.log"
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.fastq} -p {wdir}/{sra}_merged -t {threads} --minsupport {config[minsupport]}

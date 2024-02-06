@@ -7,9 +7,13 @@ rule download:
         "{wdir}/{sra}.fastq.gz",
         "{wdir}/{sra}.fna",
         temporary("{wdir}/{sra}.zip"),
-        "{wdir}/{sra}_config.yaml"
+        "{wdir}/{sra}_config.yaml",
+        "{wdir}/{sra}_assembly_data_report.jsonl",
+        "{wdir}/{sra}_sequence_report.jsonl"
     conda:
         "../envs/download.yaml"
+    log:
+        "{wdir}/logs/{sra}_download.log"
     shell:
         """
         bash workflow/scripts/download.sh {sra} {genome} {wdir}

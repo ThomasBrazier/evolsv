@@ -1,21 +1,44 @@
-rule vcf_list:
+rule removeBND:
     """
-    Create the txt file containing the list of the VCF files to merge
+    Remove BND before merging - BND are difficult to treat in downstream analyses
     """
     input:
         sniffles = "{wdir}/{sra}_sniffles.vcf",
         svim = "{wdir}/{sra}_svim.vcf",
-        nobnd = "{wdir}/{sra}_svim_noBND.vcf",
         cutesv = "{wdir}/{sra}_cutesv.vcf",
         debreak = "{wdir}/{sra}_debreak.vcf",
         snifflesQC = "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
         svimQC = "{wdir}/{sra}_svim_QC/variant_count.jpg",
         cutesvQC = "{wdir}/{sra}_cutesv_QC/variant_count.jpg"
     output:
+        svim = "{wdir}/{sra}_svim_noBND.vcf",
+        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
+        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
+    conda:
+    shell:
+        """
+        cat {input.svim} | grep -v svim.BND > {output.svim}
+        cat {input.cutesv} | grep -v svim.BND > {output.cutesv}
+        cat {input.debreak} | grep -v svim.BND > {output.debreak}
+        cat {input.sniffles} | grep -v svim.BND > {output.sniffles}
+        """
+        
+        
+rule vcf_list:
+    """
+    Create the txt file containing the list of the VCF files to merge
+    """
+    input:
+        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf",
+        svim = "{wdir}/{sra}_svim_noBND.vcf",
+        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf"
+    output:
         "{wdir}/{sra}_vcf_list.txt"
     shell:
         """
-        echo '{input.nobnd}' > {output}
+        echo '{input.svim}' > {output}
         echo '{input.sniffles}' >> {output}
         echo '{input.cutesv}' >> {output}
         echo '{input.debreak}' >> {output}
@@ -38,6 +61,7 @@ rule bam_list:
         echo '{input.bam}' >> {output}
         """
 
+
 rule jasmine:
     """
     Merge the VCF files obtained by the three SV callers
@@ -45,17 +69,18 @@ rule jasmine:
     input:
         bamlist = "{wdir}/{sra}_bam_list.txt",
         vcflist = "{wdir}/{sra}_vcf_list.txt",
-        sniffles = "{wdir}/{sra}_sniffles.vcf",
-        svim = "{wdir}/{sra}_svim.vcf",
-        nobnd = "{wdir}/{sra}_svim_noBND.vcf",
-        cutesv = "{wdir}/{sra}_cutesv.vcf",
-        debreak = "{wdir}/{sra}_debreak.vcf",
+        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf",
+        svim = "{wdir}/{sra}_svim_noBND.vcf",
+        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
         fasta = "{wdir}/{sra}.fna"
     output:
         "{wdir}/{sra}_merged.vcf"
     threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
+    log:
+        "{wdir}/logs/{sra}_jasmine.log"
     shell:
         """
         jasmine file_list={input.vcflist} out_file={output} genome_file={input.fasta} \

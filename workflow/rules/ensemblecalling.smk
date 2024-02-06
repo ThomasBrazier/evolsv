@@ -10,11 +10,12 @@ rule svim:
         plot = "{wdir}/mapping/{sra}_mapping_plot.html"
     output:
         temporary("{wdir}/{sra}_svim/variants.vcf"),
-        vcf = "{wdir}/{sra}_svim.vcf",
-        nobnd = "{wdir}/{sra}_svim_noBND.vcf"
+        vcf = "{wdir}/{sra}_svim.vcf"
     threads: workflow.cores
     conda:
         "../envs/svim.yaml"
+    log:
+        "{wdir}/logs/{sra}_svim.log"
     shell:
         """
         svim alignment {wdir}/{sra}_svim {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
@@ -24,7 +25,6 @@ rule svim:
         # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
-        cat {output.vcf} | grep -v svim.BND > {output.nobnd}
         """
 
 
@@ -42,6 +42,8 @@ rule sniffles:
     threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
+    log:
+        "{wdir}/logs/{sra}_sniffles.log"
     shell:
         """
         sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
@@ -64,6 +66,8 @@ rule cutesv:
     threads: workflow.cores
     conda:
         "../envs/cutesv.yaml"
+    log:
+        "{wdir}/logs/{sra}_cutesv.log"
     shell:
         """
         mkdir -p {wdir}/cutesv
@@ -90,6 +94,8 @@ rule debreak:
     threads: workflow.cores
     conda:
         "../envs/debreak.yaml"
+    log:
+        "{wdir}/logs/{sra}_debreak.log"
     shell:
         """
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {threads} \
@@ -115,6 +121,8 @@ rule sniffles2plot:
     threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
+    log:
+        "{wdir}/logs/{sra}_sniffles2plot.log"
     shell:
         """
         python3 -m sniffles2_plot -i {input.sniffles} -o {wdir}/{sra}_sniffles_QC/

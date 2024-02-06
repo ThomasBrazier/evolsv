@@ -28,3 +28,8 @@ dependencies:
   - r-plyr
   - bioconductor-genomicranges
   - r-yaml
+  - r-jsonlite
+  - r-purr
+  - r-tidyjson
+  - r-kableExtra
+  - r-venndiagramm
