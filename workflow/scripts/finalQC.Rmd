@@ -21,6 +21,7 @@ require(kableExtra)
 require(ggplot2)
 require(ggpubr)
 require(stringr)
+require(eulerr)
 ```
 
 
@@ -275,16 +276,9 @@ Number of SV supported by the four tools:
 ## Venn diagram
 
 ```{r venndiag, echo = F}
-library(eulerr)
 plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-
-
-```{r vennplot}
-plot(grid.draw(venn.plot))
 ```
 
 
@@ -294,10 +288,9 @@ plot(grid.draw(venn.plot))
 
 
 ```{r loadingFinal, echo = F}
-geno = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_merged_genotype.vcf"))
+geno = read.vcfR(paste0(wdir, "/", sra, "_merged_genotype.vcf"))
 gt.geno = as.data.frame(geno@gt)
 fix.geno = as.data.frame(geno@fix)
-
 ```
 
 
