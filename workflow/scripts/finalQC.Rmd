@@ -16,12 +16,12 @@ require(rmarkdown)
 require(vcfR)
 require(adegenet)
 require(poppr)
-library(jsonlite)
-library(tidyjson)
-library(kableExtra)
-library(vcfR)
-library(ggplot2)
-library(ggpubr)
+require(jsonlite)
+require(kableExtra)
+require(ggplot2)
+require(ggpubr)
+require(stringr)
+require(eulerr)
 ```
 
 
@@ -31,8 +31,7 @@ library(ggpubr)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-# json = read_json("assembly_data_report.jsonl")
-json = read_json(paste0(wdir, "/", sra, "_assembly_data_report.jsonl"))
+json = jsonlite::read_json(paste0(wdir, "/", sra, "_assembly_data_report.jsonl"))
 
 
 cat("Accession:", json$accession, "\n")
@@ -57,9 +56,6 @@ cat("GC percent:", json$assemblyStats$gcPercent, "\n")
 
 
 ```{r chromosomes, echo = F}
-# dat = tidyjson::read_json("~/Academic/tmp/ncbi_dataset/data/GCA_905220365.2/sequence_report.jsonl", format = "jsonl")
-chromosomes = read_json(paste0(wdir, "/", sra, "_sequence_report.jsonl"))
-
 dat = tidyjson::read_json(paste0(wdir, "/", sra, "_sequence_report.jsonl"), format = "jsonl")
 chr = data.frame(idx = dat$document.id)
 
@@ -91,38 +87,38 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 
 
 ```{r mapping, echo = F}
-mapping = readLines(paste0(wdir, "/", sra, "/mapping/", sa, "_mapping.stats.tsv"))
+mapping = readLines(paste0(wdir, "/mapping/", sra, "_mapping.stats.tsv"))
 
 print(gsub("\t", " ", mapping))
 ```
 
 
-The diagnostic plots for mapping are in the `mapping/` directory.
+The diagnostic plots for the mapping with minimap2 are in the `mapping/` directory.
 
 
 
 # SV calling
 
 ```{r loadingSV, echo = F}
-sniffles = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_sniffles_noBND.vcf"))
+sniffles = read.vcfR(paste0(wdir, "/", sra, "_sniffles_noBND.vcf"))
 gt.sniffles = as.data.frame(sniffles@gt)
 fix.sniffles = as.data.frame(sniffles@fix)
 gt.sniffles$Caller = "sniffles"
 fix.sniffles$Caller = "sniffles"
 
-svim = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_svim_noBND.vcf"))
+svim = read.vcfR(paste0(wdir, "/", sra, "_svim_noBND.vcf"))
 gt.svim = as.data.frame(svim@gt)
 fix.svim = as.data.frame(svim@fix)
 gt.svim$Caller = "svim"
 fix.svim$Caller = "svim"
 
-cutesv = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_cutesv_noBND.vcf"))
+cutesv = read.vcfR(paste0(wdir, "/", sra, "_cutesv_noBND.vcf"))
 gt.cutesv = as.data.frame(cutesv@gt)
 fix.cutesv = as.data.frame(cutesv@fix)
 gt.cutesv$Caller = "cutesv"
 fix.cutesv$Caller = "cutesv"
 
-debreak = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_sniffles_noBND.vcf"))
+debreak = read.vcfR(paste0(wdir, "/", sra, "_debreak_noBND.vcf"))
 gt.debreak = as.data.frame(debreak@gt)
 fix.debreak = as.data.frame(debreak@fix)
 gt.debreak$Caller = "debreak"
@@ -245,7 +241,7 @@ ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, 
 # Merging with Jasmine
 
 ```{r loadingSV, echo = F}
-merged = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_merged_noBND.vcf"))
+merged = read.vcfR(paste0(wdir, "/", sra, "_merged.vcf"))
 gt.merged = as.data.frame(merged@gt)
 fix.merged = as.data.frame(merged@fix)
 
@@ -280,16 +276,9 @@ Number of SV supported by the four tools:
 ## Venn diagram
 
 ```{r venndiag, echo = F}
-library(eulerr)
 plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-
-
-```{r vennplot}
-plot(grid.draw(venn.plot))
 ```
 
 
@@ -299,10 +288,9 @@ plot(grid.draw(venn.plot))
 
 
 ```{r loadingFinal, echo = F}
-geno = read.vcfR(paste0(wdir, "/", sra, "/", sra, "_merged_genotype.vcf"))
+geno = read.vcfR(paste0(wdir, "/", sra, "_merged_genotype.vcf"))
 gt.geno = as.data.frame(geno@gt)
 fix.geno = as.data.frame(geno@fix)
-
 ```
 
 

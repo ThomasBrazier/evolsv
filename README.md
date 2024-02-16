@@ -1,12 +1,16 @@
 # Snakemake pipeline for the calling and genotyping of genomic Structural Variants based long-read sequencing
 
+**Authors: Thomas Brazier<sup>1</sup>, Lune Angevin<sup>1</sup>, Claire Lemaitre<sup>2</sup> and Claire Mérot<sup>1</sup>**
+
+*Institutions: (1) UMR 6553 ECOBIO, University of Rennes (2) GenScale Team, IRISA-INRIA lab, University of Rennes*
+
 This pipeline performs ensemble calling of Structural Variants (SV) from long-read sequencing of a single individual. SV calling is performed by three different tools: SVIM, Sniffles and CuteSV. The three callsets are then merged with Jasmine/IRIS and SVs are genotyped with SVJediGraph.
 
 
 
 ## Installing the pipeline
 
-The following dependencies must be installed before launching the pipeline :
+The following dependencies must be installed before launching the pipeline:
 * conda
 * snakemake
 
@@ -27,12 +31,12 @@ cd evolsv
 You can launch the pipeline in two ways: either by running the *launcher.sh* script (where you can configure your setting if you are using a SLURM job scheduler), or simply by executing the following command in the terminal:
 
 ```
-snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda --conda-frontend "mamba"
+snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda
 ```
 
 ## Data directory setup
 
-In the case of a single project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
+Project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
 
 ```
 .
