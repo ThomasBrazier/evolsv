@@ -29,7 +29,8 @@ dependencies:
   - bioconductor-genomicranges
   - r-yaml
   - r-jsonlite
-  - r-purr
+  - r-purrr
   - r-tidyjson
   - r-kableExtra
   - r-eulerr
+  - r-stringr
