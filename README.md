@@ -1,6 +1,6 @@
 # Snakemake pipeline for the calling and genotyping of genomic Structural Variants based long-read sequencing
 
-**Authors: Thomas Brazier^1, Lune Angevin^1, Claire Lemaitre^2 and Claire Mérot^1**
+**Authors: Thomas Brazier<sup>1<\sup>, Lune Angevin<sup>1<\sup>, Claire Lemaitre<sup>2<\sup> and Claire Mérot<sup>1<\sup>**
 
 *Institutions: (1) UMR 6553 ECOBIO, University of Rennes (2) GenScale Team, IRISA-INRIA lab, University of Rennes*
 
