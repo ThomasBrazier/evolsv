@@ -8,7 +8,7 @@ This pipeline performs ensemble calling of Structural Variants (SV) from long-re
 
 ## Installing the pipeline
 
-The following dependencies must be installed before launching the pipeline :
+The following dependencies must be installed before launching the pipeline:
 * conda
 * snakemake
 
@@ -34,7 +34,7 @@ snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda
 
 ## Data directory setup
 
-In the case of a single project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
+Project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
 
 ```
 .
