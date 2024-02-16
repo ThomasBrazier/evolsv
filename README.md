@@ -31,7 +31,7 @@ cd evolsv
 You can launch the pipeline in two ways: either by running the *launcher.sh* script (where you can configure your setting if you are using a SLURM job scheduler), or simply by executing the following command in the terminal:
 
 ```
-snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda --conda-frontend "mamba"
+snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda
 ```
 
 ## Data directory setup
