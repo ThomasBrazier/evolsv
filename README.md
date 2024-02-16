@@ -1,6 +1,8 @@
 # Snakemake pipeline for the calling and genotyping of genomic Structural Variants based long-read sequencing
 
-**Authors: Thomas Brazier, Lune Angevin, Claire Lemaitre and Claire Mérot**
+**Authors: Thomas Brazier^1, Lune Angevin^1, Claire Lemaitre^2 and Claire Mérot^1**
+
+*Institutions: (1) UMR 6553 ECOBIO, University of Rennes (2) GenScale Team, IRISA-INRIA lab, University of Rennes*
 
 This pipeline performs ensemble calling of Structural Variants (SV) from long-read sequencing of a single individual. SV calling is performed by three different tools: SVIM, Sniffles and CuteSV. The three callsets are then merged with Jasmine/IRIS and SVs are genotyped with SVJediGraph.
 
