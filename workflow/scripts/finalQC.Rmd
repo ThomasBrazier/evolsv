@@ -339,7 +339,7 @@ ggarrange(p1, p2, nrow = 2)
 After filtering at QC > 10.
 
 
-```{r SVtablefinal}
+```{r SVtablefinal2}
 table(fix.geno$sv_type[which(fix.geno$QUAL > 10)])
 ```
 
