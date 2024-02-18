@@ -345,7 +345,7 @@ table(fix.geno$sv_type[which(fix.geno$QUAL > 10)])
 
 
 
-```{r SVtypefinal, echo = T}
+```{r SVtypefinal2, echo = T}
 p1 = ggplot(fix.geno[which(fix.geno$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
@@ -403,7 +403,7 @@ cat("Proportion of partially missing data (./?):", sum(gt.geno$GT %in% c("./0", 
 ## Heterozygosity
 
 
-```{r missinggeno}
+```{r HeGeno}
 cat("Proportion of heterozygous SV (0/1 or 1/0):", sum(gt.geno$GT %in% c("1/0", "0/1"))/nrow(gt.geno), "\n")
 ```
 
@@ -433,7 +433,7 @@ ggplot(gt.geno, aes(x = DP_REF, y = DP_ALT, group = GT, colour = GT)) +
 Variant allelic depth (higher for heterozygotes is better).
 
 
-```{r SV_DP, echo = T}
+```{r AD_GT, echo = T}
 p1 = ggplot(gt.geno, aes(y = AD, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Variant allelic depth (AD)") +
