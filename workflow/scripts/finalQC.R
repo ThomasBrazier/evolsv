@@ -10,6 +10,6 @@ library(adegenet)
 library(poppr)
 
 rmarkdown::render('workflow/scripts/finalQC.Rmd',
-                    output_file = paste0(sra, ".finalQC.html"),
+                    output_file = paste0(sra, "_finalQC.html"),
                     output_dir = paste0(wdir),
                     params = list(wdir = wdir, sra = sra))
