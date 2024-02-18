@@ -240,7 +240,7 @@ ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, 
 
 # Merging with Jasmine
 
-```{r loadingSV, echo = F}
+```{r loadingSV2, echo = F}
 merged = read.vcfR(paste0(wdir, "/", sra, "_merged.vcf"))
 gt.merged = as.data.frame(merged@gt)
 fix.merged = as.data.frame(merged@fix)
