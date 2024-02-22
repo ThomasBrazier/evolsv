@@ -3,8 +3,8 @@
 datadir: 'data/' # The directory where data and results must be stored
 
 # SAMPLE
-sra: ERR6608653 # SRA number of the long-read SRA archive
-genome: GCF_905220365.1 # GCA/GCF number of the reference genome
+sra: ERR6808046 # SRA number of the long-read SRA archive
+genome: GCA_923062465.1 # GCA/GCF number of the reference genome
 
 # Mapping on the reference genome
 minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
