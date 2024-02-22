@@ -103,16 +103,40 @@ rule debreak:
         """
 
 
-rule sniffles2plot:
+
+rule removeBND:
     """
-    Run sniffles2-plot for each SV caller
-    The sniffles2-lot package output a set of QC summary plots for a single VCF
+    Remove BND before merging - BND are difficult to treat in downstream analyses
     """
     input:
         sniffles = "{wdir}/{sra}_sniffles.vcf",
         svim = "{wdir}/{sra}_svim.vcf",
         cutesv = "{wdir}/{sra}_cutesv.vcf",
         debreak = "{wdir}/{sra}_debreak.vcf"
+    output:
+        svim = "{wdir}/{sra}_svim_noBND.vcf",
+        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
+        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
+    shell:
+        """
+        cat {input.svim} | grep -v '[a-zA-Z]*.BND' > {output.svim}
+        cat {input.cutesv} | grep -v '[a-zA-Z]*.BND' > {output.cutesv}
+        cat {input.debreak} | grep -v '[a-zA-Z]*.BND' > {output.debreak}
+        cat {input.sniffles} | grep -v '[a-zA-Z]*.BND' > {output.sniffles}
+        """
+
+
+rule sniffles2plot:
+    """
+    Run sniffles2-plot for each SV caller
+    The sniffles2-lot package output a set of QC summary plots for a single VCF
+    """
+    input:
+        svim = "{wdir}/{sra}_svim_noBND.vcf",
+        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
+        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
     output:
         "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
         "{wdir}/{sra}_svim_QC/variant_count.jpg",
