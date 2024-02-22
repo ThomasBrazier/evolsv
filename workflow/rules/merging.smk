@@ -1,29 +1,3 @@
-rule removeBND:
-    """
-    Remove BND before merging - BND are difficult to treat in downstream analyses
-    """
-    input:
-        sniffles = "{wdir}/{sra}_sniffles.vcf",
-        svim = "{wdir}/{sra}_svim.vcf",
-        cutesv = "{wdir}/{sra}_cutesv.vcf",
-        debreak = "{wdir}/{sra}_debreak.vcf",
-        snifflesQC = "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
-        svimQC = "{wdir}/{sra}_svim_QC/variant_count.jpg",
-        cutesvQC = "{wdir}/{sra}_cutesv_QC/variant_count.jpg"
-    output:
-        svim = "{wdir}/{sra}_svim_noBND.vcf",
-        cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
-        sniffles = "{wdir}/{sra}_sniffles_noBND.vcf"
-    shell:
-        """
-        cat {input.svim} | grep -v '[a-zA-Z]*.BND' > {output.svim}
-        cat {input.cutesv} | grep -v '[a-zA-Z]*.BND' > {output.cutesv}
-        cat {input.debreak} | grep -v '[a-zA-Z]*.BND' > {output.debreak}
-        cat {input.sniffles} | grep -v '[a-zA-Z]*.BND' > {output.sniffles}
-        """
-        
-        
 rule vcf_list:
     """
     Create the txt file containing the list of the VCF files to merge
@@ -32,7 +6,10 @@ rule vcf_list:
         sniffles = "{wdir}/{sra}_sniffles_noBND.vcf",
         svim = "{wdir}/{sra}_svim_noBND.vcf",
         cutesv = "{wdir}/{sra}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{sra}_debreak_noBND.vcf"
+        debreak = "{wdir}/{sra}_debreak_noBND.vcf",
+        snifflesQC = "{wdir}/{sra}_sniffles_QC/variant_count.jpg",
+        svimQC = "{wdir}/{sra}_svim_QC/variant_count.jpg",
+        cutesvQC = "{wdir}/{sra}_cutesv_QC/variant_count.jpg"
     output:
         "{wdir}/{sra}_vcf_list.txt"
     shell:
