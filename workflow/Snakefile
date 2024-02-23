@@ -4,16 +4,24 @@ Pipeline for calling and genotyping Structural Variants from long-read sequencin
 
 configfile: "config/config.yaml"
 
-wdir = config['datadir'] + config['sra']
-sra = config['sra']
+wdir = config['datadir'] + config['genome']
 genome = config['genome']
+
+# Import sample config (sample name, sra accession)
+import pandas as pd
+
+
+samples = (
+    pd.read_csv(config["samples"], sep="\t", dtype={"sample_name": str, "sra": str})
+    .set_index("sample_name", drop=False)
+    .sort_index()
+)
+
 
 
 wildcard_constraints:
     wdir = wdir,
-    sra = sra
-
-
+    genome = genome
 
 include: "rules/data_download.smk"
 include: "rules/data_qc.smk"
@@ -26,5 +34,5 @@ include: "rules/report.smk"
 
 rule all:
     input:
-        target = expand("{wdir}/{sra}_finalQC.html", wdir=wdir, sra=sra)
+        target = expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome)
 
