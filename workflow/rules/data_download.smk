@@ -11,7 +11,8 @@ rule download_sra:
         expand("{wdir}/logs/{sample}_downloadsra.log", wdir=wdir, sample=samples["sra"])
     shell:
         """
-        bash workflow/scripts/download_sra.sh {output} {wdir}
+        mkdir --parents {wdir}
+        fastq-dump -v --gzip --outdir {wdir} {output}
         cp config/samples.tsv {wdir}/{genome}_samples.tsv
         """
 
