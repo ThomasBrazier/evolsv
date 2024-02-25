@@ -4,15 +4,15 @@ rule download_sra:
     and the genome from the NCBI genome assembly database
     """
     output:
-        expand("{wdir}/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        "{wdir}/fastq/{sample}.fastq.gz"
     conda:
         "../envs/download.yaml"
     log:
-        expand("{wdir}/logs/{sample}_downloadsra.log", wdir=wdir, sample=samples["sra"])
+        "{wdir}/logs/{sample}_downloadsra.log"
     shell:
         """
-        mkdir --parents {wdir}
-        fastq-dump -v --gzip --outdir {wdir} {output}
+        mkdir --parents {wdir}/fastq
+        fastq-dump -v --gzip --outdir {wdir}/fastq/ {wildcards.sample}
         cp config/samples.tsv {wdir}/{genome}_samples.tsv
         """
 
@@ -21,6 +21,8 @@ rule download_genome:
     """
     Download the genome from the NCBI genome assembly database
     """
+    input:
+        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/{genome}.fna",
         temporary("{wdir}/{genome}.zip"),
@@ -33,6 +35,10 @@ rule download_genome:
         "{wdir}/logs/{genome}_downloadgenome.log"
     shell:
         """
-        bash workflow/scripts/download_genome.sh {genome} {wdir}
+        datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,seq-report
+	unzip {wdir}/{genome}.zip -d {wdir}/
+	cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
+	cp {wdir}/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/{genome}_assembly_data_report.jsonl
+	cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/{genome}_config.yaml
         """

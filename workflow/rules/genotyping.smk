@@ -5,7 +5,7 @@ rule svjedigraph:
     input:
         merged = "{wdir}/{genome}_merged.vcf",
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/{genome}_merged_genotype.vcf",
         "{wdir}/{genome}_merged.gfa",
@@ -18,5 +18,5 @@ rule svjedigraph:
         "{wdir}/logs/{genome}_svjedigraph.log"
     shell:
         """
-        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.fastq} -p {wdir}/{genome}_merged -t {threads} --minsupport {config[minsupport]}
+        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {threads} --minsupport {config[minsupport]}
         """

@@ -23,6 +23,7 @@ wildcard_constraints:
     wdir = wdir,
     genome = genome
 
+include: "rules/common.smk"
 include: "rules/data_download.smk"
 include: "rules/data_qc.smk"
 include: "rules/mapping.smk"

@@ -3,10 +3,10 @@ rule mapping:
     Map reads to the reference genome with Minimap2
     """
     input:
-        fastq = expand("{wdir}/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
         fasta = "{wdir}/{genome}.fna",
-        html = expand("{wdir}/fastqc/{sample}.fastqc.html", wdir=wdir, sample=samples["sra"]),
-        qczip = expand("{wdir}/fastqc/{sample}.fastqc.zip", wdir=wdir, sample=samples["sra"]),
+        html = expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
+        qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/{genome}.sam"
