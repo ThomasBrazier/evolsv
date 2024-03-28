@@ -4,7 +4,7 @@ datadir: data/ # The directory where data and results must be stored
 
 # SAMPLE
 samples: config/samples.tsv # The sample files with sample name and SRA number of the long-read SRA archive
-genome: GCA_947034855.1 # GCA/GCF number of the reference genome
+genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
 # Mapping on the reference genome
 minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
@@ -32,3 +32,7 @@ max_size: -1
 
 # Genotyping with SVJedi-graph
 minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)
+
+
+# Filtering
+pass: true # Filtering SVs that fail filters or not (true keep only PASS)
