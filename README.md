@@ -15,7 +15,7 @@ The following dependencies must be installed before launching the pipeline:
 * snakemake
 
 ```
-conda create -c conda-forge -n snakemake snakemake mamba
+conda create -c conda-forge -n snakemake snakemake mamba pandas
 conda activate snakemake
 ```
 

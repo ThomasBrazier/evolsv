@@ -36,9 +36,9 @@ rule download_genome:
     shell:
         """
         datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,seq-report
-	unzip {wdir}/{genome}.zip -d {wdir}/
-	cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
-	cp {wdir}/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/{genome}_assembly_data_report.jsonl
-	cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
+	    unzip {wdir}/{genome}.zip -d {wdir}/
+	    cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
+	    cp {wdir}/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/{genome}_assembly_data_report.jsonl
+	    cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/{genome}_config.yaml
         """
