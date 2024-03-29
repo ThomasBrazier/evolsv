@@ -32,7 +32,3 @@ max_size: -1
 
 # Genotyping with SVJedi-graph
 minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)
-
-
-# Filtering
-pass: true # Filtering SVs that fail filters or not (true keep only PASS)

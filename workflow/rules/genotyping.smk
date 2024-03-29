@@ -20,3 +20,22 @@ rule svjedigraph:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {threads} --minsupport {config[minsupport]}
         """
+
+
+rule final_filtering:
+    """
+    Do a last filtering step on the merged genotyped dataset
+    """
+    input:
+        merged = "{wdir}/{genome}_merged_genotype.vcf"
+    output:
+        filtered = "{wdir}/{genome}_filtered.vcf"
+    threads: workflow.cores
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "{wdir}/logs/{genome}_svjedigraph.log"
+    shell:
+        """
+        vcftools --vcf {input.merged} --remove-filtered-all --recode --stdout > {output.filtered}
+        """

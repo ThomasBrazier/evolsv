@@ -256,7 +256,7 @@ fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) ==
 fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1", 1, 0)
 ```
 
-
+<!-- 
 ## Number of SV for each tool before/after merging (and per SV type)
 
 
@@ -269,7 +269,7 @@ Number of SV supported by at least two tools:
 Number of SV supported by at least three tools:
 
 
-Number of SV supported by the four tools:
+Number of SV supported by the four tools: -->
 
 
 ## Venn diagram
@@ -287,7 +287,7 @@ plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles"
 
 
 ```{r loadingFinal, echo = F, results=FALSE}
-geno = read.vcfR(paste0("../../", wdir, "/", genome, "_merged_genotype.vcf"))
+geno = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
 gt.geno = as.data.frame(geno@gt)
 fix.geno = as.data.frame(geno@fix)
 ```
@@ -499,15 +499,15 @@ ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
 ```
 
 
-Support for variant allele.
+<!-- Support for variant allele. -->
 
 ```{r suppportlandscape, fig.height = 24}
-ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
-  geom_point(alpha = 0.1) +
-  geom_smooth(method = "gam", se = T) +
-  xlab("Position (Mb)") + ylab("SV Quality score") +
-  facet_wrap(~ CHROM, scales = "free_y", ncol = 3) +
-  theme_bw()
+# ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
+#   geom_point(alpha = 0.1) +
+#   geom_smooth(method = "gam", se = T) +
+#   xlab("Position (Mb)") + ylab("SV Quality score") +
+#   facet_wrap(~ CHROM, scales = "free_y", ncol = 3) +
+#   theme_bw()
 
 ```
 
