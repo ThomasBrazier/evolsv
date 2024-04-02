@@ -47,7 +47,8 @@ rule sniffles:
     shell:
         """
         sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
-        --minsvlen {config[min_sv_size]} --qc-coverage {config[min_coverage]} --output-rnames
+        --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
+        --qc-coverage {config[min_coverage]} --output-rnames --allow-overwrite
         """
 
 

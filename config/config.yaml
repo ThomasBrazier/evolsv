@@ -15,6 +15,11 @@ minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hash
 min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 50 # minimum SV length to detect
 
+# Sniffles2 specific
+minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)
+minsvlen-screen-ratio: 0.9 # minsvlen-screen-ratio N Minimum length for SV candidates (as fraction of --minsvlen) (default: 0.9)
+mapq: 25 # mapq N Alignments with mapping quality lower than this value will be ignored (default: 25)
+
 # SVIM specific
 svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
 segment_gap_tolerance: 10 #  Maximum tolerated gap between adjacent alignment segments (default: 10)
@@ -26,6 +31,10 @@ diff_ratio_merging_INS: 0.9
 max_cluster_bias_DEL: 1000
 diff_ratio_merging_DEL: 0.5
 max_size: -1
+
+
+# DeBreak specific
+
 
 # Merging with Jasmine/IRIS
 
