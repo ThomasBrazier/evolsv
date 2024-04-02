@@ -3,6 +3,6 @@ channels:
  - conda-forge
  - bioconda
 dependencies:
- - sniffles=2.0
+ - sniffles=2.2
  - pip:
    - sniffles2-plot
