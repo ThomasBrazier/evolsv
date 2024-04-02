@@ -33,6 +33,17 @@ include: "rules/genotyping.smk"
 include: "rules/report.smk"
 
 
+
+module callability:
+    snakefile:
+        "modules/callability/Snakefile"
+    config:
+        config
+
+use rule * from callability as callability_*
+
+
+
 rule all:
     input:
         target = expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome)
