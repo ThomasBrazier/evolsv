@@ -14,7 +14,7 @@ minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hash
 # Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 50 # minimum SV length to detect
-max_sv_size: 100000 # MAX_SV_SIZE
+max_sv_size: 100000 # maximum SV length to detect
 
 # Sniffles2 specific
 minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)
@@ -39,9 +39,19 @@ diff_ratio_merging_INS: 0.9
 max_cluster_bias_DEL: 1000
 diff_ratio_merging_DEL: 0.5
 max_size: -1
+min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum length of SV signal to be extracted.[10]
+
 
 
 # DeBreak specific
+# If you specify coverage of dataset with --depth, DeBreak will calculate min_support according to the table.
+# min_support is the most important argument for SV filtering of DeBreak. It should be adjusted according to sequencing depth of input BAM. Without given min_support/depth information, DeBreak estimates the depth of input dataset to assign a resonable min_support.
+# --min_quality MIN_QUALITY  minimal mapping quality of reads
+# -m MIN_SUPPORT, --min_support MIN_SUPPORT minimal number of supporting reads for one event
+# --rescue_dup          rescue DUP from INS calls. minimap2,ref required
+# --rescue_large_ins    rescue large INS. wtdbg2,minimap2,ref required
+# --poa                 POA for accurate breakpoint. wtdbg2,minimap2,ref required.
+
 
 
 # Merging with Jasmine/IRIS

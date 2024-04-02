@@ -76,7 +76,8 @@ rule cutesv:
         mkdir -p {wdir}/cutesv
         cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
          --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
-         --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} {input.bam} {input.fasta} {output} {wdir}/cutesv/
+         --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} --min_siglength {config[min_siglength]} \
+         {input.bam} {input.fasta} {output} {wdir}/cutesv/
         """
 
 
