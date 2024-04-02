@@ -14,16 +14,24 @@ minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hash
 # Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 50 # minimum SV length to detect
+max_sv_size: 100000 # MAX_SV_SIZE
 
 # Sniffles2 specific
 minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)
 minsvlen-screen-ratio: 0.9 # minsvlen-screen-ratio N Minimum length for SV candidates (as fraction of --minsvlen) (default: 0.9)
 mapq: 25 # mapq N Alignments with mapping quality lower than this value will be ignored (default: 25)
+cluster-binsize: 100 # cluster-binsize N Initial screening bin size in bp (default: 100)
+
 
 # SVIM specific
-svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
+min_mapq: 20 # min_mapq MIN_MAPQ   Minimum mapping quality of reads to consider (default: 20). Reads with a lower mapping quality are ignored.
 segment_gap_tolerance: 10 #  Maximum tolerated gap between adjacent alignment segments (default: 10)
 segment_overlap_tolerance: 5 # Maximum tolerated overlap between adjacent alignment (default: 5)
+minimum_depth: 10 # minimum_depth MINIMUM_DEPTH Minimum total read depth for genotyping (default: 4). Variants covered by a total number of reads lower than this value are not assigned a genotype (./. in the output VCF file).
+# POST-PROCESSING FILTERING
+svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
+svim_min_read_support: 10 # Minimum read support of 10 (similar to Sniffles) or 2 (sensitive filtering)
+
 
 # CuteSV specific
 max_cluster_bias_INS: 1000

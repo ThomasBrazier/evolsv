@@ -18,10 +18,12 @@ rule svim:
         "{wdir}/logs/{genome}_svim.log"
     shell:
         """
-        svim alignment {wdir}/{genome}_svim {input.bam} {input.fasta} --insertion_sequences --read_names --min_sv_size {config[min_sv_size]} \
-        --minimum_depth {config[min_coverage]} --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
+        svim alignment {wdir}/{genome}_svim {input.bam} {input.fasta} --insertion_sequences --read_names \
+        --min_sv_size {config[min_sv_size]} --max_sv_size {config[max_sv_size]} \
+        --minimum_depth {config[minimum_depth]} --min_mapq {config[min_mapq]} \
+        --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
         # SVIM does not filter SV itself and outputs all variants
-        bcftools view -i "QUAL >= {config[svim_quality]}" {wdir}/{genome}_svim/variants.vcf > {output.vcf}
+        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/{genome}_svim/variants.vcf
         # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
@@ -48,7 +50,7 @@ rule sniffles:
         """
         sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
         --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
-        --qc-coverage {config[min_coverage]} --output-rnames --allow-overwrite
+        --cluster-binsize {conifg[cluster-binsize]} --qc-coverage {config[min_coverage]} --output-rnames
         """
 
 
