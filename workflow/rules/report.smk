@@ -11,7 +11,7 @@ rule samplot_subset:
     shell:
         """
         cat {input.final} | grep '^#' > {output.subset}
-        cat {input.final} | grep -v '^#' | shuf -n {config[n_igv]}  >> {output.subset}
+        cat {input.final} | grep -v '^#' | shuf -n {config[n_samplot]}  >> {output.subset}
         """
 
 rule samplot_plot:
@@ -52,7 +52,8 @@ rule finalreport:
         sniffles = "{wdir}/{genome}_sniffles_noBND.vcf",
         svim = "{wdir}/{genome}_svim_noBND.vcf",
         cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf"
+        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
+        mappability = "{wdir}/callability/{genome}_callable_mappable.bed"
     output:
         "{wdir}/{genome}_finalQC.html"
     conda:
@@ -60,4 +61,21 @@ rule finalreport:
     shell:
         """
         Rscript workflow/scripts/finalQC.R {wdir} {genome}
+        """
+
+
+rule gzvcf:
+    """
+    BGzip final VCF
+    """
+    input:
+        final = "{wdir}/{genome}_filtered.vcf",
+        html = "{wdir}/{genome}_finalQC.html"
+    output:
+        "{wdir}/{genome}_filtered.vcf.gz"
+    conda:
+        "../envs/samtools.yaml"
+    shell:
+        """
+        bgzip --keep --index --force --threads {threads} {input.vcf}
         """
