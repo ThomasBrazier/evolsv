@@ -22,12 +22,32 @@ rule svjedigraph:
         """
 
 
+rule filter_scaffolds:  
+    input: 
+        merged = "{wdir}/{genome}_merged_genotype.vcf"
+    output: 
+        filtered = temp("{wdir}/{genome}_merged_genotype_noscaffold.vcf")
+    conda:
+        "../envs/bcftools.yml"
+    params:
+        chr_ex = config["scaffolds_to_exclude"]
+    shell:
+        """
+        if [ -z "{params.chr_ex}" ]
+        then
+            cp {input.vcf} {output.vcf}
+        else
+            bcftools view -t ^{params.chr_ex} \
+            {input.vcf} -O u -o {output.vcf}
+        fi
+        """
+
 rule final_filtering:
     """
     Do a last filtering step on the merged genotyped dataset
     """
     input:
-        merged = "{wdir}/{genome}_merged_genotype.vcf"
+        merged_noscaffold = "{wdir}/{genome}_merged_genotype_noscaffold.vcf"
     output:
         filtered = "{wdir}/{genome}_filtered.vcf"
     threads: workflow.cores
@@ -37,5 +57,8 @@ rule final_filtering:
         "{wdir}/logs/{genome}_svjedigraph.log"
     shell:
         """
-        vcftools --vcf {input.merged} --remove-filtered-all --recode --stdout > {output.filtered}
+        vcftools --vcf {input.merged_noscaffold} --remove-filtered-all --recode --stdout > {output.filtered}
         """
+
+
+

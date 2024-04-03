@@ -72,7 +72,8 @@ rule gzvcf:
         final = "{wdir}/{genome}_filtered.vcf",
         html = "{wdir}/{genome}_finalQC.html"
     output:
-        "{wdir}/{genome}_filtered.vcf.gz"
+        "{wdir}/{genome}_filtered.vcf.gz",
+        "{wdir}/{genome}_filtered.vcf.gz.csi"
     conda:
         "../envs/samtools.yaml"
     shell:

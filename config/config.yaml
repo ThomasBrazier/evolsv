@@ -6,6 +6,10 @@ datadir: data/ # The directory where data and results must be stored
 samples: config/samples.tsv # The sample files with sample name and SRA number of the long-read SRA archive
 genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
+# Filter scaffolds
+scaffolds_to_exclude: "mtDNA,MT,X,Z,W,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
+
+
 # Mapping on the reference genome
 minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
 minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
