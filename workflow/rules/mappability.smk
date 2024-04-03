@@ -1,0 +1,115 @@
+rule mosdepth_summary:
+    input:
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai"
+    output:
+        dist = "{wdir}/callability/{genome}_mosdepth.global.dist.txt",
+        summary = "{wdir}/callability/{genome}_mosdepth.summary.txt",
+    conda:
+        "../envs/mosdepth.yaml"
+    log:
+        "{wdir}/logs/mosdepth/{genome}.txt"
+    benchmark:
+        "{wdir}/benchmarks/mosdepth/{genome}.txt"
+    params:
+        prefix = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/{genome}")
+    shell:
+        """
+        mosdepth --no-per-base -t {threads} {params.prefix} {input.bam}
+        """
+
+
+rule mosdepth_quantize:
+    input:
+        summary = "{wdir}/callability/{genome}_mosdepth.summary.txt",
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai"
+    output:
+        quantized = "{wdir}/callability/{genome}_quantized.bed.gz"
+    conda:
+        "../envs/mosdepth.yaml"
+    log:
+        "{wdir}/logs/mosdepth_quantize/{genome}.txt"
+    benchmark:
+        "{wdir}/benchmarks/mosdepth_quantize/{genome}.txt"
+    params:
+        prefix = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/{genome}"),
+        lower = round(config["quantize_cov_threshold_lower"]),
+        upper = round(config["quantize_cov_threshold_upper"]),
+        sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
+        upper_threshold = lambda wildcards, input: round(config["quantize_cov_threshold_upper"] * get_mean_cov(input.summary))
+    shell:
+        """
+        export MOSDEPTH_Q0=NO_COVERAGE
+        export MOSDEPTH_Q1=LOW_COVERAGE
+        export MOSDEPTH_Q2=CALLABLE
+        export MOSDEPTH_Q3=HIGH_COVERAGE
+        mosdepth --no-per-base -t {threads} --quantize 0:1:{params.lower}:{params.upper_threshold}: {params.prefix} {input.bam}
+        """
+
+
+rule callable_bed:
+    input:
+        quantized = "{wdir}/callability/{genome}_quantized.bed.gz"
+    output:
+        callable_bed = "{wdir}/callability/{genome}_callable.bed"
+    conda:
+        "../envs/mosdepth.yaml"
+    shell:
+        "zcat {input.quantized} | grep CALLABLE | bedtools sort | bedtools merge > {output.callable_bed} || true"
+
+
+rule genmap:
+    input:
+        ref = "{wdir}/{genome}.fna"
+    output:
+        bg = temp("{wdir}/mappability/{genome}_genmap.bedgraph"),
+        sorted_bg = "{wdir}/mappability/{genome}_sorted_mappability.bg"
+    params:
+        indir = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/genmap_index"),
+        outdir = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/genmap"),
+        kmer = config['mappability_k']
+    log:
+        "{wdir}/logs/genmap/{genome}.txt"
+    benchmark:
+        "{wdir}/benchmarks/genmap/{genome}.txt"
+    conda:
+        "../envs/genmap.yaml"
+    shell:
+        # snakemake creates the output directory before the shell command, but genmap doesnt like this. so we remove the directory first.
+        """
+        rm -rf {params.indir} && genmap index -F {input.ref} -I {params.indir} &> {log}
+        genmap map -K {params.kmer} -E 0 -I {params.indir} -O {params.outdir} -bg -T {threads} -v &> {log}
+        sort -k1,1 -k2,2n {output.bg} > {output.sorted_bg} 2>> {log}
+        """
+
+rule mappability_bed:
+    input:
+        mappable = "{wdir}/mappability/{genome}_sorted_mappability.bg"
+    output:
+        callable_sites = "{wdir}/mappability/{genome}_mappable.bed",
+        tmp_map = temp("{wdir}/mappability/{genome}_temp_map.bed")
+    conda:
+        "../envs/genmap.yaml"
+    benchmark:
+        "{wdir}/benchmarks/genmap/{genome}.txt"
+    params:
+        merge = config['mappability_merge'],
+        mappability = config['mappability_min']
+    shell:
+        """
+        awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map}
+        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}
+        """
+
+
+rule add_mappability:
+    input:
+        callable_bed = "{wdir}/callability/{genome}_callable.bed",
+        mappable_bed = "{wdir}/mappability/{genome}_mappable.bed"
+    output:
+        callable_mappable = "{wdir}/callability/{genome}_callable_mappable.bed"
+    conda:
+        "../envs/mosdepth.yaml"
+    shell:
+        "bedtools intersect -a {input.callable_bed} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}"
