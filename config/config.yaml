@@ -57,5 +57,8 @@ min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum len
 # Merging with Jasmine/IRIS
 
 
+# IGC Diagnostic plot
+n_igv: 1000 # The number of SVs randomly sampled to plot with IGV
+
 # Genotyping with SVJedi-graph
 minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)

@@ -1,3 +1,47 @@
+rule samplot_subset:
+    """
+    Randomly subset SVs for diagnostic plot
+    """
+    input:
+        final = "{wdir}/{genome}_filtered.vcf"
+    output:
+        subset = "{wdir}/samplot/{genome}_subset.vcf"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        cat {input.final} | grep '^#' > {output.subset}
+        cat {input.final} | grep -v '^#' | shuf -n {config[n_igv]}  >> {output.subset}
+        """
+
+rule samplot_plot:
+    """
+    Plot a random subset of SVs
+    For diagnostic purpose
+    """
+    input:
+        subsetvcf = "{wdir}/samplot/{genome}_subset.vcf",
+        fasta = "{wdir}/{genome}.fna",
+        bam = "{wdir}/{genome}_sorted.bam"
+    output:
+        command_file = "{wdir}/samplot/{genome}_commands.sh"
+    conda:
+        "../envs/samplot.yaml"
+    params:
+        outdir = "{wdir}/samplot/"
+    shell:
+        """
+        samplot vcf \
+            --vcf {input.subsetvcf} \
+            --plot_all \
+            --threads {threads} \
+            -d {params.outdir} \
+            -O jpg \
+            -b {input.bam} \
+            --command_file {output.command_file}
+        """
+
+
 rule finalreport:
     """
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
