@@ -38,4 +38,4 @@ include: "rules/mappability.smk"
 
 rule all:
     input:
-        target = expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome)
+        target = expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome)

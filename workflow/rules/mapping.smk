@@ -9,7 +9,7 @@ rule mapping:
         qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
     output:
-        "{wdir}/{genome}.sam"
+        temp("{wdir}/{genome}.sam")
     threads: workflow.cores
     conda:
         "../envs/minimap2.yaml"
@@ -28,7 +28,7 @@ rule samtools_view:
     input:
         "{wdir}/{genome}.sam"
     output:
-        "{wdir}/{genome}.bam"
+        temp("{wdir}/{genome}.bam")
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -44,7 +44,7 @@ rule samtools_sort:
     input:
         "{wdir}/{genome}.bam"
     output:
-        "{wdir}/{genome}_sorted.bam"
+        temp("{wdir}/{genome}_sorted.bam")
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -60,7 +60,7 @@ rule samtools_index:
     input:
         "{wdir}/{genome}_sorted.bam"
     output:
-        "{wdir}/{genome}_sorted.bam.bai"
+        temp("{wdir}/{genome}_sorted.bam.bai")
     conda:
         "../envs/samtools.yaml"
     shell:

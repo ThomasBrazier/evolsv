@@ -456,12 +456,12 @@ Lower phred-scale likelihood for heterozygote genotype is better.
 
 
 ```{r PL, echo = T}
-df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/1", "1/0"))),
-                       rep("0/1", sum(gt.geno$GT %in% c("0/1", "1/0"))),
-                       rep("1/0", sum(gt.geno$GT %in% c("0/1", "1/0")))),
-                PL = c(gt.geno$PL_HOMREF[which(gt.geno$GT %in% c("0/1", "1/0"))],
-                       gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1", "1/0"))],
-                       gt.geno$PL_HOMALT[which(gt.geno$GT %in% c("0/1", "1/0"))]))
+df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/0"))),
+                       rep("0/1", sum(gt.geno$GT %in% c("0/1"))),
+                       rep("1/1", sum(gt.geno$GT %in% c("1/1")))),
+                PL = c(gt.geno$PL_HOMREF[which(gt.geno$GT %in% c("0/0"))],
+                       gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1"))],
+                       gt.geno$PL_HOMALT[which(gt.geno$GT %in% c("1/1"))]))
 
 p1 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
   geom_boxplot() +
@@ -499,16 +499,15 @@ ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
 ```
 
 
-<!-- Support for variant allele. -->
+Support for variant allele.
 
 ```{r suppportlandscape, fig.height = 24}
-# ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
-#   geom_point(alpha = 0.1) +
-#   geom_smooth(method = "gam", se = T) +
-#   xlab("Position (Mb)") + ylab("SV Quality score") +
-#   facet_wrap(~ CHROM, scales = "free_y", ncol = 3) +
-#   theme_bw()
-
+ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "gam", se = T) +
+  xlab("Position (Mb)") + ylab("SV Quality score") +
+  facet_wrap(~ CHROM, scales = "free_y", ncol = 3) +
+  theme_bw()
 ```
 
 

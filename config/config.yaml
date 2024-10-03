@@ -6,9 +6,7 @@ datadir: data/ # The directory where data and results must be stored
 samples: config/samples.tsv # The sample files with sample name and SRA number of the long-read SRA archive
 genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
-# Filter scaffolds
-scaffolds_to_exclude: "mtDNA,MT,X,Z,W,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
-
+scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 
 # Mapping on the reference genome
 minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
@@ -62,7 +60,7 @@ min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum len
 
 
 # Samplot Diagnostic plot
-n_samplot: 1000 # The number of SVs randomly sampled to plot with Samplot
+n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot
 
 # Genotyping with SVJedi-graph
 minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)

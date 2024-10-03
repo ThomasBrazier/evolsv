@@ -7,9 +7,9 @@ rule svjedigraph:
         fasta = "{wdir}/{genome}.fna",
         fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
-        "{wdir}/{genome}_merged_genotype.vcf",
-        "{wdir}/{genome}_merged.gfa",
-        "{wdir}/{genome}_merged.gaf",
+        temp("{wdir}/{genome}_merged_genotype.vcf"),
+        temp("{wdir}/{genome}_merged.gfa"),
+        temp("{wdir}/{genome}_merged.gaf"),
         "{wdir}/{genome}_merged_informative_aln.json"
     threads: workflow.cores
     conda:
@@ -22,34 +22,41 @@ rule svjedigraph:
         """
 
 
-rule filter_scaffolds:  
+rule autosomes_sexchromosomes:
+    """
+    Remove MT and Un chromosomes
+    Get the names of sex chromosomes and autosomes to copy in separate vcf files
+    """
     input: 
-        merged = "{wdir}/{genome}_merged_genotype.vcf"
+        seq = "{wdir}/{genome}_sequence_report.jsonl"
     output: 
-        filtered = temp("{wdir}/{genome}_merged_genotype_noscaffold.vcf")
+        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
+        autosomes = "{wdir}/{genome}.autosomes",
+        chromosome_names = "{wdir}/{genome}.chromosomes"
     conda:
-        "../envs/bcftools.yml"
+        "../envs/Renv.yaml"
     params:
-        chr_ex = config["scaffolds_to_exclude"]
-    shell:
-        """
-        if [ -z "{params.chr_ex}" ]
-        then
-            cp {input.vcf} {output.vcf}
-        else
-            bcftools view -t ^{params.chr_ex} \
-            {input.vcf} -O u -o {output.vcf}
-        fi
-        """
+        seq = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}_sequence_report.jsonl"),
+        sexchromosomes = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.sexchromosomes"),
+        autosomes = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.autosomes"),
+        scaffolds_to_exclude = config["scaffolds_to_exclude"],
+        chromosome_names = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.chromosomes")
+    script:
+        "../scripts/autosomes_sexchromosomes.R"
+
 
 rule final_filtering:
     """
     Do a last filtering step on the merged genotyped dataset
+    Separate autosomes and sex chromosomes
     """
     input:
-        merged_noscaffold = "{wdir}/{genome}_merged_genotype_noscaffold.vcf"
+        vcf = "{wdir}/{genome}_merged_genotype.vcf",
+        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
+        autosomes = "{wdir}/{genome}.autosomes"
     output:
-        filtered = "{wdir}/{genome}_filtered.vcf"
+        filtered = temp("{wdir}/{genome}_filtered.vcf"),
+        filtered_sexchr = temp("{wdir}/{genome}_filtered_sexchr.vcf")
     threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"
@@ -57,7 +64,8 @@ rule final_filtering:
         "{wdir}/logs/{genome}_svjedigraph.log"
     shell:
         """
-        vcftools --vcf {input.merged_noscaffold} --remove-filtered-all --recode --stdout > {output.filtered}
+        bcftools view -T {input.autosomes} -l 0 -o {output.filtered} {input.vcf}
+        bcftools view -T {input.sexchromosomes} -l 0 -o {output.filtered_sexchr} {input.vcf}
         """
 
 

@@ -50,7 +50,7 @@ rule sniffles:
         """
         sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
         --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
-        --cluster-binsize {conifg[cluster-binsize]} --qc-coverage {config[min_coverage]} --output-rnames
+        --cluster-binsize {config[cluster-binsize]} --qc-coverage {config[min_coverage]} --output-rnames
         """
 
 

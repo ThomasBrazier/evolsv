@@ -64,19 +64,27 @@ rule finalreport:
         """
 
 
-rule gzvcf:
-    """
-    BGzip final VCF
-    """
-    input:
-        final = "{wdir}/{genome}_filtered.vcf",
-        html = "{wdir}/{genome}_finalQC.html"
-    output:
-        "{wdir}/{genome}_filtered.vcf.gz",
-        "{wdir}/{genome}_filtered.vcf.gz.csi"
-    conda:
-        "../envs/samtools.yaml"
-    shell:
-        """
-        bgzip --keep --index --force --threads {threads} {input.vcf}
-        """
+# rule gzvcf:
+#     """
+#     BGzip final VCF
+#     """
+#     input:
+#         vcf = "{wdir}/{genome}_filtered.vcf",
+#         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf",
+#         html = "{wdir}/{genome}_finalQC.html"
+#     output:
+#         vcf = "{wdir}/{genome}_filtered.vcf.gz",
+#         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf.gz",
+#         vcf_idx = "{wdir}/{genome}_filtered.vcf.gz.csi",
+#         vcf_sexchr_idx = "{wdir}/{genome}_filtered_sexchr.vcf.gz.csi"
+#     conda:
+#         "../envs/samtools.yaml"
+#     shell:
+#         """
+#         bcftools sort {input.vcf} -O v | bgzip > {output.vcf}
+#         bcftools sort {input.vcf_sexchr} -O v | bgzip > {output.vcf_sexchr}
+#         # bgzip --keep --force --threads {threads} {input.vcf}
+#         # bgzip --keep --force --threads {threads} {input.vcf_sexchr}
+#         tabix --csi {output.vcf}
+#         tabix --csi {output.vcf_sexchr}
+#         """

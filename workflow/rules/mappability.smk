@@ -3,8 +3,8 @@ rule mosdepth_summary:
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai"
     output:
-        dist = "{wdir}/callability/{genome}_mosdepth.global.dist.txt",
-        summary = "{wdir}/callability/{genome}_mosdepth.summary.txt",
+        dist = "{wdir}/callability/{genome}.mosdepth.global.dist.txt",
+        summary = "{wdir}/callability/{genome}.mosdepth.summary.txt",
     conda:
         "../envs/mosdepth.yaml"
     log:
@@ -21,11 +21,12 @@ rule mosdepth_summary:
 
 rule mosdepth_quantize:
     input:
-        summary = "{wdir}/callability/{genome}_mosdepth.summary.txt",
+        summary = "{wdir}/callability/{genome}.mosdepth.summary.txt",
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai"
     output:
-        quantized = "{wdir}/callability/{genome}_quantized.bed.gz"
+        quantized = "{wdir}/callability/{genome}.quantized.bed.gz",
+        quantized_idx = "{wdir}/callability/{genome}.quantized.bed.gz.csi"
     conda:
         "../envs/mosdepth.yaml"
     log:
@@ -50,7 +51,7 @@ rule mosdepth_quantize:
 
 rule callable_bed:
     input:
-        quantized = "{wdir}/callability/{genome}_quantized.bed.gz"
+        quantized = "{wdir}/callability/{genome}.quantized.bed.gz"
     output:
         callable_bed = "{wdir}/callability/{genome}_callable.bed"
     conda:
@@ -63,11 +64,11 @@ rule genmap:
     input:
         ref = "{wdir}/{genome}.fna"
     output:
-        bg = temp("{wdir}/mappability/{genome}_genmap.bedgraph"),
-        sorted_bg = "{wdir}/mappability/{genome}_sorted_mappability.bg"
+        bg = temp("{wdir}/genmap/{genome}.genmap.bedgraph"),
+        sorted_bg = "{wdir}/genmap/{genome}_sorted_mappability.bg"
     params:
-        indir = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/genmap_index"),
-        outdir = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/genmap"),
+        indir = os.path.join(workflow.default_remote_prefix, "{wdir}/genmap_index"),
+        outdir = os.path.join(workflow.default_remote_prefix, "{wdir}/genmap"),
         kmer = config['mappability_k']
     log:
         "{wdir}/logs/genmap/{genome}.txt"
@@ -83,9 +84,10 @@ rule genmap:
         sort -k1,1 -k2,2n {output.bg} > {output.sorted_bg} 2>> {log}
         """
 
+
 rule mappability_bed:
     input:
-        mappable = "{wdir}/mappability/{genome}_sorted_mappability.bg"
+        mappable = "{wdir}/genmap/{genome}_sorted_mappability.bg"
     output:
         callable_sites = "{wdir}/mappability/{genome}_mappable.bed",
         tmp_map = temp("{wdir}/mappability/{genome}_temp_map.bed")
