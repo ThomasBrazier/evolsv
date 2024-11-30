@@ -8,4 +8,4 @@
 
 conda activate snakemake
 
-snakemake -s workflow/Snakefile --configfile config/config.yaml --use-conda --cores 8
+snakemake -s workflow/Snakefile --configfile config/config.yaml --use-conda --profile ./profiles/slurm --cores 8

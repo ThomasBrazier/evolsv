@@ -1,4 +1,4 @@
-rule mapping:
+rule minimap2:
     """
     Map reads to the reference genome with Minimap2
     """
@@ -10,14 +10,13 @@ rule mapping:
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
     output:
         temp("{wdir}/{genome}.sam")
-    threads: workflow.cores
     conda:
         "../envs/minimap2.yaml"
     log:
         "{wdir}/logs/{genome}_mapping.log"
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD -2 --seed {config[minimap_seed]} --eqx -t {threads} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        minimap2 -ax {config[minimap_ax]} --MD -2 --seed {config[minimap_seed]} --eqx -t {resources.cpus_per_task} --sam-hit-only {input.fasta} {input.fastq} > {output}
         """
 
 

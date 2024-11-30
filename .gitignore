@@ -7,7 +7,7 @@ data/
 
 .R*
 *.out
-.snakemake/
+.snakemake
 *.txt
 *.tsv
 

@@ -1,0 +1,206 @@
+executor: slurm
+use-conda: True
+jobs: 100 # Have up to N jobs submitted at any given time
+latency-wait: 100 # Wait N seconds for output files due to latency
+retries: 4 # Retry jobs N times.
+
+# These resources will be applied to all rules. Can be overriden on a per-rule basis below.
+default-resources:
+  mem_mb: attempt * 20000
+  mem_mb_reduced: (attempt * 20000) * 0.9 # Reduced mem allocated to prevent OOM errors
+  cpus_per_task: 1
+  slurm_partition: "long"
+  slurm_account: "landrec" # Same as sbatch -A. Not all clusters use this.
+  runtime: 2880 # In minutes
+
+
+# Control number of threads each rule will use.
+set-threads:
+  # Reference Genome Processing. Does NOT use more than 1 thread.
+  download_sra: 1
+  download_genome: 1
+  # Fastq Processing. Can use more than 1 thread.
+  fastqc: 8 
+  nanoplot: 1
+  # Alignment. Can use more than 1 thread, except merge_bams.
+  minimap2: 16
+  samtools_view: 1
+  samtools_sort: 1 # Does NOT use more than 1 thread.
+  samtools_index: 1
+  samtools_stats: 1
+  # Ensemble calling
+  svim: 8
+  sniffles: 8
+  cutesv: 8
+  debreak: 8
+  removeBND: 1
+  sniffles2plot: 1
+  # Merging
+  vcf_list: 1
+  bam_list: 1
+  jasmine: 8
+  # Genotyping
+  svjedigraph: 8
+  autosomes_sexchromosomes: 1
+  final_filtering: 1
+  # Report
+  samplot_subset: 1
+  samplot_plot: 1
+  final_report: 1
+  # Mappability
+  mosdepth_summary: 1
+  mosdepth_quantize: 1
+  callable_bed: 1
+  genmap: 1
+  mappability_bed: 1
+  add_mappability: 1
+
+
+# Control other resources used by each rule.
+set-resources:
+#   download_sra:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   download_genome:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   fastqc:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   nanoplot:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  minimap2:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 16
+#   samtools_view:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   samtools_sort:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   samtools_index:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   samtools_stats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   svim:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  sniffles:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 8
+#   cutesv:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  debreak:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 8
+#   removeBND:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sniffles2plot:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   vcf_list:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   bam_list:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  jasmine:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 16
+  svjedigraph:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 8
+#   autosomes_sexchromosomes:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   final_filtering:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   samplot_subset:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   samplot_plot:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   final_report:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mosdepth_summary:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mosdepth_quantize:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   callable_bed:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mappability_bed:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   add_mappability:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+

@@ -12,7 +12,7 @@ This pipeline performs ensemble calling of Structural Variants (SV) from long-re
 
 The following dependencies must be installed before launching the pipeline:
 * conda
-* snakemake
+* snakemake >= 8.9.0
 
 ```
 conda create -c conda-forge -n snakemake snakemake mamba pandas
@@ -31,18 +31,32 @@ cd evolsv
 You can launch the pipeline in two ways: either by running the *launcher.sh* script (where you can configure your setting if you are using a SLURM job scheduler), or simply by executing the following command in the terminal:
 
 ```
-snakemake --snakefile workflow/Snakefile --config config/config.yaml --use-conda
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml --profile ./profiles/slurm --use-conda --cores 1
 ```
+
+Alternatively you can build Conda env without running the pipeline with:
+
+```
+snakemake --snakefile ./workflow/Snakefile --cores 1 --use-conda --conda-frontend conda --conda-create-envs-only
+```
+
+An example dataset with a single sample of the `Vanessa cardui` species can be run with the command:
+
+```
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config_test.yaml --profile ./profiles/slurm --use-conda --cores 1
+```
+
 
 ## Data directory setup
 
-Project data can be stored in the current `EvolSV` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
+Project data can be stored in the current `evolsv` git directory. The place where is the *data/* directory must be specified in the parameter `workingdir` in *config.yaml*. The default is `workingdir: ''` which assumes *data/* to be in te current *evolsv/* directory (see below).
 
 ```
 .
 ├── evolsv/
 │   ├── config/
 │   │   ├── config.yaml
+├   |   |── samples.tsv
 │   ├── workflow/
 │   ├── data/
 ```
@@ -50,14 +64,10 @@ Project data can be stored in the current `EvolSV` git directory. The place wher
 
 ### Configuration file
 
-A YAML configuration file named *config/config.yaml* is used to specify the settings of the different filtering and tools performed during the analysis. The config file is saved at the beginning of the run for reproducibility purposes.
+A YAML configuration file named *config/config.yaml* is used to specify the settings of the different filtering and tools performed during the analysis. The config file is saved in the corresponding output directory at the beginning of the run for reproducibility purposes.
 
+Additionnally, samples must be specified in the `samples.tsv` file. It is a three columns files with `sample_name`, `sra` accession and `genome` accession. Currently, the pipeline accepts multiple samples but only a single genome accession.
 
-### Core configuration
-
-The following options in *config/config.yaml* must be set before running EvolSV:
-* sra, the ERR accession from SRA database
-* genome, the GCA accession from NCBI Assembly database
 
 
 ## Output file

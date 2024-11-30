@@ -12,7 +12,7 @@ rule mosdepth_summary:
     benchmark:
         "{wdir}/benchmarks/mosdepth/{genome}.txt"
     params:
-        prefix = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/{genome}")
+        prefix = "{wdir}/callability/{genome}"
     shell:
         """
         mosdepth --no-per-base -t {threads} {params.prefix} {input.bam}
@@ -34,7 +34,7 @@ rule mosdepth_quantize:
     benchmark:
         "{wdir}/benchmarks/mosdepth_quantize/{genome}.txt"
     params:
-        prefix = os.path.join(workflow.default_remote_prefix, "{wdir}/callability/{genome}"),
+        prefix = "{wdir}/callability/{genome}",
         lower = round(config["quantize_cov_threshold_lower"]),
         upper = round(config["quantize_cov_threshold_upper"]),
         sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
@@ -67,8 +67,8 @@ rule genmap:
         bg = temp("{wdir}/genmap/{genome}.genmap.bedgraph"),
         sorted_bg = "{wdir}/genmap/{genome}_sorted_mappability.bg"
     params:
-        indir = os.path.join(workflow.default_remote_prefix, "{wdir}/genmap_index"),
-        outdir = os.path.join(workflow.default_remote_prefix, "{wdir}/genmap"),
+        indir = "{wdir}/genmap_index",
+        outdir = "{wdir}/genmap",
         kmer = config['mappability_k']
     log:
         "{wdir}/logs/genmap/{genome}.txt"

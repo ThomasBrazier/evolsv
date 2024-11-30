@@ -7,18 +7,17 @@ rule svjedigraph:
         fasta = "{wdir}/{genome}.fna",
         fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
-        temp("{wdir}/{genome}_merged_genotype.vcf"),
-        temp("{wdir}/{genome}_merged.gfa"),
-        temp("{wdir}/{genome}_merged.gaf"),
+        "{wdir}/{genome}_merged_genotype.vcf",
+        "{wdir}/{genome}_merged.gfa",
+        "{wdir}/{genome}_merged.gaf",
         "{wdir}/{genome}_merged_informative_aln.json"
-    threads: workflow.cores
     conda:
         "../envs/svjedi-graph.yaml"
     log:
         "{wdir}/logs/{genome}_svjedigraph.log"
     shell:
         """
-        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {threads} --minsupport {config[minsupport]}
+        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {resources.cpus_per_task} --minsupport {config[minsupport]}
         """
 
 
@@ -36,11 +35,11 @@ rule autosomes_sexchromosomes:
     conda:
         "../envs/Renv.yaml"
     params:
-        seq = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}_sequence_report.jsonl"),
-        sexchromosomes = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.sexchromosomes"),
-        autosomes = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.autosomes"),
+        seq = "{wdir}/{genome}_sequence_report.jsonl",
+        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
+        autosomes = "{wdir}/{genome}.autosomes",
         scaffolds_to_exclude = config["scaffolds_to_exclude"],
-        chromosome_names = os.path.join(workflow.default_remote_prefix, "{wdir}/{genome}.chromosomes")
+        chromosome_names = "{wdir}/{genome}.chromosomes"
     script:
         "../scripts/autosomes_sexchromosomes.R"
 
@@ -55,8 +54,8 @@ rule final_filtering:
         sexchromosomes = "{wdir}/{genome}.sexchromosomes",
         autosomes = "{wdir}/{genome}.autosomes"
     output:
-        filtered = temp("{wdir}/{genome}_filtered.vcf"),
-        filtered_sexchr = temp("{wdir}/{genome}_filtered_sexchr.vcf")
+        filtered = "{wdir}/{genome}_filtered.vcf",
+        filtered_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf"   
     threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"

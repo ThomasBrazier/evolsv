@@ -11,7 +11,8 @@ rule svim:
     output:
         temporary("{wdir}/{genome}_svim/variants.vcf"),
         vcf = "{wdir}/{genome}_svim.vcf"
-    threads: workflow.cores
+    resources:
+        tmpdir = get_big_temp
     conda:
         "../envs/svim.yaml"
     log:
@@ -41,14 +42,15 @@ rule sniffles:
         fasta = "{wdir}/{genome}.fna"
     output:
         "{wdir}/{genome}_sniffles.vcf"
-    threads: workflow.cores
+    resources:
+        tmpdir = get_big_temp
     conda:
         "../envs/sniffles.yaml"
     log:
         "{wdir}/logs/{genome}_sniffles.log"
     shell:
         """
-        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {threads} --allow-overwrite \
+        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {resources.cpus_per_task} --allow-overwrite \
         --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
         --cluster-binsize {config[cluster-binsize]} --qc-coverage {config[min_coverage]} --output-rnames
         """
@@ -66,7 +68,8 @@ rule cutesv:
         fasta = "{wdir}/{genome}.fna"
     output:
         "{wdir}/{genome}_cutesv.vcf"
-    threads: workflow.cores
+    resources:
+        tmpdir = get_big_temp
     conda:
         "../envs/cutesv.yaml"
     log:
@@ -94,16 +97,17 @@ rule debreak:
         fasta = "{wdir}/{genome}.fna"
     output:
         "{wdir}/{genome}_debreak.vcf"
-    threads: workflow.cores
     conda:
         "../envs/debreak.yaml"
+    # resources:
+    #     tmpdir = get_big_temp
     log:
         "{wdir}/logs/{genome}_debreak.log"
     shell:
         """
-        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {threads} \
+        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {resources.cpus_per_task} \
         --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
-        cp {wdir}/debreak/debreak.vcf {wdir}/{genome}_debreak.vcf
+        mv {wdir}/debreak/debreak.vcf {wdir}/{genome}_debreak.vcf
         """
 
 

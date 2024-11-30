@@ -8,7 +8,7 @@ rule download_sra:
     conda:
         "../envs/download.yaml"
     log:
-        "{wdir}/logs/{sample}_downloadsra.log"
+        "{wdir}/logs/{sample}_download_sra.log"
     shell:
         """
         mkdir --parents {wdir}/fastq
@@ -26,6 +26,7 @@ rule download_genome:
     output:
         "{wdir}/{genome}.fna",
         temporary("{wdir}/{genome}.zip"),
+        "{wdir}/{genome}.gff",
         "{wdir}/{genome}_config.yaml",
         "{wdir}/{genome}_assembly_data_report.jsonl",
         "{wdir}/{genome}_sequence_report.jsonl"
@@ -35,9 +36,10 @@ rule download_genome:
         "{wdir}/logs/{genome}_downloadgenome.log"
     shell:
         """
-        datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,seq-report
+        datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,gff3,seq-report
 	    unzip {wdir}/{genome}.zip -d {wdir}/
 	    cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
+        cp {wdir}/ncbi_dataset/data/{genome}/genomic.gff {wdir}/{genome}.gff
 	    cp {wdir}/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/{genome}_assembly_data_report.jsonl
 	    cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/{genome}_config.yaml

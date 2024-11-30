@@ -4,5 +4,6 @@ channels:
  - bioconda
 dependencies:
  - sniffles=2.2
+ - pip
  - pip:
    - sniffles2-plot
