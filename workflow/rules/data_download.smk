@@ -26,7 +26,7 @@ rule download_genome:
     output:
         "{wdir}/{genome}.fna",
         temporary("{wdir}/{genome}.zip"),
-        "{wdir}/{genome}.gff",
+        # "{wdir}/{genome}.gff",
         "{wdir}/{genome}_config.yaml",
         "{wdir}/{genome}_assembly_data_report.jsonl",
         "{wdir}/{genome}_sequence_report.jsonl"
@@ -39,7 +39,11 @@ rule download_genome:
         datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,gff3,seq-report
 	    unzip {wdir}/{genome}.zip -d {wdir}/
 	    cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
+        if test -f {wdir}/ncbi_dataset/data/{genome}/genomic.gff
+        then
+        echo "GFF annotation exists."
         cp {wdir}/ncbi_dataset/data/{genome}/genomic.gff {wdir}/{genome}.gff
+        fi
 	    cp {wdir}/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/{genome}_assembly_data_report.jsonl
 	    cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/{genome}_config.yaml

@@ -94,8 +94,7 @@ rule samplot_plot:
         subset_INS = "{wdir}/samplot/{genome}_samplot_INS.vcf",
         subset_DEL = "{wdir}/samplot/{genome}_samplot_DEL.vcf",
         fasta = "{wdir}/{genome}.fna",
-        bam = "{wdir}/{genome}_sorted.bam",
-        gff3 = "{wdir}/{genome}.gff"
+        bam = "{wdir}/{genome}_sorted.bam"
     output:
         command_file_DUP = "{wdir}/samplot/{genome}_commands_DUP.sh",command_file_INV = "{wdir}/samplot/{genome}_commands_INV.sh",
         command_file_INS = "{wdir}/samplot/{genome}_commands_INS.sh",
@@ -113,7 +112,6 @@ rule samplot_plot:
             -d {params.outdir} \
             -O jpg \
             -b {input.bam} \
-            --gff3 {gff3} \
             --command_file {output.command_file_DUP}
         samplot vcf \
             --vcf {input.subset_INV} \
@@ -122,7 +120,6 @@ rule samplot_plot:
             -d {params.outdir} \
             -O jpg \
             -b {input.bam} \
-            --gff3 {gff3} \
             --command_file {output.command_file_INV}
         samplot vcf \
             --vcf {input.subset_INS} \
@@ -131,7 +128,6 @@ rule samplot_plot:
             -d {params.outdir} \
             -O jpg \
             -b {input.bam} \
-            --gff3 {gff3} \
             --command_file {output.command_file_INS}
         samplot vcf \
             --vcf {input.subset_DEL} \
@@ -140,9 +136,8 @@ rule samplot_plot:
             -d {params.outdir} \
             -O jpg \
             -b {input.bam} \
-            --gff3 {gff3} \
             --command_file {output.command_file_DEL}
-            """
+        """
 
 
 rule final_report:
