@@ -36,10 +36,11 @@ rule sniffles:
     SV calling with Sniffles
     """
     input:
-        svim = "{wdir}/{genome}_svim.vcf",
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        stats = "{wdir}/mapping/{genome}_mapping.stats",
+        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
     output:
         "{wdir}/{genome}_sniffles.vcf"
     resources:
@@ -61,11 +62,11 @@ rule cutesv:
     SV calling with CuteSV
     """
     input:
-        sniffles = "{wdir}/{genome}_sniffles.vcf",
-        svim = "{wdir}/{genome}_svim.vcf",
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        stats = "{wdir}/mapping/{genome}_mapping.stats",
+        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
     output:
         "{wdir}/{genome}_cutesv.vcf"
     resources:
@@ -89,12 +90,11 @@ rule debreak:
     SV calling with DeBreak
     """
     input:
-        sniffles = "{wdir}/{genome}_sniffles.vcf",
-        svim = "{wdir}/{genome}_svim.vcf",
-        cutesv = "{wdir}/{genome}_cutesv.vcf",
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        stats = "{wdir}/mapping/{genome}_mapping.stats",
+        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
     output:
         "{wdir}/{genome}_debreak.vcf"
     conda:
@@ -160,3 +160,85 @@ rule sniffles2plot:
         python3 -m sniffles2_plot -i {input.svim} -o {wdir}/{genome}_svim_QC/
         python3 -m sniffles2_plot -i {input.cutesv} -o {wdir}/{genome}_cutesv_QC/
         """
+
+
+rule vapor_svim:
+    """
+    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    """
+    input:
+        vcf = "{wdir}/{genome}_svim_noBND.vcf",
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai",
+        fasta = "{wdir}/{genome}.fna"
+    output:
+        "{wdir}/vapor/{genome}_svim_noBND.vcf"
+    conda:
+        "../envs/vapor.yaml"
+    log:
+        "{wdir}/logs/{genome}_vapor_svim.log"
+    shell:
+        """
+        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        """
+
+rule vapor_cutesv:
+    """
+    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    """
+    input:
+        vcf = "{wdir}/{genome}_cutesv_noBND.vcf",
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai",
+        fasta = "{wdir}/{genome}.fna"
+    output:
+        "{wdir}/vapor/{genome}_cutesv_noBND.vcf"
+    conda:
+        "../envs/vapor.yaml"
+    log:
+        "{wdir}/logs/{genome}_vapor_cutesv.log"
+    shell:
+        """
+        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        """
+
+rule vapor_sniffles:
+    """
+    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    """
+    input:
+        vcf = "{wdir}/{genome}_sniffles_noBND.vcf",
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai",
+        fasta = "{wdir}/{genome}.fna"
+    output:
+        "{wdir}/vapor/{genome}_sniffles_noBND.vcf"
+    conda:
+        "../envs/vapor.yaml"
+    log:
+        "{wdir}/logs/{genome}_vapor_sniffles.log"
+    shell:
+        """
+        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        """
+
+rule vapor_debreak:
+    """
+    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    """
+    input:
+        vcf = "{wdir}/{genome}_debreak_noBND.vcf",
+        bam = "{wdir}/{genome}_sorted.bam",
+        bai = "{wdir}/{genome}_sorted.bam.bai",
+        fasta = "{wdir}/{genome}.fna"
+    output:
+        "{wdir}/vapor/{genome}_debreak_noBND.vcf"
+    conda:
+        "../envs/vapor.yaml"
+    log:
+        "{wdir}/logs/{genome}_vapor_debreak.log"
+    shell:
+        """
+        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        """
+
