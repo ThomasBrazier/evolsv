@@ -7,6 +7,10 @@ rule vcf_list:
         svim = "{wdir}/{genome}_svim_noBND.vcf",
         cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
         debreak = "{wdir}/{genome}_debreak_noBND.vcf",
+        vapor_sniffles = "{wdir}/vapor/{genome}_sniffles_noBND.vcf",
+        vapor_svim = "{wdir}/vapor/{genome}_svim_noBND.vcf",
+        vapor_cutesv = "{wdir}/vapor/{genome}_cutesv_noBND.vcf",
+        vapor_debreak = "{wdir}/vapor/{genome}_debreak_noBND.vcf",
         snifflesQC = "{wdir}/{genome}_sniffles_QC/variant_count.jpg",
         svimQC = "{wdir}/{genome}_svim_QC/variant_count.jpg",
         cutesvQC = "{wdir}/{genome}_cutesv_QC/variant_count.jpg"
@@ -14,10 +18,10 @@ rule vcf_list:
         "{wdir}/{genome}_vcf_list.txt"
     shell:
         """
-        echo '{input.svim}' > {output}
-        echo '{input.sniffles}' >> {output}
-        echo '{input.cutesv}' >> {output}
-        echo '{input.debreak}' >> {output}
+        echo '{input.vapor_svim}' > {output}
+        echo '{input.vapor_sniffles}' >> {output}
+        echo '{input.vapor_cutesv}' >> {output}
+        echo '{input.vapor_debreak}' >> {output}
         """
 
 rule bam_list:
@@ -45,10 +49,10 @@ rule jasmine:
     input:
         bamlist = "{wdir}/{genome}_bam_list.txt",
         vcflist = "{wdir}/{genome}_vcf_list.txt",
-        sniffles = "{wdir}/{genome}_sniffles_noBND.vcf",
-        svim = "{wdir}/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
+        sniffles = "{wdir}/vapor/{genome}_sniffles_noBND.vcf",
+        svim = "{wdir}/vapor/{genome}_svim_noBND.vcf",
+        cutesv = "{wdir}/vapor/{genome}_cutesv_noBND.vcf",
+        debreak = "{wdir}/vapor/{genome}_debreak_noBND.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
         "{wdir}/{genome}_merged.vcf"

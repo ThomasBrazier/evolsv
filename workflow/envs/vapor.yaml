@@ -1,0 +1,8 @@
+name: vapor
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - python
+ - samtools
+ - vapor

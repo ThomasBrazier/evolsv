@@ -37,7 +37,7 @@ rule download_genome:
     shell:
         """
         datasets download genome accession {genome} --filename {wdir}/{genome}.zip --include genome,gff3,seq-report
-	    unzip {wdir}/{genome}.zip -d {wdir}/
+	    unzip -o {wdir}/{genome}.zip -d {wdir}/
 	    cp {wdir}/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/{genome}.fna
         if test -f {wdir}/ncbi_dataset/data/{genome}/genomic.gff
         then
