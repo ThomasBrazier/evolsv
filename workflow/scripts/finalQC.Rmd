@@ -293,6 +293,11 @@ fix.geno = as.data.frame(geno@fix)
 ```
 
 
+```{r samplename, echo = F}
+colnames(gt.geno)[2]
+```
+
+
 
 ```{r genotyping, echo = F}
 geno
@@ -383,12 +388,12 @@ ggarrange(p1, p2, nrow = 2)
 
 
 ```{r parsinggeno, echo=FALSE, message=FALSE, warning=FALSE}
-gt.geno$GT = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 1))
-gt.geno$AD = as.numeric(unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 2)))
-gt.geno$DP = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 3))
+gt.geno$GT = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 1))
+gt.geno$AD = as.numeric(unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 2)))
+gt.geno$DP = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 3))
 gt.geno$DP_REF = as.numeric(unlist(lapply(strsplit(gt.geno$DP, ","), `[[`, 1)))
 gt.geno$DP_ALT = as.numeric(unlist(lapply(strsplit(gt.geno$DP, ","), `[[`, 2)))
-gt.geno$PL = unlist(lapply(strsplit(gt.geno$SAMPLE, ":"), `[[`, 4))
+gt.geno$PL = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 4))
 gt.geno$PL_HOMREF = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 1)))
 gt.geno$PL_HET = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 2)))
 gt.geno$PL_HOMALT = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 3)))
@@ -452,7 +457,12 @@ ggarrange(p1, p2, ncol = 2)
 
 ## Phred-scale likelihoods for heterozygotes
 
-Lower phred-scale likelihood for heterozygote genotype is better.
+Lower phred-scale likelihood is better.
+
+
+
+Scores for 0/0 (homozygous ref), 0/1 (heterozygous), and 1/1 (homozygous alt) genotypes. For a phred-scaled likelihood of P, the raw likelihood of that genotype L = 10-P/10 (so the higher the number, the less likely it is that your sample is that genotype). The sum of likelihoods is not necessarily 1. 
+
 
 
 ```{r PL, echo = T}
@@ -471,28 +481,12 @@ p1 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
 p2 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Phred-scaled genotype likelihood") +
-  ylim(0, 1000) +
+  ylim(0, 100) +
   theme_bw()
 
 ggarrange(p1, p2, ncol = 2)
 ```
 
-
-```{r logPL, echo = T}
-df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/0"))),
-                       rep("0/1", sum(gt.geno$GT %in% c("0/1"))),
-                       rep("1/1", sum(gt.geno$GT %in% c("1/1")))),
-                PL = c(gt.geno$PL_HOMREF[which(gt.geno$GT %in% c("0/0"))],
-                       gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1"))],
-                       gt.geno$PL_HOMALT[which(gt.geno$GT %in% c("1/1"))]))
-
-p1 = ggplot(df, aes(y = log10(PL), group = GT, colour = GT)) +
-  geom_boxplot() +
-  ylab("Phred-scaled genotype likelihood") +
-  theme_bw()
-
-p1
-```
 
 
 
