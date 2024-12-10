@@ -7,10 +7,12 @@ rule svim:
         bai = "{wdir}/{genome}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         stats = "{wdir}/mapping/{genome}_mapping.stats",
-        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
+        plot = "{wdir}/mapping/{genome}_mapping_plot.html",
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        temporary("{wdir}/{genome}_svim/variants.vcf"),
-        vcf = "{wdir}/{genome}_svim.vcf"
+        svimvariants = temp("{wdir}/{genome}_svim/variants.vcf"),
+        vcf = temp("{wdir}/{genome}_svim_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_svim.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
@@ -28,6 +30,8 @@ rule svim:
         # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
 
@@ -39,10 +43,10 @@ rule sniffles:
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
-        stats = "{wdir}/mapping/{genome}_mapping.stats",
-        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/{genome}_sniffles.vcf"
+        vcf = temp("{wdir}/{genome}_sniffles_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_sniffles.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
@@ -51,9 +55,14 @@ rule sniffles:
         "{wdir}/logs/{genome}_sniffles.log"
     shell:
         """
-        sniffles --input {input.bam} --vcf {output} --reference {input.fasta} --threads {resources.cpus_per_task} --allow-overwrite \
-        --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
-        --cluster-binsize {config[cluster-binsize]} --qc-coverage {config[min_coverage]} --output-rnames
+        sniffles --input {input.bam} --vcf {output.vcf} --reference {input.fasta} \
+        --threads {resources.cpus_per_task} --allow-overwrite \
+        --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} \
+        --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
+        --cluster-binsize {config[cluster-binsize]} --qc-coverage {config[min_coverage]} \
+        --output-rnames
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
 
@@ -65,10 +74,10 @@ rule cutesv:
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
-        stats = "{wdir}/mapping/{genome}_mapping.stats",
-        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/{genome}_cutesv.vcf"
+        vcf = temp("{wdir}/{genome}_cutesv_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_cutesv.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
@@ -79,9 +88,11 @@ rule cutesv:
         """
         mkdir -p {wdir}/cutesv
         cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
-         --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
-         --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} --min_siglength {config[min_siglength]} \
-         {input.bam} {input.fasta} {output} {wdir}/cutesv/
+        --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
+        --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} --min_siglength {config[min_siglength]} \
+        {input.bam} {input.fasta} {output.vcf} {wdir}/cutesv/
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
 
@@ -93,10 +104,10 @@ rule debreak:
         bam = "{wdir}/{genome}_sorted.bam",
         bai = "{wdir}/{genome}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
-        stats = "{wdir}/mapping/{genome}_mapping.stats",
-        plot = "{wdir}/mapping/{genome}_mapping_plot.html"
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/{genome}_debreak.vcf"
+        vcf = temp("{wdir}/{genome}_debreak_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_debreak.vcf"
     conda:
         "../envs/debreak.yaml"
     # resources:
@@ -107,7 +118,9 @@ rule debreak:
         """
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {resources.cpus_per_task} \
         --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
-        mv {wdir}/debreak/debreak.vcf {wdir}/{genome}_debreak.vcf
+        mv {wdir}/debreak/debreak.vcf {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
 
@@ -115,6 +128,7 @@ rule debreak:
 rule removeBND:
     """
     Remove BND before merging - BND are difficult to treat in downstream analyses
+    Remove TRANSLOCATION (TRA)
     """
     input:
         sniffles = "{wdir}/{genome}_sniffles.vcf",
@@ -130,7 +144,7 @@ rule removeBND:
         """
         cat {input.svim} | grep -v '[a-zA-Z]*.BND' > {output.svim}
         cat {input.cutesv} | grep -v '[a-zA-Z]*.BND' > {output.cutesv}
-        cat {input.debreak} | grep -v '[a-zA-Z]*.BND' > {output.debreak}
+        cat {input.debreak} | grep -v 'SVTYPE=BND' | grep -v 'SVTPE=TRA' > {output.debreak}
         cat {input.sniffles} | grep -v '[a-zA-Z]*.BND' > {output.sniffles}
         """
 
@@ -162,83 +176,155 @@ rule sniffles2plot:
         """
 
 
-rule vapor_svim:
+rule genotype_svim:
     """
-    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    Use SVjedigraph to genotype one callset
+    used downstream to estimate uncertainty with ensemble methods
     """
     input:
         vcf = "{wdir}/{genome}_svim_noBND.vcf",
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/vapor/{genome}_svim_noBND.vcf"
+        vcf = temp("{wdir}/svim_genotype/{genome}_svim_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/svim_genotype/{genome}_svim_genotype.vcf",
+        gfa = "{wdir}/svim_genotype/{genome}_svim.gfa",
+        gaf = "{wdir}/svim_genotype/{genome}_svim.gaf",
+        aln = "{wdir}/svim_genotype/{genome}_svim_informative_aln.json"
     conda:
-        "../envs/vapor.yaml"
+        "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_vapor_svim.log"
+        "{wdir}/logs/{genome}_genotype_svim.log"
     shell:
         """
-        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        svjedi-graph.py -v {input.vcf} -r {input.fasta} \
+        -q {fqlist} -p {wdir}/svim_genotype/{genome}_svim \
+        -t {resources.cpus_per_task} \
+        --minsupport 1
+        mv {output.vcf_renamed} {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
-rule vapor_cutesv:
+rule genotype_cutesv:
     """
-    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    Use SVjedigraph to genotype one callset
+    used downstream to estimate uncertainty with ensemble methods
     """
     input:
         vcf = "{wdir}/{genome}_cutesv_noBND.vcf",
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/vapor/{genome}_cutesv_noBND.vcf"
+        vcf = temp("{wdir}/cutesv_genotype/{genome}_cutesv_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/cutesv_genotype/{genome}_cutesv_genotype.vcf",
+        gfa = "{wdir}/cutesv_genotype/{genome}_cutesv.gfa",
+        gaf = "{wdir}/cutesv_genotype/{genome}_cutesv.gaf",
+        aln = "{wdir}/cutesv_genotype/{genome}_cutesv_informative_aln.json"
     conda:
-        "../envs/vapor.yaml"
+        "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_vapor_cutesv.log"
+        "{wdir}/logs/{genome}_genotype_cutesv.log"
     shell:
         """
-        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        svjedi-graph.py -v {input.vcf} -r {input.fasta} \
+        -q {fqlist} -p {wdir}/cutesv_genotype/{genome}_cutesv \
+        -t {resources.cpus_per_task} \
+        --minsupport 1
+        mv {output.vcf_renamed} {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
-rule vapor_sniffles:
+rule genotype_sniffles:
     """
-    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    Use SVjedigraph to genotype one callset
+    used downstream to estimate uncertainty with ensemble methods
     """
     input:
         vcf = "{wdir}/{genome}_sniffles_noBND.vcf",
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/vapor/{genome}_sniffles_noBND.vcf"
+        vcf = temp("{wdir}/sniffles_genotype/{genome}_sniffles_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/sniffles_genotype/{genome}_sniffles_genotype.vcf",
+        gfa = "{wdir}/sniffles_genotype/{genome}_sniffles.gfa",
+        gaf = "{wdir}/sniffles_genotype/{genome}_sniffles.gaf",
+        aln = "{wdir}/sniffles_genotype/{genome}_sniffles_informative_aln.json"
     conda:
-        "../envs/vapor.yaml"
+        "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_vapor_sniffles.log"
+        "{wdir}/logs/{genome}_genotype_sniffles.log"
     shell:
         """
-        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        svjedi-graph.py -v {input.vcf} -r {input.fasta} \
+        -q {fqlist} -p {wdir}/sniffles_genotype/{genome}_sniffles \
+        -t {resources.cpus_per_task} \
+        --minsupport 1
+        mv {output.vcf_renamed} {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
-rule vapor_debreak:
+
+rule normalize_vcf_debreak:
     """
-    VaPoR is a structural variants (SVs) validator based on long reads from sequencing technology represented by PacBio
+    Add INFO tags in Debreak output
     """
     input:
         vcf = "{wdir}/{genome}_debreak_noBND.vcf",
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/{genome}.fna",
+        bam = "{wdir}/{genome}_sorted.bam"
     output:
-        "{wdir}/vapor/{genome}_debreak_noBND.vcf"
+        vcf = "{wdir}/{genome}_debreak_normalize.vcf",
+        vcflist = "{wdir}/{genome}_vcf_list_debreak.txt",
+        bamlist = "{wdir}/{genome}_bam_list_debreak.txt"
+    threads: workflow.cores
     conda:
-        "../envs/vapor.yaml"
+        "../envs/jasminesv.yaml"
     log:
-        "{wdir}/logs/{genome}_vapor_debreak.log"
+        "{wdir}/logs/{genome}_normalize_debreak.log"
     shell:
         """
-        vapor vcf --sv-input {input.vcf} --output-path {wdir}/vapor/ --reference {input.fasta} --pacbio-input {input.bam}
+        echo "{input.vcf}" > {output.vcflist}
+        echo "{input.bam}" > {output.bamlist}
+        jasmine file_list={output.vcflist} out_file={output.vcf} \
+        genome_file={input.fasta} \
+        out_dir={wdir}/debreak_normalize bam_list={output.bamlist} \
+        --preprocess-only --dup_to_ins
         """
 
+
+rule genotype_debreak:
+    """
+    Use SVjedigraph to genotype one callset
+    used downstream to estimate uncertainty with ensemble methods
+    """
+    input:
+        vcf = "{wdir}/{genome}_debreak_normalize.vcf",
+        fasta = "{wdir}/{genome}.fna",
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        sampleids = "{wdir}/{genome}.samples"        
+    output:
+        vcf = temp("{wdir}/debreak_genotype/{genome}_debreak_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/debreak_genotype/{genome}_debreak_genotype.vcf",
+        gfa = "{wdir}/debreak_genotype/{genome}_debreak.gfa",
+        gaf = "{wdir}/debreak_genotype/{genome}_debreak.gaf",
+        aln = "{wdir}/debreak_genotype/{genome}_debreak_informative_aln.json"
+    conda:
+        "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/logs/{genome}_genotype_debreak.log"
+    shell:
+        """
+        svjedi-graph.py -v {input.vcf} -r {input.fasta} \
+        -q {input.fastq} -p {wdir}/debreak_genotype/{genome}_debreak \
+        -t {resources.cpus_per_task} \
+        --minsupport 1
+        mv {output.vcf_renamed} {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        """

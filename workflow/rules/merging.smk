@@ -3,14 +3,10 @@ rule vcf_list:
     Create the txt file containing the list of the VCF files to merge
     """
     input:
-        sniffles = "{wdir}/{genome}_sniffles_noBND.vcf",
-        svim = "{wdir}/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
-        vapor_sniffles = "{wdir}/vapor/{genome}_sniffles_noBND.vcf",
-        vapor_svim = "{wdir}/vapor/{genome}_svim_noBND.vcf",
-        vapor_cutesv = "{wdir}/vapor/{genome}_cutesv_noBND.vcf",
-        vapor_debreak = "{wdir}/vapor/{genome}_debreak_noBND.vcf",
+        sniffles = "{wdir}/sniffles_genotype/{genome}_sniffles_genotype.vcf",
+        svim = "{wdir}/svim_genotype/{genome}_svim_genotype.vcf",
+        cutesv = "{wdir}/cutesv_genotype/{genome}_cutesv_genotype.vcf",
+        debreak = "{wdir}/debreak_genotype/{genome}_debreak_genotype.vcf",
         snifflesQC = "{wdir}/{genome}_sniffles_QC/variant_count.jpg",
         svimQC = "{wdir}/{genome}_svim_QC/variant_count.jpg",
         cutesvQC = "{wdir}/{genome}_cutesv_QC/variant_count.jpg"
@@ -18,10 +14,10 @@ rule vcf_list:
         "{wdir}/{genome}_vcf_list.txt"
     shell:
         """
-        echo '{input.vapor_svim}' > {output}
-        echo '{input.vapor_sniffles}' >> {output}
-        echo '{input.vapor_cutesv}' >> {output}
-        echo '{input.vapor_debreak}' >> {output}
+        echo '{input.svim}' > {output}
+        echo '{input.sniffles}' >> {output}
+        echo '{input.cutesv}' >> {output}
+        echo '{input.debreak}' >> {output}
         """
 
 rule bam_list:
@@ -49,13 +45,15 @@ rule jasmine:
     input:
         bamlist = "{wdir}/{genome}_bam_list.txt",
         vcflist = "{wdir}/{genome}_vcf_list.txt",
-        sniffles = "{wdir}/vapor/{genome}_sniffles_noBND.vcf",
-        svim = "{wdir}/vapor/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/vapor/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/vapor/{genome}_debreak_noBND.vcf",
+        sniffles = "{wdir}/sniffles_genotype/{genome}_sniffles_genotype.vcf",
+        svim = "{wdir}/svim_genotype/{genome}_svim_genotype.vcf",
+        cutesv = "{wdir}/cutesv_genotype/{genome}_cutesv_genotype.vcf",
+        debreak = "{wdir}/debreak_genotype/{genome}_debreak_genotype.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
-        "{wdir}/{genome}_merged.vcf"
+        "{wdir}/{genome}_merged.vcf",
+        # "{wdir}/iris_{genome}/resultsstore.txt",
+        # "{wdir}/iris_{genome}/results.csv"
     threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
@@ -64,5 +62,8 @@ rule jasmine:
     shell:
         """
         jasmine file_list={input.vcflist} out_file={output} genome_file={input.fasta} \
-        out_dir={wdir} bam_list={input.bamlist} --output_genotypes --run_iris --dup_to_ins
+        out_dir={wdir}/jasmine bam_list={input.bamlist} \
+        --output_genotypes \
+        # --run_iris iris_args="out_dir=iris_{genome}" \
+        --dup_to_ins
         """

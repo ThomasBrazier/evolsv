@@ -5,3 +5,4 @@ channels:
 dependencies:
  - cutesv
  - gzip>=1.10
+ - bcftools

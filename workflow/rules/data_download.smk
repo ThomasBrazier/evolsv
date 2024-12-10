@@ -48,3 +48,21 @@ rule download_genome:
 	    cp {wdir}/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/{genome}_config.yaml
         """
+
+
+rule sample_ids:
+    """
+    Create a file with sample ids
+    """
+    input:
+        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+    output:
+        sampleids = "{wdir}/{genome}.samples"
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "{wdir}/logs/{genome}_sample_ids.log"
+    shell:
+        """
+        echo {sample_id} > {output.sampleids}
+        """

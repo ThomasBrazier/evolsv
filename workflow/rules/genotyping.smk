@@ -5,12 +5,14 @@ rule svjedigraph:
     input:
         merged = "{wdir}/{genome}_merged.vcf",
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        sampleids = "{wdir}/{genome}.samples"
     output:
-        "{wdir}/{genome}_merged_genotype.vcf",
-        "{wdir}/{genome}_merged.gfa",
-        "{wdir}/{genome}_merged.gaf",
-        "{wdir}/{genome}_merged_informative_aln.json"
+        vcf = temp("{wdir}/{genome}_merged_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_merged_genotype.vcf",
+        gfa = "{wdir}/{genome}_merged.gfa",
+        gaf = "{wdir}/{genome}_merged.gaf",
+        aln = "{wdir}/{genome}_merged_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
@@ -18,6 +20,9 @@ rule svjedigraph:
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {resources.cpus_per_task} --minsupport {config[minsupport]}
+        mv {output.vcf_renamed} {output.vcf}
+        # Consistent renaming of VCF header with sample id
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
 
@@ -60,7 +65,7 @@ rule final_filtering:
     conda:
         "../envs/bcftools.yaml"
     log:
-        "{wdir}/logs/{genome}_svjedigraph.log"
+        "{wdir}/logs/{genome}_final_filtering.log"
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.filtered} {input.vcf}

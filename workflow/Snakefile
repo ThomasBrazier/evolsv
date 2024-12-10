@@ -14,15 +14,17 @@ samples = (
     .sort_index()
 )
 
-# Only accepts a single genome
+# Only accepts a single genome and a single sample/individual
 # genome = config['genome']
 genome = samples["genome"].iloc[0]
+sample_id = samples["sample_name"].iloc[0]
 
 wdir = config['datadir'] + genome
 
 wildcard_constraints:
     wdir = wdir,
-    genome = genome
+    genome = genome,
+    sample_id = sample_id
 
 include: "common.smk"
 include: "rules/common.smk"
@@ -38,4 +40,5 @@ include: "rules/mappability.smk"
 
 rule all:
     input:
-        target = expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome)
+        expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome)

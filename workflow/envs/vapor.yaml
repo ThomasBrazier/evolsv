@@ -3,6 +3,14 @@ channels:
  - conda-forge
  - bioconda
 dependencies:
- - python
+ - python=3.8
  - samtools
- - vapor
+ - cython
+ - setuptools
+ - pip
+ - r-base
+ - pip:
+     - setuptools
+     - Cython
+     - rpy2
+     - "git+https://github.com/ThomasBrazier/vapor.git#egg=vapor"

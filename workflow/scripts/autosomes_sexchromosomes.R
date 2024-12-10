@@ -24,25 +24,31 @@ df = as.data.frame(df)
 
 colnames(df)
 
-df[,c("chrName", "genbankAccession", "length")]
+df[,c("assemblyAccession", "chrName", "genbankAccession", "refseqAccession", "length")]
 
 
 df$start = 1
 df$end = df$length
 
+# Genbank or Refseq chromosome names
+if (grepl("GCA_", unique(df$assemblyAccession))) {
+    df$chromAccession = df$genbankAccession
+} else {
+    df$chromAccession = df$refseqAccession
+}
 
-write.table(df[,c("chrName", "genbankAccession", "length")], chromosome_names, quote = F, row.names = F, col.names = T, sep = "\t")
+write.table(df[,c("chrName", "chromAccession", "length")], chromosome_names, quote = F, row.names = F, col.names = T, sep = "\t")
 
-formula = as.character(paste("--chr", as.vector(df$genbankAccession[which(df$chrName %in% c("W", "Z", "X", "Y") & df$role == "assembled-molecule")]), collapse = " "))
+formula = as.character(paste("--chr", as.vector(df$chromAccession[which(df$chrName %in% c("W", "Z", "X", "Y") & df$role == "assembled-molecule")]), collapse = " "))
 formula
-formula = df[which(df$chrName %in% c("W", "Z", "X", "Y") & df$role == "assembled-molecule"), c("genbankAccession", "start", "end")]
+formula = df[which(df$chrName %in% c("W", "Z", "X", "Y") & df$role == "assembled-molecule"), c("chromAccession", "start", "end")]
 
 write.table(formula, sexchromosomes, quote = F, row.names = F, col.names = F, sep = "\t")
 
 exclude = c("W", "Z", "X", "Y", unlist(strsplit(scaffolds_to_exclude, ",")))
 
-formula = as.character(paste("--chr", as.vector(df$genbankAccession[which(!(df$chrName %in% exclude) & df$role == "assembled-molecule")]), collapse = " "))
+formula = as.character(paste("--chr", as.vector(df$chromAccession[which(!(df$chrName %in% exclude) & df$role == "assembled-molecule")]), collapse = " "))
 formula
-formula = df[which(!(df$chrName %in% exclude) & df$role == "assembled-molecule"), c("genbankAccession", "start", "end")]
+formula = df[which(!(df$chrName %in% exclude) & df$role == "assembled-molecule"), c("chromAccession", "start", "end")]
 
 write.table(formula, autosomes, quote = F, row.names = F, col.names = F, sep = "\t")

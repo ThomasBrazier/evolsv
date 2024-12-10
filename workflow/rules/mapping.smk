@@ -16,7 +16,11 @@ rule minimap2:
         "{wdir}/logs/{genome}_mapping.log"
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD -2 --seed {config[minimap_seed]} --eqx -t {resources.cpus_per_task} --sam-hit-only {input.fasta} {input.fastq} > {output}
+        minimap2 -ax {config[minimap_ax]} --MD -2 \
+        --seed {config[minimap_seed]} --eqx \
+        -t {resources.cpus_per_task} \
+        -R "@RG\\tID:{sample_id}\\tSM:{sample_id}" \
+        --sam-hit-only {input.fasta} {input.fastq} > {output}
         """
 
 
@@ -43,7 +47,7 @@ rule samtools_sort:
     input:
         "{wdir}/{genome}.bam"
     output:
-        temp("{wdir}/{genome}_sorted.bam")
+        "{wdir}/{genome}_sorted.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -59,7 +63,7 @@ rule samtools_index:
     input:
         "{wdir}/{genome}_sorted.bam"
     output:
-        temp("{wdir}/{genome}_sorted.bam.bai")
+        "{wdir}/{genome}_sorted.bam.bai"
     conda:
         "../envs/samtools.yaml"
     shell:

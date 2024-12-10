@@ -14,7 +14,7 @@ rule samplot_subset_DUP:
         """
         bcftools filter -i'INFO/SVTYPE="DUP"' {input.final} > {output.subset_dup_tmp}
         # Subset N random SNPs (default=100)
-        N={config["n_samplot"]}
+        N={config[n_samplot]}
         cat {output.subset_dup_tmp} | grep '^#' > {output.subset_dup}
         cat {output.subset_dup_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_dup}
         """
@@ -35,7 +35,7 @@ rule samplot_subset_INV:
         """
         bcftools filter -i'INFO/SVTYPE="INV"' {input.final} > {output.subset_inv_tmp}
         # Subset N random SNPs (default=100)
-        N={config["n_samplot"]}
+        N={config[n_samplot]}
         cat {output.subset_inv_tmp} | grep '^#' > {output.subset_inv}
         cat {output.subset_inv_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_inv}
         """
@@ -56,7 +56,7 @@ rule samplot_subset_INS:
         """
         bcftools filter -i'INFO/SVTYPE="INS"' {input.final} > {output.subset_ins_tmp}
         # Subset N random SNPs (default=100)
-        N={config["n_samplot"]}
+        N={config[n_samplot]}
         cat {output.subset_ins_tmp} | grep '^#' > {output.subset_ins}
         cat {output.subset_ins_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_ins}
         """
@@ -77,7 +77,7 @@ rule samplot_subset_DEL:
         """
         bcftools filter -i'INFO/SVTYPE="DEL"' {input.final} > {output.subset_del_tmp}
         # Subset N random SNPs (default=100)
-        N={config["n_samplot"]}
+        N={config[n_samplot]}
         cat {output.subset_del_tmp} | grep '^#' > {output.subset_del}
         cat {output.subset_del_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_del}
         """
@@ -89,54 +89,63 @@ rule samplot_plot:
     For diagnostic purpose
     """
     input:
-        subset_DUP = "{wdir}/samplot/{genome}_samplot_DUP.vcf",
-        subset_INV = "{wdir}/samplot/{genome}_samplot_INV.vcf",
-        subset_INS = "{wdir}/samplot/{genome}_samplot_INS.vcf",
-        subset_DEL = "{wdir}/samplot/{genome}_samplot_DEL.vcf",
-        fasta = "{wdir}/{genome}.fna",
-        bam = "{wdir}/{genome}_sorted.bam"
+        subset_DUP = expand("{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome),
+        subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
+        subset_INS = expand("{wdir}/samplot/{genome}_samplot_INS.vcf", wdir=wdir, genome=genome),
+        subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
+        fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
+        bam = expand("{wdir}/{genome}_sorted.bam", wdir=wdir, genome=genome)
     output:
-        command_file_DUP = "{wdir}/samplot/{genome}_commands_DUP.sh",command_file_INV = "{wdir}/samplot/{genome}_commands_INV.sh",
-        command_file_INS = "{wdir}/samplot/{genome}_commands_INS.sh",
-        command_file_DEL = "{wdir}/samplot/{genome}_commands_DEL.sh"
+        index_html_DUP = "{wdir}/samplot/DUP/index.html",
+        index_html_INV = "{wdir}/samplot/INV/index.html",
+        index_html_INS = "{wdir}/samplot/INS/index.html",
+        index_html_DEL = "{wdir}/samplot/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir = "{wdir}/samplot/"
+        outdir = "{wdir}/samplot"
     shell:
         """
         samplot vcf \
             --vcf {input.subset_DUP} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir} \
+            -d {params.outdir}/DUP \
             -O jpg \
+            --format GT,DP,AD,PL \
             -b {input.bam} \
-            --command_file {output.command_file_DUP}
+            --sample_ids {sample_id} \
+            --debug
         samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir} \
+            -d {params.outdir}/INV \
             -O jpg \
+            --format GT,DP,AD,PL \
+            --sample_ids {sample_id} \
             -b {input.bam} \
-            --command_file {output.command_file_INV}
+            --debug
         samplot vcf \
             --vcf {input.subset_INS} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir} \
+            -d {params.outdir}/INS \
             -O jpg \
+            --format GT,DP,AD,PL \
+            --sample_ids {sample_id} \
             -b {input.bam} \
-            --command_file {output.command_file_INS}
+            --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir} \
+            -d {params.outdir}/DEL \
             -O jpg \
+            --format GT,DP,AD,PL \
+            --sample_ids {sample_id} \
             -b {input.bam} \
-            --command_file {output.command_file_DEL}
+            --debug
         """
 
 
@@ -152,9 +161,10 @@ rule final_report:
         cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
         debreak = "{wdir}/{genome}_debreak_noBND.vcf",
         mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
-        command_file_DUP = "{wdir}/samplot/{genome}_commands_DUP.sh",command_file_INV = "{wdir}/samplot/{genome}_commands_INV.sh",
-        command_file_INS = "{wdir}/samplot/{genome}_commands_INS.sh",
-        command_file_DEL = "{wdir}/samplot/{genome}_commands_DEL.sh"
+        index_html_DUP = "{wdir}/samplot/DUP/index.html",
+        index_html_INV = "{wdir}/samplot/INV/index.html",
+        index_html_INS = "{wdir}/samplot/INS/index.html",
+        index_html_DEL = "{wdir}/samplot/DEL/index.html"
     output:
         "{wdir}/{genome}_finalQC.html"
     conda:
@@ -172,7 +182,6 @@ rule gzvcf:
     input:
         vcf = "{wdir}/{genome}_filtered.vcf",
         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf",
-        html = "{wdir}/{genome}_finalQC.html"
     output:
         vcf = "{wdir}/{genome}_filtered.vcf.gz",
         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf.gz",

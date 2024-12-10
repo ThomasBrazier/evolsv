@@ -5,3 +5,4 @@ channels:
 dependencies:
  - svjedi-graph
  - minigraph
+ - bcftools
