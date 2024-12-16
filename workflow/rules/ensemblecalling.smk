@@ -321,7 +321,7 @@ rule genotype_debreak:
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.fastq} -p {wdir}/debreak_genotype/{genome}_debreak \
+        -q {fqlist} -p {wdir}/debreak_genotype/{genome}_debreak \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}

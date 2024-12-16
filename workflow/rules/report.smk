@@ -182,7 +182,10 @@ rule gzvcf:
     input:
         vcf = "{wdir}/{genome}_filtered.vcf",
         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf",
+        html = "{wdir}/{genome}_finalQC.html"
     output:
+        tmp_vcf = temp("{wdir}/{genome}_filtered_newheader.vcf"),
+        tmp_vcf_sexchr = temp("{wdir}/{genome}_filtered_sexchr_newheader.vcf"),
         vcf = "{wdir}/{genome}_filtered.vcf.gz",
         vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf.gz",
         vcf_idx = "{wdir}/{genome}_filtered.vcf.gz.csi",
@@ -191,8 +194,11 @@ rule gzvcf:
         "../envs/samtools.yaml"
     shell:
         """
-        bcftools sort {input.vcf} -O v | bgzip > {output.vcf}
-        bcftools sort {input.vcf_sexchr} -O v | bgzip > {output.vcf_sexchr}
+        bcftools annotate --header-lines workflow/header/header.txt {input.vcf} > {output.tmp_vcf}
+        bcftools annotate --header-lines workflow/header/header.txt {input.vcf_sexchr} > {output.tmp_vcf_sexchr}
+
+        bcftools sort {output.tmp_vcf} -O v | bgzip > {output.vcf}
+        bcftools sort {output.tmp_vcf_sexchr} -O v | bgzip > {output.vcf_sexchr}
 
         tabix --csi {output.vcf}
         tabix --csi {output.vcf_sexchr}

@@ -24,7 +24,7 @@ df = as.data.frame(df)
 
 colnames(df)
 
-df[,c("assemblyAccession", "chrName", "genbankAccession", "refseqAccession", "length")]
+# df[,c("assemblyAccession", "chrName", "genbankAccession", "refseqAccession", "length")]
 
 
 df$start = 1
