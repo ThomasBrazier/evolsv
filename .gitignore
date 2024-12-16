@@ -12,6 +12,14 @@ data/
 *.tsv
 *.fa
 
+
+launcher_test_Bombus_terrestris.sh
+launcher_test_local.sh
+tmp/
+workflow/envs/src/
+workflow/rules/debug_samplot.sh
+
+
 # C extensions
 *.so
 
