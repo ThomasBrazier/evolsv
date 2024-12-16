@@ -170,7 +170,7 @@ table(fix$Caller)
 *Note that all SV callers do not use the same way of calculating the Quality Score and they are not all on the same scale (e.g. log/phred-scale).*
 
 
-```{r SVquality, echo = T}
+```{r SVquality, echo = F, warning = F}
 ggplot(fix, aes(x = Caller, y = as.numeric(QUAL), colour = Caller, group = Caller)) +
   geom_boxplot() +
   xlab("SV caller") + ylab("Quality Score") +
@@ -178,7 +178,7 @@ ggplot(fix, aes(x = Caller, y = as.numeric(QUAL), colour = Caller, group = Calle
 ```
 
 
-```{r SVqualitydensity, echo = T}
+```{r SVqualitydensity, echo = F, warning = F}
 ggplot(fix, aes(x = as.numeric(QUAL), colour = Caller, group = Caller)) +
   geom_density() +
   xlab("Quality Score") + ylab("Density") +
@@ -187,9 +187,6 @@ ggplot(fix, aes(x = as.numeric(QUAL), colour = Caller, group = Caller)) +
 ```
 
 
-## Average number of reads supporting SVs
-
-**TODO**
 
 ## SV type
 
@@ -199,7 +196,7 @@ table(fix$sv_type, fix$Caller)
 
 
 
-```{r SVtype, echo = T}
+```{r SVtype, echo = F, warning = F}
 ggplot(fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("SV type") + ylab("Count") +
@@ -211,7 +208,7 @@ ggplot(fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
 ## SV length
 
 
-```{r SVlength, echo = T}
+```{r SVlength, echo = F, warning = F}
 df = aggregate(sv_length ~ sv_type + Caller, fix, function(x) {sum(abs(x))})
 
 ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type)) +
@@ -224,7 +221,7 @@ ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type
 
 
 
-```{r SVproportion, echo = T}
+```{r SVproportion, echo = F, warning = F}
 ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, colour = sv_type)) +
   geom_bar(stat = "identity") +
   xlab("SV type") + ylab("Proportion of the genome") +
@@ -272,10 +269,7 @@ Number of SV supported by at least three tools:
 Number of SV supported by the four tools: -->
 
 
-## Venn diagram
-
-
-All SV types together.
+## Venn diagram - All SV types together
 
 
 ```{r venndiag, echo = F, fig.width= 12, fig.height=9}
@@ -286,7 +280,7 @@ plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles"
 
 
 
-SVs per type.
+## Venn diagram - DEL
 
 
 
@@ -298,6 +292,9 @@ plot(euler(fix.merged.del[, colnames(fix.merged.del) %in% c("svim", "cutesv", "s
 ```
 
 
+## Venn diagram - INS
+
+
 
 ```{r venndiagins, echo = F, fig.width= 12, fig.height=9}
 fix.merged.ins = fix.merged[which(fix.merged$sv_type == "INS"),]
@@ -305,6 +302,8 @@ plot(euler(fix.merged.ins[, colnames(fix.merged.ins) %in% c("svim", "cutesv", "s
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
 ```
+
+## Venn diagram - DUP
 
 
 ```{r venndiagdup, echo = F, fig.width= 12, fig.height=9}
@@ -315,9 +314,7 @@ plot(euler(fix.merged.dup[, colnames(fix.merged.dup) %in% c("svim", "cutesv", "s
 ```
 
 
-
-
-
+## Venn diagram - INV
 
 
 ```{r venndiaginv, echo = F, fig.width= 12, fig.height=9}
@@ -371,7 +368,7 @@ table(fix.geno$sv_type)
 
 The stacked barplot of SV count for each SV type and SV length (no filter on quality scores and quality score > 10).
 
-```{r SVtypefinal, echo = T}
+```{r SVtypefinal, echo = F, warning = F}
 p1 = ggplot(fix.geno, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
@@ -398,7 +395,7 @@ table(fix.geno$sv_type[which(fix.geno$QUAL > 10)])
 
 
 
-```{r SVtypefinal2, echo = T}
+```{r SVtypefinal2, echo = F, warning = F}
 p1 = ggplot(fix.geno[which(fix.geno$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
@@ -417,20 +414,24 @@ ggarrange(p1, p2, nrow = 2)
 
 
 
-```{r SVlengthfinal, echo = T}
-p1 = ggplot(fix.geno, aes(y = abs(sv_length), fill = sv_type, colour = sv_type)) +
+```{r SVlengthfinal, echo = F, warning = F}
+fix.geno$sv_type = as.factor(fix.geno$sv_type)
+
+p1 = ggplot(fix.geno, aes(y = abs(sv_length), x = sv_type, fill = sv_type, colour = sv_type)) +
   geom_boxplot() +
   ylab("SV Length (bp)") +
   theme_bw()
 
 
-p2 = ggplot(fix.geno, aes(y = log10(abs(sv_length)), fill = sv_type, colour = sv_type)) +
+p2 = ggplot(fix.geno, aes(y = log10(abs(sv_length)), x = sv_type, fill = sv_type, colour = sv_type)) +
   geom_boxplot() +
   ylab("SV Length (log10 scale)") +
   theme_bw()
 
 ggarrange(p1, p2, nrow = 2)
 ```
+
+
 
 ## Missing data
 
@@ -476,7 +477,7 @@ We investigated the usual Variant Calling quality criterion:
 Approximate read depth (should be balanced between reference and variant if unbiased).
 
 
-```{r SV_DP, echo = T}
+```{r SV_DP, echo = F, warning = F}
 ggplot(gt.geno, aes(x = DP_REF, y = DP_ALT, group = GT, colour = GT)) +
   geom_point(alpha = 0.3) +
   xlab("Reference allele read depth (DP)") + ylab("Variant allele read depth (DP)") +
@@ -487,13 +488,15 @@ ggplot(gt.geno, aes(x = DP_REF, y = DP_ALT, group = GT, colour = GT)) +
 Variant allelic depth (higher for heterozygotes is better).
 
 
-```{r AD_GT, echo = T}
-p1 = ggplot(gt.geno, aes(y = AD, group = GT, colour = GT)) +
+```{r AD_GT, echo = F, warning = F}
+gt.geno$GT = as.factor(gt.geno$GT)
+
+p1 = ggplot(gt.geno, aes(x = GT, y = AD, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Variant allelic depth (AD)") +
   theme_bw()
 
-p2 = ggplot(gt.geno, aes(y = AD, group = GT, colour = GT)) +
+p2 = ggplot(gt.geno, aes(x = GT, y = AD, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Variant allelic depth (AD)") +
   ylim(0, 100) +
@@ -513,20 +516,22 @@ Scores for 0/0 (homozygous ref), 0/1 (heterozygous), and 1/1 (homozygous alt) ge
 
 
 
-```{r PL, echo = T}
+```{r PL, echo = F, warning = F}
 df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/0"))),
                        rep("0/1", sum(gt.geno$GT %in% c("0/1"))),
                        rep("1/1", sum(gt.geno$GT %in% c("1/1")))),
                 PL = c(gt.geno$PL_HOMREF[which(gt.geno$GT %in% c("0/0"))],
                        gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1"))],
                        gt.geno$PL_HOMALT[which(gt.geno$GT %in% c("1/1"))]))
+df$GT = as.factor(df$GT)
 
-p1 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
+
+p1 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Phred-scaled genotype likelihood") +
   theme_bw()
 
-p2 = ggplot(df, aes(y = PL, group = GT, colour = GT)) +
+p2 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
   geom_boxplot() +
   ylab("Phred-scaled genotype likelihood") +
   ylim(0, 100) +
@@ -549,7 +554,7 @@ Quality scores and allele support are expected to homogeneous along the genome.
 
 Quality Score.
 
-```{r QClandscape, fig.height = 24}
+```{r QClandscape, fig.height = 24, echo = F, warning = F}
 ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
   geom_point(alpha = 0.1) +
   geom_smooth(method = "gam", se = T) +
@@ -561,7 +566,7 @@ ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
 
 Support for variant allele.
 
-```{r suppportlandscape, fig.height = 24}
+```{r suppportlandscape, fig.height = 24, echo = F, warning = F}
 ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
   geom_point(alpha = 0.1) +
   geom_smooth(method = "gam", se = T) +
@@ -578,7 +583,7 @@ ggplot(fix.geno, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
 ## The distribution of SVs along the genome
 
 
-```{r SVlandscape, fig.height = 24}
+```{r SVlandscape, fig.height = 24, echo = F, warning = F}
 ggplot(fix.geno, aes(x = as.numeric(POS)/10^6)) +
   geom_histogram(bins = 1000) +
   xlab("Position (Mb)") + ylab("SV count") +
