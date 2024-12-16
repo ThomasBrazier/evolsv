@@ -69,7 +69,12 @@ rule final_filtering:
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.filtered} {input.vcf}
+        if [ $(wc -l < {input.sexchromosomes}) -eq 0 ]; then
+        echo "No sex chr"
+        cat {input.vcf} | grep "#" > {output.filtered_sexchr}
+        else
         bcftools view -T {input.sexchromosomes} -l 0 -o {output.filtered_sexchr} {input.vcf}
+        fi
         """
 
 
