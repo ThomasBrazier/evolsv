@@ -40,26 +40,26 @@ rule samplot_subset_INV:
         cat {output.subset_inv_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_inv}
         """
 
-rule samplot_subset_INS:
-    """
-    Randomly subset SVs for diagnostic plot
-    Subset N variants of each type DEL/DUP/INS/INV
-    """
-    input:
-        final = "{wdir}/{genome}_filtered.vcf"
-    output:
-        subset_ins_tmp = temp("{wdir}/samplot/{genome}_samplot_INS_tmp.vcf"),
-        subset_ins = temp("{wdir}/samplot/{genome}_samplot_INS.vcf")
-    conda:
-        "../envs/bcftools.yaml"
-    shell:
-        """
-        bcftools filter -i'INFO/SVTYPE="INS"' {input.final} > {output.subset_ins_tmp}
-        # Subset N random SNPs (default=100)
-        N={config[n_samplot]}
-        cat {output.subset_ins_tmp} | grep '^#' > {output.subset_ins}
-        cat {output.subset_ins_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_ins}
-        """
+# rule samplot_subset_INS:
+#     """
+#     Randomly subset SVs for diagnostic plot
+#     Subset N variants of each type DEL/DUP/INS/INV
+#     """
+#     input:
+#         final = "{wdir}/{genome}_filtered.vcf"
+#     output:
+#         subset_ins_tmp = temp("{wdir}/samplot/{genome}_samplot_INS_tmp.vcf"),
+#         subset_ins = temp("{wdir}/samplot/{genome}_samplot_INS.vcf")
+#     conda:
+#         "../envs/bcftools.yaml"
+#     shell:
+#         """
+#         bcftools filter -i'INFO/SVTYPE="INS"' {input.final} > {output.subset_ins_tmp}
+#         # Subset N random SNPs (default=100)
+#         N={config[n_samplot]}
+#         cat {output.subset_ins_tmp} | grep '^#' > {output.subset_ins}
+#         cat {output.subset_ins_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_ins}
+#         """
 
 rule samplot_subset_DEL:
     """
@@ -91,14 +91,14 @@ rule samplot_plot:
     input:
         subset_DUP = expand("{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome),
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
-        subset_INS = expand("{wdir}/samplot/{genome}_samplot_INS.vcf", wdir=wdir, genome=genome),
+        # subset_INS = expand("{wdir}/samplot/{genome}_samplot_INS.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
         fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
         bam = expand("{wdir}/{genome}_sorted.bam", wdir=wdir, genome=genome)
     output:
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
-        index_html_INS = "{wdir}/samplot/INS/index.html",
+        # index_html_INS = "{wdir}/samplot/INS/index.html",
         index_html_DEL = "{wdir}/samplot/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
@@ -126,16 +126,16 @@ rule samplot_plot:
             --sample_ids {sample_id} \
             -b {input.bam} \
             --debug
-        samplot vcf \
-            --vcf {input.subset_INS} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir}/INS \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            --sample_ids {sample_id} \
-            -b {input.bam} \
-            --debug
+        # samplot vcf \
+        #     --vcf {input.subset_INS} \
+        #     --plot_all \
+        #     --threads {threads} \
+        #     -d {params.outdir}/INS \
+        #     -O jpg \
+        #     --format GT,DP,AD,PL \
+        #     --sample_ids {sample_id} \
+        #     -b {input.bam} \
+        #     --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
@@ -163,7 +163,7 @@ rule final_report:
         mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
-        index_html_INS = "{wdir}/samplot/INS/index.html",
+        # index_html_INS = "{wdir}/samplot/INS/index.html",
         index_html_DEL = "{wdir}/samplot/DEL/index.html"
     output:
         "{wdir}/{genome}_finalQC.html"
