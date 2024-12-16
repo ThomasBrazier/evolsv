@@ -275,7 +275,8 @@ Number of SV supported by the four tools: -->
 ## Venn diagram
 
 
-All SVs.
+All SV types together.
+
 
 ```{r venndiag, echo = F, fig.width= 12, fig.height=9}
 plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
@@ -287,7 +288,10 @@ plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles"
 
 SVs per type.
 
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
+
+
+```{r venndiagdel, echo = F, fig.width= 12, fig.height=9}
+fix.merged.del = fix.merged[which(fix.merged$sv_type == "DEL"),]
 plot(euler(fix.merged.del[, colnames(fix.merged.del) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
@@ -295,30 +299,33 @@ plot(euler(fix.merged.del[, colnames(fix.merged.del) %in% c("svim", "cutesv", "s
 
 
 
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
-plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
+```{r venndiagins, echo = F, fig.width= 12, fig.height=9}
+fix.merged.ins = fix.merged[which(fix.merged$sv_type == "INS"),]
+plot(euler(fix.merged.ins[, colnames(fix.merged.ins) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
+     quantities = TRUE,
+     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
+```
+
+
+```{r venndiagdup, echo = F, fig.width= 12, fig.height=9}
+fix.merged.dup = fix.merged[which(fix.merged$sv_type == "DUP"),]
+plot(euler(fix.merged.dup[, colnames(fix.merged.dup) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
 ```
 
 
 
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
-plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
+
+
+
+
+```{r venndiaginv, echo = F, fig.width= 12, fig.height=9}
+fix.merged.inv = fix.merged[which(fix.merged$sv_type == "INV"),]
+plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
 ```
-
-
-
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
-plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-
-
 
 
 
