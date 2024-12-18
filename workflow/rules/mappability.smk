@@ -1,7 +1,7 @@
 rule mosdepth_summary:
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     output:
         dist = "{wdir}/callability/{genome}_{aligner}.mosdepth.global.dist.txt",
         summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt"
@@ -21,9 +21,9 @@ rule mosdepth_summary:
 
 rule mosdepth_quantize:
     input:
-        summary = expand("{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt", wdir=wdir, genome=genome, aligner=aligner),
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
+        summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt",
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     output:
         quantized = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz",
         quantized_idx = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi"
@@ -56,8 +56,8 @@ rule mosdepth_quantize:
 
 rule callable_bed:
     input:
-        quantized = expand("{wdir}/callability/{genome}_{aligner}.quantized.bed.gz", wdir=wdir, genome=genome, aligner=aligner),
-        quantized_idx = expand("{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi", wdir=wdir, genome=genome, aligner=aligner)
+        quantized = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz",
+        quantized_idx = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi"
     output:
         callable_bed = "{wdir}/callability/{genome}_{aligner}_callable.bed"
     conda:

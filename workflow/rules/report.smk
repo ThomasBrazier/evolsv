@@ -93,7 +93,8 @@ rule samplot_plot:
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
         fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bam_index = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
     output:
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
@@ -150,7 +151,10 @@ rule final_report:
         mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
-        index_html_DEL = "{wdir}/samplot/DEL/index.html"
+        index_html_DEL = "{wdir}/samplot/DEL/index.html",
+        svimQC = expand("{wdir}/{genome}_{aligner}_svim_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner),
+        cutesvQC = expand("{wdir}/{genome}_{aligner}_cutesv_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner),
+        snifflesQC = expand("{wdir}/{genome}_{aligner}_sniffles_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner)
     output:
         "{wdir}/{genome}_finalQC.html"
     conda:

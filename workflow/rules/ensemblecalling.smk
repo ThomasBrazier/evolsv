@@ -3,8 +3,8 @@ rule svim:
     SV calling with SVIM
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -32,14 +32,13 @@ rule svim:
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
-
 rule sniffles:
     """
     SV calling with Sniffles
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -69,8 +68,8 @@ rule cutesv:
     SV calling with CuteSV
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -99,8 +98,8 @@ rule debreak:
     SV calling with DeBreak
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -129,10 +128,10 @@ rule removeBND:
     Remove TRANSLOCATION (TRA)
     """
     input:
-        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        svim = expand("{wdir}/{genome}_{aligner}_svim.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        debreak = expand("{wdir}/{genome}_{aligner}_debreak.vcf", wdir=wdir, genome=genome, aligner=aligner)
+        sniffles = "{wdir}/{genome}_{aligner}_sniffles.vcf",
+        svim = "{wdir}/{genome}_{aligner}_svim.vcf",
+        cutesv = "{wdir}/{genome}_{aligner}_cutesv.vcf",
+        debreak = "{wdir}/{genome}_{aligner}_debreak.vcf"
     output:
         svim = "{wdir}/{genome}_{aligner}_svim_noBND.vcf",
         cutesv = "{wdir}/{genome}_{aligner}_cutesv_noBND.vcf",
@@ -153,15 +152,13 @@ rule sniffles2plot:
     The sniffles2-lot package output a set of QC summary plots for a single VCF
     """
     input:
-        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        svim = expand("{wdir}/{genome}_{aligner}_svim_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        debreak = expand("{wdir}/{genome}_{aligner}_debreak_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner)
+        sniffles = "{wdir}/{genome}_{aligner}_sniffles_noBND.vcf",
+        svim = "{wdir}/{genome}_{aligner}_svim_noBND.vcf",
+        cutesv = "{wdir}/{genome}_{aligner}_cutesv_noBND.vcf"
     output:
         "{wdir}/{genome}_{aligner}_sniffles_QC/variant_count.jpg",
         "{wdir}/{genome}_{aligner}_svim_QC/variant_count.jpg",
         "{wdir}/{genome}_{aligner}_cutesv_QC/variant_count.jpg"
-    threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
     log:
@@ -259,7 +256,7 @@ rule genotype_sniffles:
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/sniffles_genotype/{genome}_sniffles \
+        -q {input.merged_fastq} -p {wdir}/sniffles_genotype/{genome}_{aligner}_sniffles \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}
@@ -275,7 +272,7 @@ rule normalize_vcf_debreak:
     input:
         vcf = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam"
     output:
         vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
         vcflist = "{wdir}/{genome}_{aligner}_vcf_list_debreak.txt",
@@ -319,7 +316,7 @@ rule genotype_debreak:
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/debreak_genotype/{genome}_debreak \
+        -q {input.merged_fastq} -p {wdir}/debreak_genotype/{genome}_{aligner}_debreak \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}

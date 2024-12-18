@@ -74,9 +74,9 @@ rule samtools_view:
     Transform the sam file to a bam file
     """
     input:
-        expand("{wdir}/{genome}_{aligner}.sam", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}.sam"
     output:
-        expand("{wdir}/{genome}_{aligner}.bam", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -90,9 +90,9 @@ rule samtools_sort:
     Sort the bam file
     """
     input:
-        expand("{wdir}/{genome}_{aligner}.bam", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}.bam"
     output:
-        expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}_sorted.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -106,9 +106,9 @@ rule samtools_index:
     Create an index related file of the sorted bam file
     """
     input:
-        expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}_sorted.bam"
     output:
-        expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
+        "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -122,12 +122,12 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     output:
-        stats = expand("{wdir}/mapping/{genome}_{aligner}_mapping.stats", wdir=wdir, genome=genome, aligner=aligner),
-        stattsv = expand("{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv", wdir=wdir, genome=genome, aligner=aligner),
-        plot = expand("{wdir}/mapping/{genome}_{aligner}_mapping_plot.html", wdir=wdir, genome=genome, aligner=aligner)
+        stats = "{wdir}/mapping/{genome}_{aligner}_mapping.stats",
+        stattsv = "{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv",
+        plot = "{wdir}/mapping/{genome}_{aligner}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
     shell:
