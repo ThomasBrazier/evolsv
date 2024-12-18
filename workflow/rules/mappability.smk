@@ -1,18 +1,18 @@
 rule mosdepth_summary:
     input:
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai"
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        dist = "{wdir}/callability/{genome}.mosdepth.global.dist.txt",
-        summary = "{wdir}/callability/{genome}.mosdepth.summary.txt",
+        dist = "{wdir}/callability/{genome}_{aligner}.mosdepth.global.dist.txt",
+        summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt"
     conda:
         "../envs/mosdepth.yaml"
     log:
-        "{wdir}/logs/mosdepth/{genome}.txt"
+        "{wdir}/logs/mosdepth/{genome}_{aligner}.txt"
     benchmark:
-        "{wdir}/benchmarks/mosdepth/{genome}.txt"
+        "{wdir}/benchmarks/mosdepth/{genome}_{aligner}.txt"
     params:
-        prefix = "{wdir}/callability/{genome}"
+        prefix = "{wdir}/callability/{genome}_{aligner}"
     shell:
         """
         mosdepth --no-per-base -t {threads} {params.prefix} {input.bam}
@@ -21,20 +21,20 @@ rule mosdepth_summary:
 
 rule mosdepth_quantize:
     input:
-        summary = "{wdir}/callability/{genome}.mosdepth.summary.txt",
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai"
+        summary = expand("{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt", wdir=wdir, genome=genome, aligner=aligner),
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        quantized = "{wdir}/callability/{genome}.quantized.bed.gz",
-        quantized_idx = "{wdir}/callability/{genome}.quantized.bed.gz.csi"
+        quantized = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz",
+        quantized_idx = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi"
     conda:
         "../envs/mosdepth.yaml"
     log:
-        "{wdir}/logs/mosdepth_quantize/{genome}.txt"
+        "{wdir}/logs/mosdepth_quantize/{genome}_{aligner}.txt"
     benchmark:
-        "{wdir}/benchmarks/mosdepth_quantize/{genome}.txt"
+        "{wdir}/benchmarks/mosdepth_quantize/{genome}_{aligner}.txt"
     params:
-        prefix = "{wdir}/callability/{genome}",
+        # prefix = "{wdir}/callability/{genome}_{aligner}",
         lower = round(config["quantize_cov_threshold_lower"]),
         upper = round(config["quantize_cov_threshold_upper"]),
         sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
@@ -45,15 +45,21 @@ rule mosdepth_quantize:
         export MOSDEPTH_Q1=LOW_COVERAGE
         export MOSDEPTH_Q2=CALLABLE
         export MOSDEPTH_Q3=HIGH_COVERAGE
-        mosdepth --no-per-base -t {threads} --quantize 0:1:{params.lower}:{params.upper_threshold}: {params.prefix} {input.bam}
+        mosdepth --no-per-base -t {threads} \
+        --quantize 0:1:{params.lower}:{params.upper_threshold}: \
+        {wdir}/callability/{genome}_minimap2 {input.bam}
+        mosdepth --no-per-base -t {threads} \
+        --quantize 0:1:{params.lower}:{params.upper_threshold}: \
+        {wdir}/callability/{genome}_nglmr {input.bam}
         """
 
 
 rule callable_bed:
     input:
-        quantized = "{wdir}/callability/{genome}.quantized.bed.gz"
+        quantized = expand("{wdir}/callability/{genome}_{aligner}.quantized.bed.gz", wdir=wdir, genome=genome, aligner=aligner),
+        quantized_idx = expand("{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        callable_bed = "{wdir}/callability/{genome}_callable.bed"
+        callable_bed = "{wdir}/callability/{genome}_{aligner}_callable.bed"
     conda:
         "../envs/mosdepth.yaml"
     shell:
@@ -107,11 +113,16 @@ rule mappability_bed:
 
 rule add_mappability:
     input:
-        callable_bed = "{wdir}/callability/{genome}_callable.bed",
+        callable_bed_minimap2 = "{wdir}/callability/{genome}_minimap2_callable.bed",
+        callable_bed_nglmr = "{wdir}/callability/{genome}_nglmr_callable.bed",
         mappable_bed = "{wdir}/mappability/{genome}_mappable.bed"
     output:
+        callable = "{wdir}/callability/{genome}_callable.bed",
         callable_mappable = "{wdir}/callability/{genome}_callable_mappable.bed"
     conda:
         "../envs/mosdepth.yaml"
     shell:
-        "bedtools intersect -a {input.callable_bed} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}"
+        """
+        bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_nglmr} | bedtools sort | bedtools merge > {output.callable}
+        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}
+        """

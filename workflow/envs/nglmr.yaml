@@ -1,6 +1,6 @@
-name: minimap2
+name: nglmr
 channels:
  - conda-forge
  - bioconda
 dependencies:
- - minimap2
+ - nglmr

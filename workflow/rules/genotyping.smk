@@ -5,7 +5,7 @@ rule svjedigraph:
     input:
         merged = "{wdir}/{genome}_merged.vcf",
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_merged_genotype_tmp.vcf"),
@@ -19,7 +19,7 @@ rule svjedigraph:
         "{wdir}/logs/{genome}_svjedigraph.log"
     shell:
         """
-        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {fqlist} -p {wdir}/{genome}_merged -t {resources.cpus_per_task} --minsupport {config[minsupport]}
+        svjedi-graph.py -v {input.merged} -r {input.fasta} -q {input.merged_fastq} -p {wdir}/{genome}_merged -t {resources.cpus_per_task} --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
@@ -49,13 +49,30 @@ rule autosomes_sexchromosomes:
         "../scripts/autosomes_sexchromosomes.R"
 
 
+rule final_vcf:
+    """
+    Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
+    """
+    input:
+        jasmine = "{wdir}/{genome}_merged.vcf",
+        svjedi = "{wdir}/{genome}_merged_genotype.vcf"
+    output:
+        "{wdir}/{genome}_final.vcf"
+    conda:
+        "../envs/bcftools.yaml"
+    shell:
+        """
+        bcftools merge --output {output} {input.jasmine} {input.svjedi}
+        """
+
+
 rule final_filtering:
     """
     Do a last filtering step on the merged genotyped dataset
     Separate autosomes and sex chromosomes
     """
     input:
-        vcf = "{wdir}/{genome}_merged_genotype.vcf",
+        vcf = "{wdir}/{genome}_final.vcf",
         sexchromosomes = "{wdir}/{genome}.sexchromosomes",
         autosomes = "{wdir}/{genome}.autosomes"
     output:

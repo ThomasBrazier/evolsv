@@ -66,3 +66,21 @@ rule sample_ids:
         """
         echo {sample_id} > {output.sampleids}
         """
+
+
+rule merge_fastq:
+    """
+    Merge fastq files for mapping
+    """
+    input:
+        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+    output:
+        merged_fastq = expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome)
+    conda:
+        "../envs/samtools.yaml"
+    params:
+        fastqlist = " ".join(samplelist)
+    shell:
+        """
+        cat {params.fastqlist} > {output.merged_fastq}
+        """

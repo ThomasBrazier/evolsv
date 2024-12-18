@@ -3,22 +3,20 @@ rule svim:
     SV calling with SVIM
     """
     input:
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        stats = "{wdir}/mapping/{genome}_mapping.stats",
-        plot = "{wdir}/mapping/{genome}_mapping_plot.html",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        svimvariants = temp("{wdir}/{genome}_svim/variants.vcf"),
-        vcf = temp("{wdir}/{genome}_svim_tmp.vcf"),
-        vcf_renamed = "{wdir}/{genome}_svim.vcf"
+        svimvariants = temp("{wdir}/{genome}_{aligner}_svim/variants.vcf"),
+        vcf = temp("{wdir}/{genome}_{aligner}_svim_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_{aligner}_svim.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
         "../envs/svim.yaml"
     log:
-        "{wdir}/logs/{genome}_svim.log"
+        "{wdir}/logs/{genome}_{aligner}_svim.log"
     shell:
         """
         svim alignment {wdir}/{genome}_svim {input.bam} {input.fasta} --insertion_sequences --read_names \
@@ -40,19 +38,19 @@ rule sniffles:
     SV calling with Sniffles
     """
     input:
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/{genome}_sniffles_tmp.vcf"),
-        vcf_renamed = "{wdir}/{genome}_sniffles.vcf"
+        vcf = temp("{wdir}/{genome}_{aligner}_sniffles_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_{aligner}_sniffles.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
         "../envs/sniffles.yaml"
     log:
-        "{wdir}/logs/{genome}_sniffles.log"
+        "{wdir}/logs/{genome}_{aligner}_sniffles.log"
     shell:
         """
         sniffles --input {input.bam} --vcf {output.vcf} --reference {input.fasta} \
@@ -71,19 +69,19 @@ rule cutesv:
     SV calling with CuteSV
     """
     input:
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/{genome}_cutesv_tmp.vcf"),
-        vcf_renamed = "{wdir}/{genome}_cutesv.vcf"
+        vcf = temp("{wdir}/{genome}_{aligner}_cutesv_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_{aligner}_cutesv.vcf"
     resources:
         tmpdir = get_big_temp
     conda:
         "../envs/cutesv.yaml"
     log:
-        "{wdir}/logs/{genome}_cutesv.log"
+        "{wdir}/logs/{genome}_{aligner}_cutesv.log"
     shell:
         """
         mkdir -p {wdir}/cutesv
@@ -101,19 +99,19 @@ rule debreak:
     SV calling with DeBreak
     """
     input:
-        bam = "{wdir}/{genome}_sorted.bam",
-        bai = "{wdir}/{genome}_sorted.bam.bai",
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
+        bai = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/{genome}_debreak_tmp.vcf"),
-        vcf_renamed = "{wdir}/{genome}_debreak.vcf"
+        vcf = temp("{wdir}/{genome}_{aligner}_debreak_tmp.vcf"),
+        vcf_renamed = "{wdir}/{genome}_{aligner}_debreak.vcf"
     conda:
         "../envs/debreak.yaml"
-    # resources:
-    #     tmpdir = get_big_temp
+    resources:
+        tmpdir = get_big_temp
     log:
-        "{wdir}/logs/{genome}_debreak.log"
+        "{wdir}/logs/{genome}_{aligner}_debreak.log"
     shell:
         """
         debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {resources.cpus_per_task} \
@@ -131,15 +129,15 @@ rule removeBND:
     Remove TRANSLOCATION (TRA)
     """
     input:
-        sniffles = "{wdir}/{genome}_sniffles.vcf",
-        svim = "{wdir}/{genome}_svim.vcf",
-        cutesv = "{wdir}/{genome}_cutesv.vcf",
-        debreak = "{wdir}/{genome}_debreak.vcf"
+        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        svim = expand("{wdir}/{genome}_{aligner}_svim.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        debreak = expand("{wdir}/{genome}_{aligner}_debreak.vcf", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        svim = "{wdir}/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
-        sniffles = "{wdir}/{genome}_sniffles_noBND.vcf"
+        svim = "{wdir}/{genome}_{aligner}_svim_noBND.vcf",
+        cutesv = "{wdir}/{genome}_{aligner}_cutesv_noBND.vcf",
+        debreak = "{wdir}/{genome}_{aligner}_debreak_noBND.vcf",
+        sniffles = "{wdir}/{genome}_{aligner}_sniffles_noBND.vcf"
     shell:
         """
         cat {input.svim} | grep -v '[a-zA-Z]*.BND' > {output.svim}
@@ -155,24 +153,24 @@ rule sniffles2plot:
     The sniffles2-lot package output a set of QC summary plots for a single VCF
     """
     input:
-        svim = "{wdir}/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
-        sniffles = "{wdir}/{genome}_sniffles_noBND.vcf"
+        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        svim = expand("{wdir}/{genome}_{aligner}_svim_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        debreak = expand("{wdir}/{genome}_{aligner}_debreak_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        "{wdir}/{genome}_sniffles_QC/variant_count.jpg",
-        "{wdir}/{genome}_svim_QC/variant_count.jpg",
-        "{wdir}/{genome}_cutesv_QC/variant_count.jpg"
+        "{wdir}/{genome}_{aligner}_sniffles_QC/variant_count.jpg",
+        "{wdir}/{genome}_{aligner}_svim_QC/variant_count.jpg",
+        "{wdir}/{genome}_{aligner}_cutesv_QC/variant_count.jpg"
     threads: workflow.cores
     conda:
         "../envs/sniffles.yaml"
     log:
-        "{wdir}/logs/{genome}_sniffles2plot.log"
+        "{wdir}/logs/{genome}_{aligner}_sniffles2plot.log"
     shell:
         """
-        python3 -m sniffles2_plot -i {input.sniffles} -o {wdir}/{genome}_sniffles_QC/
-        python3 -m sniffles2_plot -i {input.svim} -o {wdir}/{genome}_svim_QC/
-        python3 -m sniffles2_plot -i {input.cutesv} -o {wdir}/{genome}_cutesv_QC/
+        python3 -m sniffles2_plot -i {input.sniffles} -o {wdir}/{genome}_{aligner}_sniffles_QC/
+        python3 -m sniffles2_plot -i {input.svim} -o {wdir}/{genome}_{aligner}_svim_QC/
+        python3 -m sniffles2_plot -i {input.cutesv} -o {wdir}/{genome}_{aligner}_cutesv_QC/
         """
 
 
@@ -182,24 +180,24 @@ rule genotype_svim:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_svim_noBND.vcf",
+        vcf = expand("{wdir}/{genome}_{aligner}_svim_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/svim_genotype/{genome}_svim_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/svim_genotype/{genome}_svim_genotype.vcf",
-        gfa = "{wdir}/svim_genotype/{genome}_svim.gfa",
-        gaf = "{wdir}/svim_genotype/{genome}_svim.gaf",
-        aln = "{wdir}/svim_genotype/{genome}_svim_informative_aln.json"
+        vcf = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype.vcf",
+        gfa = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gfa",
+        gaf = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gaf",
+        aln = "{wdir}/svim_genotype/{genome}_{aligner}_svim_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_genotype_svim.log"
+        "{wdir}/logs/{genome}_{aligner}_genotype_svim.log"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {fqlist} -p {wdir}/svim_genotype/{genome}_svim \
+        -q {input.merged_fastq} -p {wdir}/svim_genotype/{genome}_{aligner}_svim \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}
@@ -213,24 +211,24 @@ rule genotype_cutesv:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_cutesv_noBND.vcf",
+        vcf = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/cutesv_genotype/{genome}_cutesv_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/cutesv_genotype/{genome}_cutesv_genotype.vcf",
-        gfa = "{wdir}/cutesv_genotype/{genome}_cutesv.gfa",
-        gaf = "{wdir}/cutesv_genotype/{genome}_cutesv.gaf",
-        aln = "{wdir}/cutesv_genotype/{genome}_cutesv_informative_aln.json"
+        vcf = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype.vcf",
+        gfa = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gfa",
+        gaf = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gaf",
+        aln = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_genotype_cutesv.log"
+        "{wdir}/logs/{genome}_{aligner}_genotype_cutesv.log"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {fqlist} -p {wdir}/cutesv_genotype/{genome}_cutesv \
+        -q {input.merged_fastq} -p {wdir}/cutesv_genotype/{genome}_{aligner}_cutesv \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}
@@ -244,24 +242,24 @@ rule genotype_sniffles:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_sniffles_noBND.vcf",
+        vcf = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
+        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/sniffles_genotype/{genome}_sniffles_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/sniffles_genotype/{genome}_sniffles_genotype.vcf",
-        gfa = "{wdir}/sniffles_genotype/{genome}_sniffles.gfa",
-        gaf = "{wdir}/sniffles_genotype/{genome}_sniffles.gaf",
-        aln = "{wdir}/sniffles_genotype/{genome}_sniffles_informative_aln.json"
+        vcf = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype.vcf",
+        gfa = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gfa",
+        gaf = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gaf",
+        aln = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_genotype_sniffles.log"
+        "{wdir}/logs/{genome}_{aligner}_genotype_sniffles.log"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {fqlist} -p {wdir}/sniffles_genotype/{genome}_sniffles \
+        -q {input.merged_fastq} -p {wdir}/sniffles_genotype/{genome}_sniffles \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}
@@ -275,18 +273,18 @@ rule normalize_vcf_debreak:
     Add INFO tags in Debreak output
     """
     input:
-        vcf = "{wdir}/{genome}_debreak_noBND.vcf",
+        vcf = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        bam = "{wdir}/{genome}_sorted.bam"
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
     output:
-        vcf = "{wdir}/{genome}_debreak_normalize.vcf",
-        vcflist = "{wdir}/{genome}_vcf_list_debreak.txt",
-        bamlist = "{wdir}/{genome}_bam_list_debreak.txt"
+        vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
+        vcflist = "{wdir}/{genome}_{aligner}_vcf_list_debreak.txt",
+        bamlist = "{wdir}/{genome}_{aligner}_bam_list_debreak.txt"
     threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
     log:
-        "{wdir}/logs/{genome}_normalize_debreak.log"
+        "{wdir}/logs/{genome}_{aligner}_normalize_debreak.log"
     shell:
         """
         echo "{input.vcf}" > {output.vcflist}
@@ -304,24 +302,24 @@ rule genotype_debreak:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_debreak_normalize.vcf",
+        vcf = expand("{wdir}/{genome}_{aligner}_debreak_normalize.vcf", wdir=wdir, genome=genome, aligner=aligner),
         fasta = "{wdir}/{genome}.fna",
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"]),
-        sampleids = "{wdir}/{genome}.samples"        
+        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        sampleids = "{wdir}/{genome}.samples"     
     output:
-        vcf = temp("{wdir}/debreak_genotype/{genome}_debreak_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/debreak_genotype/{genome}_debreak_genotype.vcf",
-        gfa = "{wdir}/debreak_genotype/{genome}_debreak.gfa",
-        gaf = "{wdir}/debreak_genotype/{genome}_debreak.gaf",
-        aln = "{wdir}/debreak_genotype/{genome}_debreak_informative_aln.json"
+        vcf = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
+        vcf_renamed = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype.vcf",
+        gfa = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gfa",
+        gaf = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gaf",
+        aln = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_genotype_debreak.log"
+        "{wdir}/logs/{genome}_{aligner}_genotype_debreak.log"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {fqlist} -p {wdir}/debreak_genotype/{genome}_debreak \
+        -q {input.merged_fastq} -p {wdir}/debreak_genotype/{genome}_debreak \
         -t {resources.cpus_per_task} \
         --minsupport 1
         mv {output.vcf_renamed} {output.vcf}

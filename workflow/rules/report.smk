@@ -4,7 +4,7 @@ rule samplot_subset_DUP:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_filtered.vcf"
+        final = "{wdir}/{genome}_merged_genotype.vcf"
     output:
         subset_dup_tmp = temp("{wdir}/samplot/{genome}_samplot_DUP_tmp.vcf"),
         subset_dup = temp("{wdir}/samplot/{genome}_samplot_DUP.vcf")
@@ -25,7 +25,7 @@ rule samplot_subset_INV:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_filtered.vcf"
+        final = "{wdir}/{genome}_merged_genotype.vcf"
     output:
         subset_inv_tmp = temp("{wdir}/samplot/{genome}_samplot_INV_tmp.vcf"),
         subset_inv = temp("{wdir}/samplot/{genome}_samplot_INV.vcf")
@@ -67,7 +67,7 @@ rule samplot_subset_DEL:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_filtered.vcf"
+        final = "{wdir}/{genome}_merged_genotype.vcf"
     output:
         subset_del_tmp = temp("{wdir}/samplot/{genome}_samplot_DEL_tmp.vcf"),
         subset_del = temp("{wdir}/samplot/{genome}_samplot_DEL.vcf")
@@ -93,7 +93,7 @@ rule samplot_plot:
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
         fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
-        bam = expand("{wdir}/{genome}_sorted.bam", wdir=wdir, genome=genome)
+        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner)
     output:
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
@@ -101,7 +101,7 @@ rule samplot_plot:
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir = "{wdir}/samplot"
+        outdir = "{wdir}/samplot_{aligner}"
     shell:
         """
         samplot vcf \
@@ -136,7 +136,6 @@ rule samplot_plot:
             --debug
         """
 
-
 rule final_report:
     """
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
@@ -144,10 +143,10 @@ rule final_report:
     input:
         final = "{wdir}/{genome}_filtered.vcf",
         merged = "{wdir}/{genome}_merged_genotype.vcf",
-        sniffles = "{wdir}/{genome}_sniffles_noBND.vcf",
-        svim = "{wdir}/{genome}_svim_noBND.vcf",
-        cutesv = "{wdir}/{genome}_cutesv_noBND.vcf",
-        debreak = "{wdir}/{genome}_debreak_noBND.vcf",
+        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        svim = expand("{wdir}/{genome}_{aligner}_svim_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
+        debreak = expand("{wdir}/{genome}_{aligner}_debreak_normalize.vcf", wdir=wdir, genome=genome, aligner=aligner),
         mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",

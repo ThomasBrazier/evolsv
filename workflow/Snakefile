@@ -21,10 +21,13 @@ sample_id = samples["sample_name"].iloc[0]
 
 wdir = config['datadir'] + genome
 
+aligner = ["minimap2","nglmr"]
+
 wildcard_constraints:
     wdir = wdir,
     genome = genome,
-    sample_id = sample_id
+    sample_id = sample_id,
+    aligner = aligner
 
 include: "common.smk"
 include: "rules/common.smk"
