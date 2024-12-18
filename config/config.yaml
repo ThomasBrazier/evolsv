@@ -80,3 +80,9 @@ mappability_k: 150 #the kmer used to compute mappability with genmap; you should
 #to do strict filtering, set to 0
 
 mappability_merge: 100 #merge passing mappability regions separated by this or fewer bp into a single region
+
+
+# Annotation with Truvari
+threshold: 0.8 # Threshold for pct of allele covered to consider hit (0.8)
+dist: 10 # Minimum distance an alignment must be from a DEL's position to be considered
+hits: 0 # Report top hits as chr:start-end.pct (max 0)

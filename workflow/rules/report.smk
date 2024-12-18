@@ -91,14 +91,12 @@ rule samplot_plot:
     input:
         subset_DUP = expand("{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome),
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
-        # subset_INS = expand("{wdir}/samplot/{genome}_samplot_INS.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
         fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
         bam = expand("{wdir}/{genome}_sorted.bam", wdir=wdir, genome=genome)
     output:
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
-        # index_html_INS = "{wdir}/samplot/INS/index.html",
         index_html_DEL = "{wdir}/samplot/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
@@ -126,16 +124,6 @@ rule samplot_plot:
             --sample_ids {sample_id} \
             -b {input.bam} \
             --debug
-        # samplot vcf \
-        #     --vcf {input.subset_INS} \
-        #     --plot_all \
-        #     --threads {threads} \
-        #     -d {params.outdir}/INS \
-        #     -O jpg \
-        #     --format GT,DP,AD,PL \
-        #     --sample_ids {sample_id} \
-        #     -b {input.bam} \
-        #     --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
@@ -163,7 +151,6 @@ rule final_report:
         mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
         index_html_DUP = "{wdir}/samplot/DUP/index.html",
         index_html_INV = "{wdir}/samplot/INV/index.html",
-        # index_html_INS = "{wdir}/samplot/INS/index.html",
         index_html_DEL = "{wdir}/samplot/DEL/index.html"
     output:
         "{wdir}/{genome}_finalQC.html"
