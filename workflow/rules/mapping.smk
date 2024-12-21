@@ -25,9 +25,9 @@ rule minimap2:
 
 
 
-rule nglmr:
+rule ngmlr:
     """
-    Map reads to the reference genome with NGLMR
+    Map reads to the reference genome with ngmlr
     --rg-id <string>
         Adds RG:Z:<string> to all alignments in SAM/BAM [none]
     --rg-sm <string>
@@ -52,18 +52,17 @@ rule nglmr:
         qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
     output:
-        sam = temp("{wdir}/{genome}_nglmr.sam")
+        sam = temp("{wdir}/{genome}_ngmlr.sam")
     conda:
-        "../envs/nglmr.yaml"
+        "../envs/ngmlr.yaml"
     log:
-        "{wdir}/logs/{genome}_nglmr.log"
+        "{wdir}/logs/{genome}_ngmlr.log"
     shell:
         """
         ngmlr -t {resources.cpus_per_task} \
         -r {input.fasta} -q {input.fastq} \
-        --presets pacbio --min-identity {config[min-identity]} \
-        --min-residues {config[min-residues]} --no-smallinv {config[no-smallinv]} \
-        --no-lowqualitysplit {config[no-lowqualitysplit]} \
+        --presets pacbio \
+        --min-identity {config[min-identity]} \
         --rg-id {sample_id} --rg-sm {sample_id} \
         -o {output.sam}
         """
@@ -74,14 +73,17 @@ rule samtools_view:
     Transform the sam file to a bam file
     """
     input:
-        "{wdir}/{genome}_{aligner}.sam"
+        sam_minimap2 = "{wdir}/{genome}_minimap2.sam",
+        sam_ngmlr = "{wdir}/{genome}_ngmlr.sam"
     output:
-        "{wdir}/{genome}_{aligner}.bam"
+        bam_minimap2 = "{wdir}/{genome}_minimap2.bam",
+        bam_ngmlr = "{wdir}/{genome}_ngmlr.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
         """
-        samtools view -S -b {input} > {output}
+        samtools view -S -b {input.sam_minimap2} > {output.bam_minimap2}
+        samtools view -S -b {input.sam_ngmlr} > {output.bam_ngmlr}
         """
 
 
@@ -122,12 +124,12 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
+        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
+        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners)
     output:
-        stats = "{wdir}/mapping/{genome}_{aligner}_mapping.stats",
-        stattsv = "{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv",
-        plot = "{wdir}/mapping/{genome}_{aligner}_mapping_plot.html"
+        stats = "{wdir}/mapping/{genome}_{aligners}_mapping.stats",
+        stattsv = "{wdir}/mapping/{genome}_{aligners}_mapping.stats.tsv",
+        plot = "{wdir}/mapping/{genome}_{aligners}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
     shell:

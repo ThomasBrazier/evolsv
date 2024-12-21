@@ -1,6 +1,6 @@
-name: nglmr
+name: ngmlr
 channels:
  - conda-forge
  - bioconda
 dependencies:
- - nglmr
+ - ngmlr

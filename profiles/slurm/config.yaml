@@ -24,6 +24,7 @@ set-threads:
   nanoplot: 1
   # Alignment. Can use more than 1 thread, except merge_bams.
   minimap2: 16
+  ngmlr: 16
   samtools_view: 1
   samtools_sort: 1 # Does NOT use more than 1 thread.
   samtools_index: 1
@@ -79,6 +80,11 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   minimap2:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+    cpus_per_task: 16
+  ngmlr:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:

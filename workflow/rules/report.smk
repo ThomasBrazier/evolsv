@@ -93,47 +93,84 @@ rule samplot_plot:
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
         fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
-        bam = expand("{wdir}/{genome}_{aligner}_sorted.bam", wdir=wdir, genome=genome, aligner=aligner),
-        bam_index = expand("{wdir}/{genome}_{aligner}_sorted.bam.bai", wdir=wdir, genome=genome, aligner=aligner)
+        bam_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam",
+        bam_index_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam.bai",
+        bam_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam",
+        bam_index_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam.bai"
     output:
-        index_html_DUP = "{wdir}/samplot/DUP/index.html",
-        index_html_INV = "{wdir}/samplot/INV/index.html",
-        index_html_DEL = "{wdir}/samplot/DEL/index.html"
+        "{wdir}/{genome}_samplot_minimap2/DUP/index.html",
+        "{wdir}/{genome}_samplot_minimap2/INV/index.html",
+        "{wdir}/{genome}_samplot_minimap2/DEL/index.html",
+        "{wdir}/{genome}_samplot_ngmlr/DUP/index.html",
+        "{wdir}/{genome}_samplot_ngmlr/INV/index.html",
+        "{wdir}/{genome}_samplot_ngmlr/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir = "{wdir}/samplot_{aligner}"
+        outdir_minimap2 = "{wdir}/{genome}_samplot_minimap2",
+        outdir_ngmlr = "{wdir}/{genome}_samplot_ngmlr"
     shell:
         """
         samplot vcf \
             --vcf {input.subset_DUP} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir}/DUP \
+            -d {params.outdir_minimap2}/DUP \
             -O jpg \
             --format GT,DP,AD,PL \
-            -b {input.bam} \
+            -b {input.bam_minimap2} \
             --sample_ids {sample_id} \
             --debug
         samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir}/INV \
+            -d {params.outdir_minimap2}/INV \
             -O jpg \
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
-            -b {input.bam} \
+            -b {input.bam_minimap2} \
             --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir}/DEL \
+            -d {params.outdir_minimap2}/DEL \
             -O jpg \
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
-            -b {input.bam} \
+            -b {input.bam_minimap2} \
+            --debug
+
+        samplot vcf \
+            --vcf {input.subset_DUP} \
+            --plot_all \
+            --threads {threads} \
+            -d {params.outdir_ngmlr}/DUP \
+            -O jpg \
+            --format GT,DP,AD,PL \
+            -b {input.bam_ngmlr} \
+            --sample_ids {sample_id} \
+            --debug
+        samplot vcf \
+            --vcf {input.subset_INV} \
+            --plot_all \
+            --threads {threads} \
+            -d {params.outdir_ngmlr}/INV \
+            -O jpg \
+            --format GT,DP,AD,PL \
+            --sample_ids {sample_id} \
+            -b {input.bam_ngmlr} \
+            --debug
+        samplot vcf \
+            --vcf {input.subset_DEL} \
+            --plot_all \
+            --threads {threads} \
+            -d {params.outdir_ngmlr}/DEL \
+            -O jpg \
+            --format GT,DP,AD,PL \
+            --sample_ids {sample_id} \
+            -b {input.bam_ngmlr} \
             --debug
         """
 
@@ -143,18 +180,7 @@ rule final_report:
     """
     input:
         final = "{wdir}/{genome}_filtered.vcf",
-        merged = "{wdir}/{genome}_merged_genotype.vcf",
-        sniffles = expand("{wdir}/{genome}_{aligner}_sniffles_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        svim = expand("{wdir}/{genome}_{aligner}_svim_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        cutesv = expand("{wdir}/{genome}_{aligner}_cutesv_noBND.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        debreak = expand("{wdir}/{genome}_{aligner}_debreak_normalize.vcf", wdir=wdir, genome=genome, aligner=aligner),
-        mappability = "{wdir}/callability/{genome}_callable_mappable.bed",
-        index_html_DUP = "{wdir}/samplot/DUP/index.html",
-        index_html_INV = "{wdir}/samplot/INV/index.html",
-        index_html_DEL = "{wdir}/samplot/DEL/index.html",
-        svimQC = expand("{wdir}/{genome}_{aligner}_svim_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner),
-        cutesvQC = expand("{wdir}/{genome}_{aligner}_cutesv_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner),
-        snifflesQC = expand("{wdir}/{genome}_{aligner}_sniffles_QC/variant_count.jpg", wdir=wdir, genome=genome, aligner=aligner)
+        merged = "{wdir}/{genome}_merged_genotype.vcf"
     output:
         "{wdir}/{genome}_finalQC.html"
     conda:

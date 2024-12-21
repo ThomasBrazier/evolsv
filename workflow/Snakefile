@@ -21,13 +21,13 @@ sample_id = samples["sample_name"].iloc[0]
 
 wdir = config['datadir'] + genome
 
-aligner = ["minimap2","nglmr"]
+aligners = ["minimap2","ngmlr"]
 
 wildcard_constraints:
     wdir = wdir,
     genome = genome,
     sample_id = sample_id,
-    aligner = aligner
+    aligners = aligners
 
 include: "common.smk"
 include: "rules/common.smk"
@@ -41,7 +41,24 @@ include: "rules/report.smk"
 # include: "rules/mappability.smk"
 
 
+# rule all:
+#     input:
+#         expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome),
+#         expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
+#         expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome)
+
+
+
 rule all:
     input:
         expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome)
+        expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_minimap2/DUP/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_minimap2/INV/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_minimap2/DEL/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_ngmlr/DUP/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_ngmlr/INV/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_samplot_ngmlr/DEL/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_{aligners}_svim_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/{genome}_{aligners}_cutesv_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/{genome}_{aligners}_sniffles_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners)
