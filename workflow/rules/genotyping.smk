@@ -57,12 +57,18 @@ rule final_vcf:
         jasmine = "{wdir}/{genome}_merged.vcf",
         svjedi = "{wdir}/{genome}_merged_genotype.vcf"
     output:
-        "{wdir}/{genome}_final.vcf"
+        final = "{wdir}/{genome}_final.vcf",
+        jasmine_gz = temp("{wdir}/{genome}_merged.vcf.gz"),
+        svjedi_gz = temp("{wdir}/{genome}_merged_genotype.vcf.gz")
     conda:
         "../envs/bcftools.yaml"
     shell:
         """
-        bcftools merge --output {output} {input.jasmine} {input.svjedi}
+        bcftools view {input.jasmine} -Oz -o {output.jasmine_gz}
+        bcftools view {input.svjedi} -Oz -o {output.svjedi_gz}
+        bcftools index {output.jasmine_gz}
+        bcftools index {output.svjedi_gz}
+        bcftools merge --output {output.final} {output.jasmine_gz} {output.svjedi_gz}
         """
 
 

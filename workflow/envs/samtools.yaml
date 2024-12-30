@@ -3,7 +3,7 @@ channels:
  - conda-forge
  - bioconda
 dependencies:
- - samtools
+ - samtools<1.10
  - bcftools
  - htslib
  - gnuplot

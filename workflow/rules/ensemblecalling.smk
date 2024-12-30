@@ -3,8 +3,8 @@ rule svim:
     SV calling with SVIM
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
-        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -19,16 +19,22 @@ rule svim:
         "{wdir}/logs/{genome}_{aligner}_svim.log"
     shell:
         """
-        svim alignment {wdir}/{genome}_svim {input.bam} {input.fasta} --insertion_sequences --read_names \
-        --min_sv_size {config[min_sv_size]} --max_sv_size {config[max_sv_size]} \
-        --minimum_depth {config[minimum_depth]} --min_mapq {config[min_mapq]} \
-        --segment_gap_tolerance {config[segment_gap_tolerance]} --segment_overlap_tolerance {config[segment_overlap_tolerance]}
+        svim alignment {wdir}/{genome}_{wildcards.aligner}_svim {input.bam} {input.fasta} \
+        --insertion_sequences --read_names \
+        --min_sv_size {config[min_sv_size]} \
+        --max_sv_size {config[max_sv_size]} \
+        --minimum_depth {config[minimum_depth]} \
+        --min_mapq {config[min_mapq]} \
+        --segment_gap_tolerance {config[segment_gap_tolerance]} \
+        --segment_overlap_tolerance {config[segment_overlap_tolerance]}
         # SVIM does not filter SV itself and outputs all variants
-        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/{genome}_svim/variants.vcf
+        echo "Filter SVIM output"
+        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/{genome}_{wildcards.aligner}_svim/variants.vcf
         # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
         # Consistent renaming of VCF header with sample id
+        echo "Renaming VCF header with sample id"
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
 
@@ -37,8 +43,8 @@ rule sniffles:
     SV calling with Sniffles
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
-        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -52,11 +58,17 @@ rule sniffles:
         "{wdir}/logs/{genome}_{aligner}_sniffles.log"
     shell:
         """
-        sniffles --input {input.bam} --vcf {output.vcf} --reference {input.fasta} \
-        --threads {resources.cpus_per_task} --allow-overwrite \
-        --minsvlen {config[min_sv_size]} --minsupport {config[minsupport]} \
-        --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} --mapq {config[mapq]} \
-        --cluster-binsize {config[cluster-binsize]} --qc-coverage {config[min_coverage]} \
+        sniffles --input {input.bam} \
+        --vcf {output.vcf} \
+        --reference {input.fasta} \
+        --threads {resources.cpus_per_task} \
+        --allow-overwrite \
+        --minsvlen {config[min_sv_size]} \
+        --minsupport {config[minsupport]} \
+        --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} \
+        --mapq {config[mapq]} \
+        --cluster-binsize {config[cluster-binsize]} \
+        --qc-coverage {config[min_coverage]} \
         --output-rnames
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
@@ -68,8 +80,8 @@ rule cutesv:
     SV calling with CuteSV
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
-        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -83,11 +95,17 @@ rule cutesv:
         "{wdir}/logs/{genome}_{aligner}_cutesv.log"
     shell:
         """
-        mkdir -p {wdir}/cutesv
-        cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
-        --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} --genotype --report_readid --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
-        --max_size {config[max_size]} --min_support {config[min_coverage]} --min_size {config[min_sv_size]} --min_siglength {config[min_siglength]} \
-        {input.bam} {input.fasta} {output.vcf} {wdir}/cutesv/
+        mkdir -p {wdir}/cutesv_{wildcards.aligner}
+        cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} \
+        --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
+        --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} \
+        --genotype --report_readid \
+        --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
+        --max_size {config[max_size]} \
+        --min_support {config[min_coverage]} \
+        --min_size {config[min_sv_size]} \
+        --min_siglength {config[min_siglength]} \
+        {input.bam} {input.fasta} {output.vcf} {wdir}/cutesv_{wildcards.aligner}/
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """
@@ -98,8 +116,8 @@ rule debreak:
     SV calling with DeBreak
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
-        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners),
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -113,9 +131,15 @@ rule debreak:
         "{wdir}/logs/{genome}_{aligner}_debreak.log"
     shell:
         """
-        debreak --bam {input.bam} --outpath {wdir}/debreak/ --rescue_large_ins --rescue_dup -t {resources.cpus_per_task} \
-        --min_size {config[min_sv_size]} --min_support {config[min_coverage]} --poa --ref {input.fasta}
-        mv {wdir}/debreak/debreak.vcf {output.vcf}
+        debreak --bam {input.bam} \
+        --outpath {wdir}/debreak_{wildcards.aligner}/ \
+        --rescue_large_ins \
+        --rescue_dup \
+        -t {resources.cpus_per_task} \
+        --min_size {config[min_sv_size]} \
+        --min_support {config[min_coverage]} --poa \
+        --ref {input.fasta}
+        mv {wdir}/debreak_{wildcards.aligner}/debreak.vcf {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
         """

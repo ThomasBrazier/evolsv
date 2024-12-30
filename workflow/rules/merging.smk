@@ -66,13 +66,13 @@ rule jasmine:
     shell:
         """
         echo "{wdir}/sniffles_genotype/{genome}_minimap2_sniffles_genotype.vcf" > {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_minimap2_svim_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_minimap2_cutesv_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_minimap2_debreak_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/svim_genotype/{genome}_minimap2_svim_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/cutesv_genotype/{genome}_minimap2_cutesv_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/debreak_genotype/{genome}_minimap2_debreak_genotype.vcf" >> {output.vcflist}
         echo "{wdir}/sniffles_genotype/{genome}_ngmlr_sniffles_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_ngmlr_svim_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_ngmlr_cutesv_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_ngmlr_debreak_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/svim_genotype/{genome}_ngmlr_svim_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/cutesv_genotype/{genome}_ngmlr_cutesv_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/debreak_genotype/{genome}_ngmlr_debreak_genotype.vcf" >> {output.vcflist}
 
         echo "{wdir}/{genome}_minimap2_sorted.bam" > {output.bamlist}
         echo "{wdir}/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
