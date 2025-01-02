@@ -64,10 +64,18 @@ rule final_vcf:
         "../envs/bcftools.yaml"
     shell:
         """
-        bcftools view {input.jasmine} -Oz -o {output.jasmine_gz}
-        bcftools view {input.svjedi} -Oz -o {output.svjedi_gz}
+        bcftools annotate --header-lines workflow/header/header.txt -Ou {input.jasmine} | \
+        bcftools sort -Ou | \
+        bcftools view -Oz -o {output.jasmine_gz}
+
         bcftools index {output.jasmine_gz}
+
+        bcftools annotate --header-lines workflow/header/header.txt -Ou {input.svjedi} | \
+        bcftools sort -Ou | \
+        bcftools view -Oz -o {output.svjedi_gz}
+
         bcftools index {output.svjedi_gz}
+
         bcftools merge --output {output.final} {output.jasmine_gz} {output.svjedi_gz}
         """
 

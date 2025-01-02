@@ -17,4 +17,25 @@
 ##INFO=<ID=REFINEDALT,Number=1,Type=Integer,Description="Iris refined">
 ##INFO=<ID=MULTI,Number=0,Type=Flag,Description="If the SV is multi-allelic SV">
 ##INFO=<ID=LARGEINS,Number=0,Type=Flag,Description="Large insertion indentified from local assembly">
+##INFO=<ID=SUPPORT,Number=1,Type=Integer,Description="Number of reads supporting this variant">
+##INFO=<ID=STD_SPAN,Number=1,Type=Float,Description="Standard deviation in span of merged SV signatures">
+##INFO=<ID=STD_POS,Number=1,Type=Float,Description="Standard deviation in position of merged SV signatures">
+##INFO=<ID=STD_POS1,Number=1,Type=Float,Description="Standard deviation of breakend 1 position">
+##INFO=<ID=STD_POS2,Number=1,Type=Float,Description="Standard deviation of breakend 2 position">
+##INFO=<ID=SEQS,Number=.,Type=String,Description="Insertion sequences from all supporting reads">
+##INFO=<ID=READS,Number=.,Type=String,Description="Names of all supporting reads">
+##INFO=<ID=CUTPASTE,Number=0,Type=Flag,Description="Genomic origin of interspersed duplication seems to be deleted">
 ##FILTER=<ID=q5,Description="Quality below 5">
+##FILTER=<ID=hom_ref,Description="Genotype is homozygous reference">
+##FILTER=<ID=not_fully_covered,Description="Tandem duplication is not fully covered by a single read">
+##FILTER=<ID=GT,Description="Genotype filter">
+##FILTER=<ID=SUPPORT_MIN,Description="Minimum read support filter">
+##FILTER=<ID=STDEV_POS,Description="SV Breakpoint standard deviation filter">
+##FILTER=<ID=STDEV_LEN,Description="SV length standard deviation filter">
+##FILTER=<ID=COV_MIN,Description="Minimum coverage filter">
+##FILTER=<ID=COV_CHANGE,Description="Coverage change filter">
+##FILTER=<ID=COV_CHANGE_FRAC,Description="Coverage fractional change filter">
+##FILTER=<ID=MOSAIC_AF,Description="Mosaic maximum allele frequency filter">
+##FILTER=<ID=ALN_NM,Description="Length adjusted mismatch filter">
+##FILTER=<ID=STRAND,Description="Strand support filter">
+##FILTER=<ID=SVLEN_MIN,Description="SV length filter">
