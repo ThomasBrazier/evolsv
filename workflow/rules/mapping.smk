@@ -124,12 +124,12 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam = expand("{wdir}/{genome}_{aligners}_sorted.bam", wdir=wdir, genome=genome, aligners=aligners),
-        bai = expand("{wdir}/{genome}_{aligners}_sorted.bam.bai", wdir=wdir, genome=genome, aligners=aligners)
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     output:
-        stats = "{wdir}/mapping/{genome}_{aligners}_mapping.stats",
-        stattsv = "{wdir}/mapping/{genome}_{aligners}_mapping.stats.tsv",
-        plot = "{wdir}/mapping/{genome}_{aligners}_mapping_plot.html"
+        stats = "{wdir}/mapping/{genome}_{aligner}_mapping.stats",
+        stattsv = "{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv",
+        plot = "{wdir}/mapping/{genome}_{aligner}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
     shell:
