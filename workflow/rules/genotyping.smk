@@ -49,7 +49,7 @@ rule autosomes_sexchromosomes:
         "../scripts/autosomes_sexchromosomes.R"
 
 
-rule final_vcf:
+rule allsamples_vcf:
     """
     Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
     """
@@ -57,7 +57,7 @@ rule final_vcf:
         jasmine = "{wdir}/{genome}_merged.vcf",
         svjedi = "{wdir}/{genome}_merged_genotype.vcf"
     output:
-        final = "{wdir}/{genome}_final.vcf",
+        final = "{wdir}/{genome}_allsamples.vcf",
         jasmine_gz = temp("{wdir}/{genome}_merged.vcf.gz"),
         svjedi_gz = temp("{wdir}/{genome}_merged_genotype.vcf.gz")
     conda:
@@ -86,10 +86,11 @@ rule final_filtering:
     Separate autosomes and sex chromosomes
     """
     input:
-        vcf = "{wdir}/{genome}_final.vcf",
+        vcf = "{wdir}/{genome}_allsamples.vcf",
         sexchromosomes = "{wdir}/{genome}.sexchromosomes",
         autosomes = "{wdir}/{genome}.autosomes"
     output:
+        filtered_tmp = "{wdir}/{genome}_filtered_tmp.vcf",
         filtered = "{wdir}/{genome}_filtered.vcf",
         filtered_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf"   
     threads: workflow.cores
@@ -100,6 +101,17 @@ rule final_filtering:
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.filtered} {input.vcf}
+        # Remove accessory INFO tags
+        bcftools annotate --remove INFO/STRAND,INFO/STRANDS,INFO/AF,INFO/STDEV_POS,INFO/STDEV_LEN,INFO/COVERAGE,INFO/SUPPORT_INLINE,\
+        INFO/SUPPORT_LONG,INFO/CIPOS,INFO/CILEN,INFO/RE,\
+        INFO/PRECISE,INFO/IMPRECISE,\
+        INFO/REFINEDALT,INFO/MULTI,INFO/LARGEINS,INFO/STD_SPAN,INFO/STD_POS,INFO/STD_POS1,INFO/STD_POS2,\
+        INFO/CHR2,INFO/END,INFO/MAPQ,INFO/SUPPREAD,INFO/SUPPORT,INFO/READS,INFO/CUTPASTE,\
+        FILTER/MOSAIC_AF,FILTER/SVLEN_MIN,FILTER/STRAND,FILTER/ALN_NM,INFO/STARTVARIANCE,INFO/ENDVARIANCE,\
+        FILTER/COV_CHANGE_FRAC,FILTER/COV_CHANGE,FILTER/not_fully_covered,FILTER/hom_ref,\
+        INFO/SEQS,FILTER/q5,FILTER/STDEV_POS,FILTER/STDEV_LEN {output.filtered_tmp} > {output.filtered}
+
+        # Filter sex chromosomes
         if [ $(wc -l < {input.sexchromosomes}) -eq 0 ]; then
         echo "No sex chr"
         cat {input.vcf} | grep "#" > {output.filtered_sexchr}
