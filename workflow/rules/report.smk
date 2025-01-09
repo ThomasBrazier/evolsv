@@ -174,13 +174,30 @@ rule samplot_plot:
             --debug
         """
 
+
+rule vcf_to_tsv:
+    """
+    Convert the full vcf to tabular data frame for R scripts
+    """
+    input:
+        vcf = "{wdir}/{genome}_filtered.vcf"
+    output:
+        tsv = "{wdir}/{genome}_filtered.tsv"
+    shell:
+        """
+        bash workflow/scripts/vcf_to_tsv.sh {input.vcf} {output.tsv}
+        """
+
+
+
 rule final_report:
     """
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
     """
     input:
         final = "{wdir}/{genome}_filtered.vcf",
-        merged = "{wdir}/{genome}_merged_genotype.vcf"
+        merged = "{wdir}/{genome}_merged_genotype.vcf",
+        final = "{wdir}/{genome}_filtered.tsv"
     output:
         "{wdir}/{genome}_finalQC.html"
     conda:

@@ -135,10 +135,10 @@ fix.merged$jasmine = ifelse(!is.na(fix.merged$supp_vec), 1, 0)
 ```
 
 ```{r samplenames, echo = T}
-sample_names = c("FORMAT", paste(c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
-                                   "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
-                                   "ngmlr_cutesv", "ngmlr_debreak"), genome, sep = "_"), genome)
-names(gt.merged) = sample_names
+# sample_names = c("FORMAT", paste(c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
+#                                    "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
+#                                    "ngmlr_cutesv", "ngmlr_debreak"), genome, sep = "_"), genome)
+# names(gt.merged) = sample_names
 ```
 
 
