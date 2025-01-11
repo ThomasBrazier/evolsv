@@ -86,11 +86,22 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 # Mapping
 
 
-```{r mapping, echo = F}
-mapping = readLines(paste0("../../", wdir, "/mapping/", genome, "_mapping.stats.tsv"))
+```{r mapping_minimap2, echo = F}
+mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping/", genome, "_minimap2_mapping.stats.tsv"))
 
-print(gsub("\t", " ", mapping))
+print(gsub("\t", " ", mapping_minimap2))
 ```
+
+
+
+
+```{r mapping_ngmlr, echo = F}
+mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping/", genome, "_ngmlr_mapping.stats.tsv"))
+
+print(gsub("\t", " ", mapping_ngmlr))
+```
+
+
 
 
 The diagnostic plots for the mapping with minimap2 are in the `mapping/` directory.
@@ -223,7 +234,7 @@ fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.mer
 ```
 
 
-````{r, echo = F}
+```{r, echo = F}
 # Tidy data frame
 fix.merged1 = fix.merged[fix.merged$minimap2 == 1 & fix.merged$sniffles == 1,]
 fix.merged1$aligner = "minimap2"
@@ -405,7 +416,7 @@ Number of SV supported by the four tools: -->
 
 ## Venn diagram - All SV types together
 
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
+```{r venndiag1, echo = F, fig.width= 12, fig.height=9}
 plot(euler(fix.merged[, colnames(fix.merged) %in% c("minimap2", "ngmlr")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
@@ -413,7 +424,7 @@ plot(euler(fix.merged[, colnames(fix.merged) %in% c("minimap2", "ngmlr")], shape
 
 
 
-```{r venndiag, echo = F, fig.width= 12, fig.height=9}
+```{r venndiag2, echo = F, fig.width= 12, fig.height=9}
 plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
      fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))

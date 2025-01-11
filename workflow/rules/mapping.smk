@@ -138,5 +138,5 @@ rule samtools_stats:
         samtools stats {input.bam} > {output.stats}
         cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
-        plot-bamstats -p {wdir}/mapping/{genome}_mapping_plot {output.stats}
+        plot-bamstats -p {wdir}/mapping/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
         """
