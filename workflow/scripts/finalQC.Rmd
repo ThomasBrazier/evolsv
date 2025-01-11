@@ -114,23 +114,29 @@ How to make the difference between a call that has been merged and another that 
 
 
 ```{r loading_final_vcf, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
-merged = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
+# merged = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
+merged = read.table(paste0("../../", wdir, "/", genome, "_filtered.tsv"),
+                    header = TRUE, sep = "\t")
 
 # TESTING
 # merged = read.vcfR(paste0("../../", wdir, "/", "test_lightheader.vcf"), check_keys = FALSE,
 #                    verbose = TRUE)
-# 
+# merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
+#                     header = TRUE, sep = "\t", quote = '"')
+
 # saveRDS(merged, "../../data/test.Rds")
 # merged = readRDS("../../data/test.Rds")
-
-gt.merged = as.data.frame(merged@gt)
-fix.merged = as.data.frame(merged@fix)
+# 
+# gt.merged = as.data.frame(merged@gt)
+# fix.merged = as.data.frame(merged@fix)
+fix.merged = merged[,1:6]
+gt.merged = merged[,7:16]
 
 fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
 fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
 
 fix.merged$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
-fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-1]+"))))
+fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-9]+"))))
 fix.merged$jasmine = ifelse(!is.na(fix.merged$supp_vec), 1, 0)
 ```
 
@@ -685,6 +691,130 @@ p2 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
 
 ggarrange(p1, p2, ncol = 2)
 ```
+
+
+
+# Precision/recall for each tool and each type of SV
+
+
+Estimate the calling rates for each tool
+* the TRUE POSITIVE rate is when a call is genotyped as HET by SVjedi-graph
+* the FALSE POSITIVE rate is when a call is genotyped as HOM by SVjedi-graph
+* the FALSE NEGATIVE rate is when a call is genotyped as missing (./.) while it has been called as HET for at least one other tool (we assume that a HET call is a true call, yet it an approximation and ground truth remains unknown). Note that because of this approximation we might be underestimating the false negative rate (the proportion of undetected variants) and overestimating the recall and F1 score. However, without ground truth, it is difficult to estimate the false negative rate, and our performance score is still valid to compare and weight the different tools.
+* the TRUE NEGATIVE rate is not estimated, and is not used in precision/recall calculation
+
+
+Quick reminder, the precision is TP / (TP + FP) and recall is TP / (TP +  FN). The F1 score is then F1 = 2 * ((precision * recall) / (precision + recall)).
+
+
+```{r, echo = T}
+# Build a matrix of calls per tool
+# "minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
+#                                    "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
+#                                    "ngmlr_cutesv", "ngmlr_debreak"
+genotype = fix.merged[,c(1:3, 7)]
+
+gen = unlist(lapply(strsplit(gt.merged$minimap2_sniffles, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$minimap2_sniffles = gen
+
+gen = unlist(lapply(strsplit(gt.merged$minimap2_svim, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$minimap2_svim = gen
+
+gen = unlist(lapply(strsplit(gt.merged$minimap2_cutesv, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$minimap2_cutesv = gen
+
+gen = unlist(lapply(strsplit(gt.merged$minimap2_debreak, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$minimap2_debreak = gen
+
+
+
+gen = unlist(lapply(strsplit(gt.merged$ngmlr_sniffles, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$ngmlr_sniffles = gen
+
+gen = unlist(lapply(strsplit(gt.merged$ngmlr_svim, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$ngmlr_svim = gen
+
+gen = unlist(lapply(strsplit(gt.merged$ngmlr_cutesv, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$ngmlr_cutesv = gen
+
+gen = unlist(lapply(strsplit(gt.merged$ngmlr_debreak, ":"), `[[`, 1))
+gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
+genotype$ngmlr_debreak = gen
+
+# Estimate precision, recall and F1 score
+performance = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
+                                   "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
+                                   "ngmlr_cutesv", "ngmlr_debreak"),
+                         true_positive = NA,
+                         false_positive = NA,
+                         false_negative = NA)
+
+n_calls = nrow(genotype)
+
+for (i in 1:nrow(performance)) {
+  performance$true_positive[i] = sum(genotype[,performance$tool[i]] == "HET") / n_calls
+  performance$false_positive[i] = sum(genotype[,performance$tool[i]] == "HOM") / n_calls
+  het_in_one_tool = apply(genotype, 1, function(x) {"HET" %in% x})
+  performance$false_negative[i] = sum(genotype[,performance$tool[i]] == "MISSING" & het_in_one_tool) / n_calls
+}
+
+performance$precision = performance$true_positive / (performance$true_positive + performance$false_positive)
+performance$recall = performance$true_positive / (performance$true_positive + performance$false_negative)
+
+performance$f1 = 2 * ((performance$precision * performance$recall) / (performance$precision + performance$recall))
+
+# Save the performance output
+write.table(performance, paste0("../../", wdir, "/performance/", genome, "_performance.tsv"),
+            quote = F, sep = "\t", row.names = F, col.names = T)
+```
+
+
+```{r, echo = T, tab.cap = "Performance of the different SV calling tools"}
+kable(performance, digits = 3, align = "c")
+```
+
+
+
+## Accumulation curve
+
+The cumulative number of calls (pooling tools) as a function of the number of supporting tools. If almost all SVs have been called , we expect an asymptotic curve towards a plateau when all individual tools are pooled together.
+
+```{r, echo = T}
+#  Cumulative number of calls supported by n, n-1, ..., 1 tool
+summary(fix.merged$n_supp)
+table(fix.merged$n_supp)
+
+cumsum(table(fix.merged$n_supp)[8:1])
+
+df = data.frame(num_tools = 1:8,
+                cumsum_num_sv = cumsum(table(fix.merged$n_supp)[8:1]))
+```
+
+
+
+
+```{r, fig.height = 24, echo = F, warning = F}
+ggplot(df, aes(x = num_tools, y = cumsum_num_sv)) +
+  geom_point() +
+  geom_line() +
+  xlab("Number of supporting tools") + ylab("Cumulative number of calls (tools pooled)") +
+  theme_bw()
+```
+
+
+
+
+## Likelihood Ratio Test between the best likelihood and the HET likelihood
+
+An alternative measure of confidence of each call.
+
 
 
 

@@ -199,7 +199,8 @@ rule final_report:
         merged = "{wdir}/{genome}_merged_genotype.vcf",
         final = "{wdir}/{genome}_filtered.tsv"
     output:
-        "{wdir}/{genome}_finalQC.html"
+        "{wdir}/{genome}_finalQC.html",
+        "{wdir}/performance/{genome}_performance.tsv"
     conda:
         "../envs/Renv.yaml"
     shell:
