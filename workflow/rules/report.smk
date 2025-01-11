@@ -195,9 +195,9 @@ rule final_report:
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
     """
     input:
-        final = "{wdir}/{genome}_filtered.vcf",
+        vcf = "{wdir}/{genome}_filtered.vcf",
         merged = "{wdir}/{genome}_merged_genotype.vcf",
-        final = "{wdir}/{genome}_filtered.tsv",
+        tsv = "{wdir}/{genome}_filtered.tsv",
         mapping_minimap2 = "{wdir}/mapping/{genome}_minimap2_mapping.stats.tsv",
         mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
     output:

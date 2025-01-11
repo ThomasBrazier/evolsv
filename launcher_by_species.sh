@@ -24,4 +24,4 @@ echo "Testing the new aligner branch"
 
 snakemake -s workflow/Snakefile --configfile config/config.yaml \
 --use-conda --profile ./profiles/slurm --cores 1 --rerun-incomplete \
---config samples="data/config/samples_$species.tsv" --unlock
+--config samples="data/config/samples_$species.tsv"
