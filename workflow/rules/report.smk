@@ -197,7 +197,9 @@ rule final_report:
     input:
         final = "{wdir}/{genome}_filtered.vcf",
         merged = "{wdir}/{genome}_merged_genotype.vcf",
-        final = "{wdir}/{genome}_filtered.tsv"
+        final = "{wdir}/{genome}_filtered.tsv",
+        mapping_minimap2 = "{wdir}/mapping/{genome}_minimap2_mapping.stats.tsv",
+        mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
     output:
         "{wdir}/{genome}_finalQC.html",
         "{wdir}/performance/{genome}_performance.tsv"
