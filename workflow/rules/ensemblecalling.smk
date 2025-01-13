@@ -286,7 +286,7 @@ rule genotype_sniffles:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_cutesv_noBND.vcf",
+        vcf = "{wdir}/{genome}_{aligner}_sniffles_noBND.vcf",
         fasta = "{wdir}/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
