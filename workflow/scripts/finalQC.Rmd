@@ -89,6 +89,7 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 ```{r mapping_minimap2, echo = F}
 mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping/", genome, "_minimap2_mapping.stats.tsv"))
 
+print("Mapping with minimap2")
 print(gsub("\t", " ", mapping_minimap2))
 ```
 
@@ -98,13 +99,14 @@ print(gsub("\t", " ", mapping_minimap2))
 ```{r mapping_ngmlr, echo = F}
 mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping/", genome, "_ngmlr_mapping.stats.tsv"))
 
+print("Mapping with ngmlr")
 print(gsub("\t", " ", mapping_ngmlr))
 ```
 
 
 
 
-The diagnostic plots for the mapping with minimap2 are in the `mapping/` directory.
+The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping/` directory.
 
 
 
@@ -112,6 +114,8 @@ The diagnostic plots for the mapping with minimap2 are in the `mapping/` directo
 
 
 The final VCF produced contains 9 samples:
+
+
 * eight samples are individual callset from a pair of aligner + sv caller
 * the last sample is the final genotype call after merging callsets with Jasmine
 
@@ -296,7 +300,7 @@ table(tidy_fix$aligner, tidy_fix$caller)
 
 *Note that all SV callers do not use the same way of calculating the Quality Score and they are not all on the same scale (e.g. log/phred-scale).* Consequently, the QUAL score plotted here is the SVjedi-graph genotyping QUAL score, estimated in a consistent way across SV callers.
 
-```{r SVqualityAligner, echo = F, warning = F}
+```{r SVqualityAligner, echo = F, warning = F, fig.cap = "SVjedi-graph quality score for each aligner."}
 ggplot(tidy_fix, aes(x = aligner, y = as.numeric(QUAL), colour = aligner, group = aligner)) +
   geom_violin(aes(fill = aligner), color = "black") +
   geom_boxplot(alpha = 0.5, color = "black") +
@@ -307,7 +311,7 @@ ggplot(tidy_fix, aes(x = aligner, y = as.numeric(QUAL), colour = aligner, group 
 
 
 
-```{r SVqualityCaller, echo = F, warning = F}
+```{r SVqualityCaller, echo = F, warning = F, fig.cap = "SVjedi-graph quality score for each aligner and SV caller."}
 ggplot(tidy_fix, aes(x = caller, y = as.numeric(QUAL), colour = caller, group = caller)) +
   geom_violin(aes(fill = caller), color = "black") +
   geom_boxplot(alpha = 0.5, color = "black") +
@@ -317,7 +321,7 @@ ggplot(tidy_fix, aes(x = caller, y = as.numeric(QUAL), colour = caller, group = 
 ```
 
 
-```{r SVqualitydensity, echo = F, warning = F}
+```{r SVqualitydensity, echo = F, warning = F, fig.cap = "Density distribution of SVjedi-graph quality scores for each aligner and SV caller."}
 ggplot(tidy_fix, aes(x = as.numeric(QUAL), colour = caller, group = caller)) +
   geom_density() +
   xlab("Quality Score") + ylab("Density") +
@@ -335,7 +339,7 @@ table(tidy_fix$sv_type, tidy_fix$caller)
 
 
 
-```{r SVtype, echo = F, warning = F}
+```{r SVtype, echo = F, warning = F, fig.cap = "Number of SVs of each type for each aligner and SV caller."}
 ggplot(tidy_fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("SV type") + ylab("Count") + labs(fill = "SV type", colour = "SV type") +
@@ -347,11 +351,17 @@ ggplot(tidy_fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
 ## SV length
 
 
-```{r SVlength, echo = F, warning = F}
+```{r SVlength, echo = F, warning = F, fig.cap="Total absolute length covered by SVs. The black line is the total genome size."}
 df = aggregate(sv_length ~ sv_type + caller + aligner, tidy_fix, function(x) {sum(abs(x))})
+
+df_sample_size = aggregate(sv_length ~ sv_type + caller + aligner, tidy_fix, function(x) {length(x)})
+df$sample_size = df_sample_size$sv_length
+  
+df$proportion_genome = df$sv_length/(genome_size * 10^6)
 
 ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type)) +
   geom_bar(stat = "identity") +
+  geom_hline(yintercept = genome_size) +
   xlab("SV type") + ylab("Total absolute length (Mb)") +
   labs(fill = "SV type", colour = "SV type") +
   facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
@@ -361,13 +371,13 @@ ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type
 
 
 
-```{r SVproportion, echo = F, warning = F}
-ggplot(df, aes(x = sv_type, y = sv_length/(genome_size * 10^6), fill = sv_type, colour = sv_type)) +
+```{r SVproportion, echo = F, warning = F, fig.cap="Proportion of the genome covered by SVs"}
+ggplot(df, aes(x = sv_type, y = proportion_genome, fill = sv_type, colour = sv_type)) +
   geom_bar(stat = "identity") +
   xlab("SV type") + ylab("Proportion of the genome") +
   facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
   labs(fill = "SV type", colour = "SV type") +
-  ylim(0, 1) +
+  # ylim(0, 1) +
   theme_bw()
 ```
 
@@ -485,6 +495,39 @@ plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "s
 
 
 
+## Accumulation curve
+
+
+The cumulative number of calls (pooling tools) as a function of the number of supporting tools. If almost all SVs have been called (in a perfect world), we would expect an asymptotic curve towards a plateau when all individual tools are pooled together.
+
+
+```{r, echo = T}
+#  Cumulative number of calls supported by n, n-1, ..., 1 tool
+summary(fix.merged$n_supp)
+table(fix.merged$n_supp)
+
+cumsum(table(fix.merged$n_supp)[1:8])
+
+df = data.frame(num_tools = 1:8,
+                cumsum_num_sv = cumsum(table(fix.merged$n_supp)[1:8]))
+```
+
+
+
+
+```{r, echo = F, warning = F}
+ggplot(df, aes(x = num_tools, y = cumsum_num_sv)) +
+  geom_point() +
+  geom_line() +
+  xlab("Minimum number of supporting tools") + ylab("Cumulative number of calls (tools pooled)") +
+  ylim(0, max(df$cumsum_num_sv)) +
+  theme_bw()
+```
+
+
+
+
+
 
 # Genotyping and final callset
 
@@ -520,22 +563,31 @@ table(fix.merged$sv_type)
 
 The stacked barplot of SV count for each SV type and SV length (no filter on quality scores and quality score > 10).
 
-```{r SVtypefinal, echo = F, warning = F}
+```{r SVtypefinal, echo = F, warning = F, fig.cap = "Joint distribution of SV length and number of SV, per SV type."}
 p1 = ggplot(fix.merged, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
-  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlab("Length of Structural Variant (bp), less than 1 kb") + ylab("SV Count") +
   xlim(0, 1000) +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
 p2 = ggplot(fix.merged, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
-  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlab("Length of Structural Variant (bp), less than 50 kb") + ylab("SV Count") +
   xlim(0, 50000) +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
-ggarrange(p1, p2, nrow = 2)
+
+p3 = ggplot(fix.merged, aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp), unlimited scale") + ylab("SV Count") +
+  labs(fill = "SV type", colour = "SV type") +
+  theme_bw()
+
+
+
+ggarrange(p1, p2, p3, nrow = 3)
 ```
 
 
@@ -552,33 +604,39 @@ table(fix.merged$sv_type[which(fix.merged$QUAL > 10)]) / table(fix.merged$sv_typ
 
 
 
-```{r SVtypefinal2, echo = F, warning = F}
+```{r SVtypefinal2, echo = F, warning = F, fig.cap = "Joint distribution of SV length and number of SV, per SV type (after filtering for QUAL > 10)."}
 p1 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
-  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlab("Length of Structural Variant (bp), less than 1 kb") + ylab("SV Count") +
   xlim(0, 1000) +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
 p2 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
   geom_bar() +
-  xlab("Length of Structural Variant (bp)") + ylab("SV Count") +
+  xlab("Length of Structural Variant (bp), less than 50 kb") + ylab("SV Count") +
   xlim(0, 50000) +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
-ggarrange(p1, p2, nrow = 2)
+p3 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
+  geom_bar() +
+  xlab("Length of Structural Variant (bp), unlimited scale") + ylab("SV Count") +
+  labs(fill = "SV type", colour = "SV type") +
+  theme_bw()
+
+ggarrange(p1, p2, p3, nrow = 3)
 ```
 
 
 
 
-```{r SVlengthfinal, echo = F, warning = F}
+```{r SVlengthfinal, echo = F, warning = F, fig.cap = "SV length as a function of SV type."}
 fix.merged$sv_type = as.factor(fix.merged$sv_type)
 
-p1 = ggplot(fix.merged, aes(y = abs(sv_length), x = sv_type, fill = sv_type)) +
+p1 = ggplot(fix.merged, aes(y = abs(sv_length) / 1000, x = sv_type, fill = sv_type)) +
   geom_boxplot() +
-  ylab("SV Length (bp)") + xlab("SV type") +
+  ylab("SV Length (kb)") + xlab("SV type") +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
@@ -640,7 +698,7 @@ We investigated the usual Variant Calling quality criterion:
 Approximate read depth (should be balanced between reference and variant if unbiased).
 
 
-```{r SV_DP, echo = F, warning = F}
+```{r SV_DP, echo = F, warning = F, fig.cap = "Genotype quality. Variant allele read depth (AD) as a function of the genotype."}
 ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
   geom_point(alpha = 0.3) +
   xlab("Reference allele read depth (AD)") + ylab("Variant allele read depth (AD)") +
@@ -671,11 +729,9 @@ ggarrange(p1, p2, ncol = 2)
 
 ## Phred-scale likelihoods for heterozygotes
 
-Lower phred-scale likelihood is better.
 
 
-
-Scores for 0/0 (homozygous ref), 0/1 (heterozygous), and 1/1 (homozygous alt) genotypes. For a phred-scaled likelihood of P, the raw likelihood of that genotype L = 10-P/10 (so the higher the number, the less likely it is that your sample is that genotype). The sum of likelihoods is not necessarily 1. 
+Scores for 0/0 (homozygous ref), 0/1 (heterozygous), and 1/1 (homozygous alt) genotypes. For a phred-scaled likelihood of P, the raw likelihood of that genotype L = 10-P/10 (so the higher the number, the less likely it is that your sample is that genotype). A lower phred-scale likelihood is better. The sum of likelihoods is not necessarily 1. 
 
 
 
@@ -704,15 +760,50 @@ ggarrange(p1, p2, ncol = 2)
 ```
 
 
+Now we plot the likelihood of the heterozygote for the three genotypes inferred. We expect a very low PL value for hetozygotes while PL values should be higher for HOM genotypes that are most likely calling errors. The difference in PL values between HET and HOM genotypes can be leveraged as a cutoff to filter low quality SV calls.
+
+
+
+```{r PLHET, echo = F, warning = F}
+df = data.frame(GT = c(rep("0/0", sum(gt.geno$GT %in% c("0/0"))),
+                       rep("0/1", sum(gt.geno$GT %in% c("0/1"))),
+                       rep("1/1", sum(gt.geno$GT %in% c("1/1")))),
+                PL = c(gt.geno$PL_HET[which(gt.geno$GT %in% c("0/0"))],
+                       gt.geno$PL_HET[which(gt.geno$GT %in% c("0/1"))],
+                       gt.geno$PL_HET[which(gt.geno$GT %in% c("1/1"))]))
+df$GT = as.factor(df$GT)
+
+
+p1 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("HET Phred-scaled genotype likelihood") +
+  theme_bw()
+
+p2 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
+  geom_boxplot() +
+  ylab("HET Phred-scaled genotype likelihood") +
+  ylim(0, 100) +
+  theme_bw()
+
+ggarrange(p1, p2, ncol = 2)
+```
+
+
+
+
 
 # Precision/recall for each tool and each type of SV
 
 
-Estimate the calling rates for each tool
+Estimate the calling rates for each tool:
+
+
 * the TRUE POSITIVE rate is when a call is genotyped as HET by SVjedi-graph
 * the FALSE POSITIVE rate is when a call is genotyped as HOM by SVjedi-graph
 * the FALSE NEGATIVE rate is when a call is genotyped as missing (./.) while it has been called as HET for at least one other tool (we assume that a HET call is a true call, yet it an approximation and ground truth remains unknown). Note that because of this approximation we might be underestimating the false negative rate (the proportion of undetected variants) and overestimating the recall and F1 score. However, without ground truth, it is difficult to estimate the false negative rate, and our performance score is still valid to compare and weight the different tools.
 * the TRUE NEGATIVE rate is not estimated, and is not used in precision/recall calculation
+
+
 
 
 Quick reminder, the precision is TP / (TP + FP) and recall is TP / (TP +  FN). The F1 score is then F1 = 2 * ((precision * recall) / (precision + recall)).
@@ -780,51 +871,72 @@ performance$precision = performance$true_positive / (performance$true_positive +
 performance$recall = performance$true_positive / (performance$true_positive + performance$false_negative)
 
 performance$f1 = 2 * ((performance$precision * performance$recall) / (performance$precision + performance$recall))
+```
 
+
+<!-- Now estimate the performance for each type of SV (DEL, INS, DUP, INV). -->
+
+
+```{r, echo = F}
+performance$sv_type = "all"
+
+
+for (type in c("DEL", "INS", "DUP", "INV")) {
+  # Estimate precision, recall and F1 score
+  performance_per_type = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
+                                     "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
+                                     "ngmlr_cutesv", "ngmlr_debreak"),
+                           true_positive = NA,
+                           false_positive = NA,
+                           false_negative = NA)
+  
+  genotype_subset = genotype[genotype$sv_type == type,]
+  n_calls = nrow(genotype_subset)
+  
+  for (i in 1:nrow(performance_per_type)) {
+    performance_per_type$true_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HET") / n_calls
+    performance_per_type$false_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HOM") / n_calls
+    het_in_one_tool = apply(genotype_subset, 1, function(x) {"HET" %in% x})
+    performance_per_type$false_negative[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "MISSING" & het_in_one_tool) / n_calls
+  }
+  
+  performance_per_type$precision = performance_per_type$true_positive / (performance_per_type$true_positive + performance_per_type$false_positive)
+  performance_per_type$recall = performance_per_type$true_positive / (performance_per_type$true_positive + performance_per_type$false_negative)
+  
+  performance_per_type$f1 = 2 * ((performance_per_type$precision * performance_per_type$recall) / (performance_per_type$precision + performance_per_type$recall))
+  
+  performance_per_type$sv_type = type
+  
+  performance = rbind(performance, performance_per_type)
+}
+
+
+```
+
+
+
+```{r, echo = T, tab.cap = "Performance of the different SV calling tools for each SV type and all SV pooled."}
+kable(performance, digits = 3, align = "c")
+```
+
+
+
+
+
+```{r, echo = F}
 # Save the performance output
 write.table(performance, paste0("../../", wdir, "/performance/", genome, "_performance.tsv"),
             quote = F, sep = "\t", row.names = F, col.names = T)
 ```
 
 
-```{r, echo = T, tab.cap = "Performance of the different SV calling tools"}
-kable(performance, digits = 3, align = "c")
-```
-
-
-
-## Accumulation curve
-
-The cumulative number of calls (pooling tools) as a function of the number of supporting tools. If almost all SVs have been called , we expect an asymptotic curve towards a plateau when all individual tools are pooled together.
-
-```{r, echo = T}
-#  Cumulative number of calls supported by n, n-1, ..., 1 tool
-summary(fix.merged$n_supp)
-table(fix.merged$n_supp)
-
-cumsum(table(fix.merged$n_supp)[8:1])
-
-df = data.frame(num_tools = 1:8,
-                cumsum_num_sv = cumsum(table(fix.merged$n_supp)[8:1]))
-```
-
-
-
-
-```{r, fig.height = 24, echo = F, warning = F}
-ggplot(df, aes(x = num_tools, y = cumsum_num_sv)) +
-  geom_point() +
-  geom_line() +
-  xlab("Number of supporting tools") + ylab("Cumulative number of calls (tools pooled)") +
-  theme_bw()
-```
-
 
 
 
 ## Likelihood Ratio Test between the best likelihood and the HET likelihood
 
-An alternative measure of confidence of each call.
+
+An alternative measure of confidence for each call.
 
 
 
@@ -841,7 +953,7 @@ Quality scores and allele support are expected to homogeneous along the genome.
 
 Quality Score.
 
-```{r QClandscape, fig.height = 24, echo = F, warning = F}
+```{r QClandscape, echo = F, warning = F}
 ggplot(fix.merged, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
   geom_point(alpha = 0.5) +
   geom_smooth(method = "gam", se = T) +
@@ -854,7 +966,7 @@ ggplot(fix.merged, aes(x = as.numeric(POS)/10^6, y = as.numeric(QUAL))) +
 Support for variant allele.
 
 
-```{r suppportlandscape, fig.height = 24, echo = F, warning = F}
+```{r suppportlandscape, echo = F, warning = F}
 fix.merged$sv_support = unlist(lapply(fix.merged$supp_vec, function(x) sum(as.numeric(strsplit(x, "")[[1]]))))
 
 ggplot(fix.merged, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
@@ -874,7 +986,7 @@ ggplot(fix.merged, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
 ## The distribution of SVs along the genome
 
 
-```{r SVlandscape, fig.height = 24, echo = F, warning = F}
+```{r SVlandscape, echo = F, warning = F}
 ggplot(fix.merged, aes(x = as.numeric(POS)/10^6)) +
   geom_histogram(bins = 1000) +
   xlab("Position (Mb)") + ylab("SV count") +
