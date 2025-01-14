@@ -109,8 +109,8 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   svim:
-#     mem_mb: attempt * 2000
+  svim:
+    mem_mb: attempt * 50000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
