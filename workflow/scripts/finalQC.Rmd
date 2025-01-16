@@ -175,8 +175,8 @@ fix.merged$ngmlr = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == 
                                lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
 
 # Get SV caller support
-fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1", 1, 0)
-fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1", 1, 0)
+fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1", 1, 0)
+fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1", 1, 0)
 fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 7) == "1", 1, 0)
 fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
 ```
@@ -498,10 +498,7 @@ plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "s
 ## Accumulation curve
 
 
-The cumulative number of calls (pooling tools) as a function of the number of supporting tools. If almost all SVs have been called (in a perfect world), we would expect an asymptotic curve towards a plateau when all individual tools are pooled together.
-
-
-```{r, echo = T}
+```{r, echo = F}
 #  Cumulative number of calls supported by n, n-1, ..., 1 tool
 summary(fix.merged$n_supp)
 table(fix.merged$n_supp)
@@ -515,7 +512,7 @@ df = data.frame(num_tools = 1:8,
 
 
 
-```{r, echo = F, warning = F}
+```{r, echo = F, warning = F, fig.cap = "The cumulative number of calls (pooling tools) as a function of the number of supporting tools."}
 ggplot(df, aes(x = num_tools, y = cumsum_num_sv)) +
   geom_point() +
   geom_line() +
