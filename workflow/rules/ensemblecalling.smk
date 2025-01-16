@@ -10,6 +10,7 @@ rule svim:
     output:
         svimvariants = temp("{wdir}/{genome}_{aligner}_svim/variants.vcf"),
         vcf = temp("{wdir}/{genome}_{aligner}_svim_tmp.vcf"),
+        vcf_raw = temp("{wdir}/{genome}_{aligner}_svim_raw.vcf"),
         vcf_renamed = "{wdir}/{genome}_{aligner}_svim.vcf"
     resources:
         tmpdir = get_big_temp
@@ -35,7 +36,8 @@ rule svim:
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
         # Consistent renaming of VCF header with sample id
         echo "Renaming VCF header with sample id"
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
+        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
         """
 
 rule sniffles:
@@ -49,6 +51,7 @@ rule sniffles:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_sniffles_tmp.vcf"),
+        vcf_raw = temp("{wdir}/{genome}_{aligner}_sniffles_raw.vcf"),
         vcf_renamed = "{wdir}/{genome}_{aligner}_sniffles.vcf"
     resources:
         tmpdir = get_big_temp
@@ -71,7 +74,8 @@ rule sniffles:
         --qc-coverage {config[min_coverage]} \
         --output-rnames
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
+        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
         """
 
 
@@ -86,6 +90,7 @@ rule cutesv:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_cutesv_tmp.vcf"),
+        vcf_raw = temp("{wdir}/{genome}_{aligner}_cutesv_raw.vcf"),
         vcf_renamed = "{wdir}/{genome}_{aligner}_cutesv.vcf"
     resources:
         tmpdir = get_big_temp
@@ -107,7 +112,8 @@ rule cutesv:
         --min_siglength {config[min_siglength]} \
         {input.bam} {input.fasta} {output.vcf} {wdir}/cutesv_{wildcards.aligner}/
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
+        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
         """
 
 
@@ -122,6 +128,7 @@ rule debreak:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_debreak_tmp.vcf"),
+        vcf_raw = temp("{wdir}/{genome}_{aligner}_debreak_raw.vcf"),
         vcf_renamed = "{wdir}/{genome}_{aligner}_debreak.vcf"
     conda:
         "../envs/debreak.yaml"
@@ -141,9 +148,9 @@ rule debreak:
         --ref {input.fasta}
         mv {wdir}/debreak_{wildcards.aligner}/debreak.vcf {output.vcf}
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
+        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
         """
-
 
 
 rule removeBND:
@@ -173,12 +180,12 @@ rule removeBND:
         """
         cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
         cat {input.cutesv_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.cutesv_minimap2}
-        cat {input.debreak_minimap2} | grep -v 'SVTYPE=BND' | grep -v 'SVTPE=TRA' > {output.debreak_minimap2}
+        cat {input.debreak_minimap2} | grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA' > {output.debreak_minimap2}
         cat {input.sniffles_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_minimap2}
 
         cat {input.svim_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.svim_ngmlr}
         cat {input.cutesv_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.cutesv_ngmlr}
-        cat {input.debreak_ngmlr} | grep -v 'SVTYPE=BND' | grep -v 'SVTPE=TRA' > {output.debreak_ngmlr}
+        cat {input.debreak_ngmlr} | grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA' > {output.debreak_ngmlr}
         cat {input.sniffles_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_ngmlr}
         """
 

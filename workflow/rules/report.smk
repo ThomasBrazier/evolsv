@@ -185,9 +185,46 @@ rule vcf_to_tsv:
         tsv = "{wdir}/{genome}_filtered.tsv"
     shell:
         """
+        # All samples
         bash workflow/scripts/vcf_to_tsv.sh {input.vcf} {output.tsv}
         """
 
+
+rule vcf_to_tsv_tools:
+    """
+    Convert the full vcf to tabular data frame for R scripts
+    """
+    input:
+        minimap2_cutesv_vcf = "{wdir}/{genome}_minimap2_cutesv.vcf",
+        minimap2_svim_vcf = "{wdir}/{genome}_minimap2_svim.vcf",
+        minimap2_sniffles_vcf = "{wdir}/{genome}_minimap2_sniffles.vcf",
+        minimap2_debreak_vcf = "{wdir}/{genome}_minimap2_debreak.vcf",
+        ngmlr_cutesv_vcf = "{wdir}/{genome}_ngmlr_cutesv.vcf",
+        ngmlr_svim_vcf = "{wdir}/{genome}_ngmlr_svim.vcf",
+        ngmlr_sniffles_vcf = "{wdir}/{genome}_ngmlr_sniffles.vcf",
+        ngmlr_debreak_vcf = "{wdir}/{genome}_ngmlr_debreak.vcf"
+    output:
+        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv"
+    shell:
+        """
+        # Tool specific output
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_cutesv_vcf} {output.minimap2_cutesv_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_svim_vcf} {output.minimap2_svim_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_sniffles_vcf} {output.minimap2_sniffles_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_debreak_vcf} {output.minimap2_debreak_tsv}
+        
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_cutesv_vcf} {output.ngmlr_cutesv_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_svim_vcf} {output.ngmlr_svim_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_sniffles_vcf} {output.ngmlr_sniffles_tsv}
+        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_debreak_vcf} {output.ngmlr_debreak_tsv}
+        """
 
 
 rule final_report:
@@ -198,6 +235,14 @@ rule final_report:
         vcf = "{wdir}/{genome}_filtered.vcf",
         merged = "{wdir}/{genome}_merged_genotype.vcf",
         tsv = "{wdir}/{genome}_filtered.tsv",
+        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv",
         mapping_minimap2 = "{wdir}/mapping/{genome}_minimap2_mapping.stats.tsv",
         mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
     output:
