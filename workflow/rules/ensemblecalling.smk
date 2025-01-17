@@ -37,7 +37,7 @@ rule svim:
         # Consistent renaming of VCF header with sample id
         echo "Renaming VCF header with sample id"
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
-        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
+        bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
 
 rule sniffles:
@@ -75,7 +75,7 @@ rule sniffles:
         --output-rnames
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
-        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
+        bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
 
 
@@ -113,7 +113,7 @@ rule cutesv:
         {input.bam} {input.fasta} {output.vcf} {wdir}/cutesv_{wildcards.aligner}/
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
-        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
+        bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
 
 
@@ -149,7 +149,7 @@ rule debreak:
         mv {wdir}/debreak_{wildcards.aligner}/debreak.vcf {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
-        bcftools view -f PASS --output {output.vcf_renamed} {output.vcf_raw}
+        bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
 
 
