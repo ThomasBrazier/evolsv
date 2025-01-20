@@ -859,7 +859,7 @@ performance = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap
 n_calls = nrow(genotype)
 
 for (i in 1:nrow(performance)) {
-  performance$n_calls[i] = sum(genotype$[,performance$tool[i]] != "MISSING")
+  performance$n_calls[i] = sum(genotype[,performance$tool[i]] != "MISSING")
   performance$true_positive[i] = sum(genotype[,performance$tool[i]] == "HET")
   performance$false_positive[i] = sum(genotype[,performance$tool[i]] == "HOM")
   het_in_one_tool = apply(genotype, 1, function(x) {"HET" %in% x})
@@ -894,7 +894,7 @@ for (type in c("DEL", "INS", "DUP", "INV")) {
   # n_calls = nrow(genotype_subset)
   
   for (i in 1:nrow(performance_per_type)) {
-    performance_per_type$n_calls[i] = sum(genotype$[,performance_per_type$tool[i]] != "MISSING")
+    performance_per_type$n_calls[i] = sum(genotype_subset[,performance_per_type$tool[i]] != "MISSING")
     performance_per_type$true_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HET")
     performance_per_type$false_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HOM")
     het_in_one_tool = apply(genotype_subset, 1, function(x) {"HET" %in% x})
