@@ -130,7 +130,7 @@ How to make the difference between a call that has been merged and another that 
 
 ```{r loading_final_vcf, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
 # merged = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
-merged = read.table(paste0("../../", wdir, "/", genome, "_filtered.tsv"),
+merged = read.table(paste0("../../", wdir, "/", genome, "_final.tsv"),
                     header = TRUE, sep = "\t")
 
 # TESTING

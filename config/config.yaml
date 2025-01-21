@@ -26,7 +26,10 @@ min-identity: 0.65 # Alignments with an identity lower than this threshold will 
 # Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 50 # minimum SV length to detect
-max_sv_size: 100000 # maximum SV length to detect
+max_sv_size: 10000000 # maximum SV length to detect (default: 10Mb)
+min_depth: 10 # Min depth of the variant (default: 10)
+min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
+
 
 # Sniffles2 specific
 minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)

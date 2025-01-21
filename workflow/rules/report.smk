@@ -46,7 +46,7 @@ rule samplot_subset_INV:
 #     Subset N variants of each type DEL/DUP/INS/INV
 #     """
 #     input:
-#         final = "{wdir}/{genome}_filtered.vcf"
+#         final = "{wdir}/{genome}_final.vcf"
 #     output:
 #         subset_ins_tmp = temp("{wdir}/samplot/{genome}_samplot_INS_tmp.vcf"),
 #         subset_ins = temp("{wdir}/samplot/{genome}_samplot_INS.vcf")
@@ -180,9 +180,9 @@ rule vcf_to_tsv:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        vcf = "{wdir}/{genome}_filtered.vcf"
+        vcf = "{wdir}/{genome}_final.vcf"
     output:
-        tsv = "{wdir}/{genome}_filtered.tsv"
+        tsv = "{wdir}/{genome}_final.tsv"
     shell:
         """
         # All samples
@@ -232,9 +232,9 @@ rule final_report:
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
     """
     input:
-        vcf = "{wdir}/{genome}_filtered.vcf",
+        vcf = "{wdir}/{genome}_final.vcf",
         merged = "{wdir}/{genome}_merged_genotype.vcf",
-        tsv = "{wdir}/{genome}_filtered.tsv",
+        tsv = "{wdir}/{genome}_final.tsv",
         minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
         minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
         minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
@@ -261,16 +261,16 @@ rule gzvcf:
     BGzip final VCF
     """
     input:
-        vcf = "{wdir}/{genome}_filtered.vcf",
-        vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf",
+        vcf = "{wdir}/{genome}_final.vcf",
+        vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf",
         html = "{wdir}/{genome}_finalQC.html"
     output:
-        tmp_vcf = temp("{wdir}/{genome}_filtered_newheader.vcf"),
-        tmp_vcf_sexchr = temp("{wdir}/{genome}_filtered_sexchr_newheader.vcf"),
-        vcf = "{wdir}/{genome}_filtered.vcf.gz",
-        vcf_sexchr = "{wdir}/{genome}_filtered_sexchr.vcf.gz",
-        vcf_idx = "{wdir}/{genome}_filtered.vcf.gz.csi",
-        vcf_sexchr_idx = "{wdir}/{genome}_filtered_sexchr.vcf.gz.csi"
+        tmp_vcf = temp("{wdir}/{genome}_final_newheader.vcf"),
+        tmp_vcf_sexchr = temp("{wdir}/{genome}_final_sexchr_newheader.vcf"),
+        vcf = "{wdir}/{genome}_final.vcf.gz",
+        vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf.gz",
+        vcf_idx = "{wdir}/{genome}_final.vcf.gz.csi",
+        vcf_sexchr_idx = "{wdir}/{genome}_final_sexchr.vcf.gz.csi"
     conda:
         "../envs/samtools.yaml"
     shell:

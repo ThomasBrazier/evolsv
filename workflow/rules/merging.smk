@@ -46,14 +46,14 @@ rule jasmine:
     Merge the VCF files obtained by the three SV callers
     """
     input:
-        sniffles_minimap2 = "{wdir}/sniffles_genotype/{genome}_minimap2_sniffles_genotype.vcf",
-        svim_minimap2 = "{wdir}/svim_genotype/{genome}_minimap2_svim_genotype.vcf",
-        cutesv_minimap2 = "{wdir}/cutesv_genotype/{genome}_minimap2_cutesv_genotype.vcf",
-        debreak_minimap2 = "{wdir}/debreak_genotype/{genome}_minimap2_debreak_genotype.vcf",
-        sniffles_ngmlr = "{wdir}/sniffles_genotype/{genome}_ngmlr_sniffles_genotype.vcf",
-        svim_ngmlr = "{wdir}/svim_genotype/{genome}_ngmlr_svim_genotype.vcf",
-        cutesv_ngmlr = "{wdir}/cutesv_genotype/{genome}_ngmlr_cutesv_genotype.vcf",
-        debreak_ngmlr = "{wdir}/debreak_genotype/{genome}_ngmlr_debreak_genotype.vcf",
+        sniffles_minimap2 = "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
+        svim_minimap2 = "{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf",
+        cutesv_minimap2 = "{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
+        debreak_minimap2 = "{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf",
+        sniffles_ngmlr = "{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
+        svim_ngmlr = "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
+        cutesv_ngmlr = "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
+        debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
         vcf = "{wdir}/{genome}_merged.vcf",
@@ -65,14 +65,14 @@ rule jasmine:
         "{wdir}/logs/{genome}_jasmine.log"
     shell:
         """
-        echo "{wdir}/sniffles_genotype/{genome}_minimap2_sniffles_genotype.vcf" > {output.vcflist}
-        echo "{wdir}/svim_genotype/{genome}_minimap2_svim_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/cutesv_genotype/{genome}_minimap2_cutesv_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/debreak_genotype/{genome}_minimap2_debreak_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/sniffles_genotype/{genome}_ngmlr_sniffles_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/svim_genotype/{genome}_ngmlr_svim_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/cutesv_genotype/{genome}_ngmlr_cutesv_genotype.vcf" >> {output.vcflist}
-        echo "{wdir}/debreak_genotype/{genome}_ngmlr_debreak_genotype.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
+        echo "{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf" >> {output.vcflist}
 
         echo "{wdir}/{genome}_minimap2_sorted.bam" > {output.bamlist}
         echo "{wdir}/{genome}_ngmlr_sorted.bam" >> {output.bamlist}

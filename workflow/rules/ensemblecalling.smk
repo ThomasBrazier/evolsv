@@ -189,6 +189,39 @@ rule removeBND:
         cat {input.sniffles_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_ngmlr}
         """
 
+rule dup_to_ins:
+    """
+    Convert DUP to INS
+    - must be defined as an insertion event whith `CHR` and `POS` corresponding to the position of insertion of the novel copy
+    - `INFO` field must contain `SVTYPE=INS`
+    - `ALT` field must contain the sequence of the duplication
+    """
+    input:
+        vcf = "{wdir}/{genome}_{aligner}_{caller}_noBND.vcf",
+        fasta = "{wdir}/{genome}.fna",
+        bam = "{wdir}/{genome}_{aligner}_sorted.bam"
+    output:
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf",
+        vcf_temp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
+        vcflist = temp("{wdir}/{genome}_{aligner}_{caller}_vcf_list.txt"),
+        bamlist = temp("{wdir}/{genome}_{aligner}_{caller}_bam_list.txt")
+    threads: workflow.cores
+    conda:
+        "../envs/jasminesv.yaml"
+    log:
+        "{wdir}/logs/{genome}_{aligner}_{caller}_preprocess.log"
+    shell:
+        """
+        echo "{input.vcf}" > {output.vcflist}
+        echo "{input.bam}" > {output.bamlist}
+        jasmine file_list={output.vcflist} out_file={output.vcf_temp} \
+        genome_file={input.fasta} \
+        out_dir={wdir}/preprocess bam_list={output.bamlist} \
+        --preprocess-only --dup_to_ins
+        # Add DUP sequence in ALT
+        python ../scripts/add_dup_to_ins.py {output.vcf_temp} {output.vcf} {input.fasta}
+        """
+
 
 rule sniffles2plot:
     """
@@ -231,7 +264,7 @@ rule genotype_svim:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_svim_noBND.vcf",
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
@@ -262,7 +295,7 @@ rule genotype_cutesv:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_cutesv_noBND.vcf",
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_cutesv_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
@@ -293,7 +326,7 @@ rule genotype_sniffles:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_sniffles_noBND.vcf",
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_sniffles_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
@@ -319,32 +352,32 @@ rule genotype_sniffles:
         """
 
 
-rule normalize_vcf_debreak:
-    """
-    Add INFO tags in Debreak output
-    """
-    input:
-        vcf = "{wdir}/{genome}_{aligner}_debreak_noBND.vcf",
-        fasta = "{wdir}/{genome}.fna",
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam"
-    output:
-        vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
-        vcflist = temp("{wdir}/{genome}_{aligner}_vcf_list_debreak.txt"),
-        bamlist = temp("{wdir}/{genome}_{aligner}_bam_list_debreak.txt")
-    threads: workflow.cores
-    conda:
-        "../envs/jasminesv.yaml"
-    log:
-        "{wdir}/logs/{genome}_{aligner}_normalize_debreak.log"
-    shell:
-        """
-        echo "{input.vcf}" > {output.vcflist}
-        echo "{input.bam}" > {output.bamlist}
-        jasmine file_list={output.vcflist} out_file={output.vcf} \
-        genome_file={input.fasta} \
-        out_dir={wdir}/debreak_normalize bam_list={output.bamlist} \
-        --preprocess-only --dup_to_ins
-        """
+# rule normalize_vcf_debreak:
+#     """
+#     Add INFO tags in Debreak output
+#     """
+#     input:
+#         vcf = "{wdir}/{genome}_{aligner}_debreak_noBND.vcf",
+#         fasta = "{wdir}/{genome}.fna",
+#         bam = "{wdir}/{genome}_{aligner}_sorted.bam"
+#     output:
+#         vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
+#         vcflist = temp("{wdir}/{genome}_{aligner}_vcf_list_debreak.txt"),
+#         bamlist = temp("{wdir}/{genome}_{aligner}_bam_list_debreak.txt")
+#     threads: workflow.cores
+#     conda:
+#         "../envs/jasminesv.yaml"
+#     log:
+#         "{wdir}/logs/{genome}_{aligner}_normalize_debreak.log"
+#     shell:
+#         """
+#         echo "{input.vcf}" > {output.vcflist}
+#         echo "{input.bam}" > {output.bamlist}
+#         jasmine file_list={output.vcflist} out_file={output.vcf} \
+#         genome_file={input.fasta} \
+#         out_dir={wdir}/debreak_normalize bam_list={output.bamlist} \
+#         --preprocess-only --dup_to_ins
+#         """
 
 
 rule genotype_debreak:
@@ -353,7 +386,7 @@ rule genotype_debreak:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_debreak_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"     
@@ -376,4 +409,25 @@ rule genotype_debreak:
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        """
+
+
+rule basic_filter:
+    """
+    After genotyping, apply basic filtering on the genotypes
+    Filter DEPTH (min DEPTH DP and min AD)
+    Filter max SV size
+    """
+    input:
+        vcf = "{wdir}/{caller}_genotype/{genome}_{aligner}_{caller}_genotype.vcf"
+    output:
+        vcf = "{wdir}/filtered/{genome}_{aligner}_{caller}_filtered.vcf"
+    threads: workflow.cores
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "{wdir}/logs/{genome}_{aligner}_{caller}_basic_filter.log"
+    shell:
+        """
+        bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]}" -o {output.vcf} -O v {input.vcf}
         """
