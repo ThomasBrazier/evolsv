@@ -851,6 +851,7 @@ genotype$ngmlr_debreak = gen
 performance = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
                                    "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
                                    "ngmlr_cutesv", "ngmlr_debreak"),
+                         n_calls = NA,
                          true_positive = NA,
                          false_positive = NA,
                          false_negative = NA)
@@ -858,10 +859,11 @@ performance = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap
 n_calls = nrow(genotype)
 
 for (i in 1:nrow(performance)) {
-  performance$true_positive[i] = sum(genotype[,performance$tool[i]] == "HET") / n_calls
-  performance$false_positive[i] = sum(genotype[,performance$tool[i]] == "HOM") / n_calls
+  performance$n_calls[i] = sum(genotype[,performance$tool[i]] != "MISSING")
+  performance$true_positive[i] = sum(genotype[,performance$tool[i]] == "HET")
+  performance$false_positive[i] = sum(genotype[,performance$tool[i]] == "HOM")
   het_in_one_tool = apply(genotype, 1, function(x) {"HET" %in% x})
-  performance$false_negative[i] = sum(genotype[,performance$tool[i]] == "MISSING" & het_in_one_tool) / n_calls
+  performance$false_negative[i] = sum(genotype[,performance$tool[i]] == "MISSING" & het_in_one_tool)
 }
 
 performance$precision = performance$true_positive / (performance$true_positive + performance$false_positive)
@@ -883,18 +885,20 @@ for (type in c("DEL", "INS", "DUP", "INV")) {
   performance_per_type = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
                                      "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
                                      "ngmlr_cutesv", "ngmlr_debreak"),
+                           n_calls = NA,
                            true_positive = NA,
                            false_positive = NA,
                            false_negative = NA)
   
   genotype_subset = genotype[genotype$sv_type == type,]
-  n_calls = nrow(genotype_subset)
+  # n_calls = nrow(genotype_subset)
   
   for (i in 1:nrow(performance_per_type)) {
-    performance_per_type$true_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HET") / n_calls
-    performance_per_type$false_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HOM") / n_calls
+    performance_per_type$n_calls[i] = sum(genotype_subset[,performance_per_type$tool[i]] != "MISSING")
+    performance_per_type$true_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HET")
+    performance_per_type$false_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HOM")
     het_in_one_tool = apply(genotype_subset, 1, function(x) {"HET" %in% x})
-    performance_per_type$false_negative[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "MISSING" & het_in_one_tool) / n_calls
+    performance_per_type$false_negative[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "MISSING" & het_in_one_tool)
   }
   
   performance_per_type$precision = performance_per_type$true_positive / (performance_per_type$true_positive + performance_per_type$false_positive)
@@ -906,8 +910,6 @@ for (type in c("DEL", "INS", "DUP", "INV")) {
   
   performance = rbind(performance, performance_per_type)
 }
-
-
 ```
 
 
