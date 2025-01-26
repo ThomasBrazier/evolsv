@@ -12,7 +12,7 @@ rule samplot_subset_DUP:
         "../envs/bcftools.yaml"
     shell:
         """
-        bcftools filter -i'INFO/SVTYPE="DUP"' {input.final} > {output.subset_dup_tmp}
+        bcftools filter -i'INFO/OLDTYPE="DUP"' {input.final} > {output.subset_dup_tmp}
         # Subset N random SNPs (default=100)
         N={config[n_samplot]}
         cat {output.subset_dup_tmp} | grep '^#' > {output.subset_dup}

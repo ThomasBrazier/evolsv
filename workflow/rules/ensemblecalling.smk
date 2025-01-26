@@ -189,20 +189,16 @@ rule removeBND:
         cat {input.sniffles_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_ngmlr}
         """
 
-rule dup_to_ins:
+rule vcf_preprocess:
     """
-    Convert DUP to INS
-    - must be defined as an insertion event whith `CHR` and `POS` corresponding to the position of insertion of the novel copy
-    - `INFO` field must contain `SVTYPE=INS`
-    - `ALT` field must contain the sequence of the duplication
+    Preprocess VCF with Jasmine to convert DUP to INS and add consistent INFO tags
     """
     input:
         vcf = "{wdir}/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta = "{wdir}/{genome}.fna",
         bam = "{wdir}/{genome}_{aligner}_sorted.bam"
     output:
-        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf",
-        vcf_temp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
+        vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
         vcflist = temp("{wdir}/{genome}_{aligner}_{caller}_vcf_list.txt"),
         bamlist = temp("{wdir}/{genome}_{aligner}_{caller}_bam_list.txt")
     threads: workflow.cores
@@ -218,9 +214,36 @@ rule dup_to_ins:
         genome_file={input.fasta} \
         out_dir={wdir}/preprocess bam_list={output.bamlist} \
         --preprocess-only --dup_to_ins
-        # Add DUP sequence in ALT
-        python ../scripts/add_dup_to_ins.py {output.vcf_temp} {output.vcf} {input.fasta}
         """
+
+
+
+rule dup_to_ins:
+    """
+    Convert DUP to INS
+    - must be defined as an insertion event whith `CHR` and `POS` corresponding to the position of insertion of the novel copy
+    - `INFO` field must contain `SVTYPE=INS`
+    - `ALT` field must contain the sequence of the duplication
+    """
+    input:
+        vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
+        fasta = "{wdir}/{genome}.fna"
+    output:
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
+    threads: workflow.cores
+    conda:
+        "../envs/pysam.yaml"
+    log:
+        "{wdir}/logs/{genome}_{aligner}_{caller}_preprocess.log"
+    shell:
+        """
+        # Add DUP sequence in ALT
+        # ISSUE. This code require an older pysam version (= 0.10).
+        # More recent versions remove the END INFO tag, hence errors in SVjedi-graph
+        python workflow/scripts/add_dup_to_ins.py {input.vcf_temp} {output.vcf} {input.fasta}
+        sed -i 's/SVTYPE=DUP/SVTYPE=INS/g' {output.vcf}
+        """
+
 
 
 rule sniffles2plot:
@@ -269,7 +292,7 @@ rule genotype_svim:
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
+        vcf_temp = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype.vcf",
         gfa = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gfa",
         gaf = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gaf",
@@ -284,9 +307,9 @@ rule genotype_svim:
         -q {input.merged_fastq} -p {wdir}/svim_genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
         --minsupport 1
-        mv {output.vcf_renamed} {output.vcf}
+        mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
 
 rule genotype_cutesv:
@@ -300,7 +323,7 @@ rule genotype_cutesv:
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
+        vcf_temp = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype.vcf",
         gfa = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gfa",
         gaf = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gaf",
@@ -315,9 +338,9 @@ rule genotype_cutesv:
         -q {input.merged_fastq} -p {wdir}/cutesv_genotype/{genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
         --minsupport 1
-        mv {output.vcf_renamed} {output.vcf}
+        mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
 
 rule genotype_sniffles:
@@ -331,7 +354,7 @@ rule genotype_sniffles:
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
+        vcf_temp = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype.vcf",
         gfa = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gfa",
         gaf = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gaf",
@@ -346,9 +369,9 @@ rule genotype_sniffles:
         -q {input.merged_fastq} -p {wdir}/sniffles_genotype/{genome}_{wildcards.aligner}_sniffles \
         -t {resources.cpus_per_task} \
         --minsupport 1
-        mv {output.vcf_renamed} {output.vcf}
+        mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
 
 
@@ -391,7 +414,7 @@ rule genotype_debreak:
         merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"     
     output:
-        vcf = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
+        vcf_temp = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype.vcf",
         gfa = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gfa",
         gaf = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gaf",
@@ -406,9 +429,9 @@ rule genotype_debreak:
         -q {input.merged_fastq} -p {wdir}/debreak_genotype/{genome}_{wildcards.aligner}_debreak \
         -t {resources.cpus_per_task} \
         --minsupport 1
-        mv {output.vcf_renamed} {output.vcf}
+        mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
-        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
 
 

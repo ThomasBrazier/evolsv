@@ -36,6 +36,8 @@ set-threads:
   debreak: 8
   removeBND: 1
   sniffles2plot: 1
+  dup_to_ins: 1
+  basic_filter: 1
   # Merging
   vcf_list: 1
   bam_list: 1
@@ -129,12 +131,22 @@ set-resources:
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
-  normalize_vcf_debreak:
+#   removeBND:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  vcf_preprocess:
     mem_mb: attempt * 60000
 #     slurm_partition:
 #     runtime:
-    # cpus_per_task: 8
-#   removeBND:
+#     cpus_per_task:
+  dup_to_ins:
+    mem_mb: attempt * 20000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   basic_filter:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
@@ -145,22 +157,22 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   genotype_svim:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 20000
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
   genotype_cutesv:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 20000
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
   genotype_sniffles:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 20000
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
   genotype_debreak:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 40000
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
@@ -183,7 +195,7 @@ set-resources:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
-    cpus_per_task: 8
+    cpus_per_task: 16
 #   autosomes_sexchromosomes:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
