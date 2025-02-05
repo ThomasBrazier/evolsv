@@ -51,7 +51,7 @@ include: "rules/report.smk"
 
 rule all:
     input:
-        expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_final.vcf.gz", wdir=wdir, genome=genome),
         expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
         expand("{wdir}/{genome}_samplot_minimap2/DUP/index.html", wdir=wdir, genome=genome),
         expand("{wdir}/{genome}_samplot_minimap2/INV/index.html", wdir=wdir, genome=genome),

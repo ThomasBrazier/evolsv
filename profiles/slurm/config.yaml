@@ -2,7 +2,7 @@ executor: slurm
 use-conda: True
 jobs: 100 # Have up to N jobs submitted at any given time
 latency-wait: 100 # Wait N seconds for output files due to latency
-retries: 1 # Retry jobs N times.
+retries: 5 # Retry jobs N times.
 
 # These resources will be applied to all rules. Can be overriden on a per-rule basis below.
 default-resources:
@@ -82,12 +82,12 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   minimap2:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 20000
 #     slurm_partition:
     runtime: 2880 * 4
     cpus_per_task: 16
   ngmlr:
-#     mem_mb: attempt * 2000
+    mem_mb: attempt * 20000
 #     slurm_partition:
     runtime: 2880 * 4
     cpus_per_task: 16
@@ -101,8 +101,8 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   samtools_index:
-#     mem_mb: attempt * 2000
+  samtools_index:
+    mem_mb: attempt * 40000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -137,7 +137,7 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   vcf_preprocess:
-    mem_mb: attempt * 60000
+    mem_mb: attempt * 200000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
