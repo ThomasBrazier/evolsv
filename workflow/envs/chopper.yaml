@@ -1,0 +1,9 @@
+name: chopper
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - chopper
+ - bcftools
+ - htslib
+
