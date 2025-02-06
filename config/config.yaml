@@ -32,7 +32,7 @@ min-identity: 0.65 # Alignments with an identity lower than this threshold will 
 # SV CALLING
 # Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
-min_sv_size: 50 # minimum SV length to detect
+min_sv_size: 30 # minimum SV length to detect
 max_sv_size: 10000000 # maximum SV length to detect (default: 10Mb)
 min_depth: 10 # Min depth of the variant (default: 10)
 min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
@@ -105,3 +105,5 @@ mappability_merge: 100 #merge passing mappability regions separated by this or f
 threshold: 0.8 # Threshold for pct of allele covered to consider hit (0.8)
 dist: 10 # Minimum distance an alignment must be from a DEL's position to be considered
 hits: 0 # Report top hits as chr:start-end.pct (max 0)
+
+grm_kmersize: 50 # Size of kmer to map (default = 50)
