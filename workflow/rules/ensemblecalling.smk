@@ -289,7 +289,7 @@ rule genotype_svim:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
@@ -320,7 +320,7 @@ rule genotype_cutesv:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_cutesv_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
@@ -351,7 +351,7 @@ rule genotype_sniffles:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_sniffles_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
@@ -383,7 +383,7 @@ rule genotype_debreak:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_debreak_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"     
     output:
         vcf_temp = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),

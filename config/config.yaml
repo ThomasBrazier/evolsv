@@ -9,6 +9,13 @@ samples: config/samples.tsv # The sample files with sample name and SRA number o
 
 scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 
+# READS QUALITY
+# Filter long reads with Chopper
+chopper_headcrop: 1 # Trim N nucleotides from the start of a read [default: 0]
+chopper_maxlength: 20000000  # Sets a maximum read length [default: 20 Mb]
+chopper_minlength: 1000 # Sets a minimum read length [default: 1000 bp]
+chopper_quality: 10 # Sets a minimum Phred average quality score [default: 10]
+chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
 
 # MAPPING
 # Mapping on the reference genome with Minimap2

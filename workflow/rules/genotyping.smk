@@ -5,7 +5,7 @@ rule svjedigraph:
     input:
         merged = "{wdir}/{genome}_merged.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_merged_genotype_tmp.vcf"),

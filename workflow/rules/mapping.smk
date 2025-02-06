@@ -3,11 +3,12 @@ rule minimap2:
     Map reads to the reference genome with Minimap2
     """
     input:
-        fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         fasta = "{wdir}/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
-        nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
+        nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
+        nanoplot_filtered = expand("{wdir}/nanoplot_filtered/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
     output:
         sam = temp("{wdir}/{genome}_minimap2.sam")
     conda:
@@ -46,7 +47,7 @@ rule ngmlr:
         Split alignments with poor quality [false]
     """
     input:
-        fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         fasta = "{wdir}/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
