@@ -118,11 +118,17 @@ rule add_mappability:
         mappable_bed = "{wdir}/mappability/{genome}_mappable.bed"
     output:
         callable = "{wdir}/callability/{genome}_callable.bed",
-        callable_mappable = "{wdir}/callability/{genome}_callable_mappable.bed"
+        callable_mappable = "{wdir}/callability/{genome}_callable_mappable.bed",
+        callable_mappable_minimap2 = "{wdir}/callability/{genome}_minimap2_callable_mappable.bed",
+        callable_mappable_nglmr = "{wdir}/callability/{genome}_nglmr_callable_mappable.bed"
     conda:
         "../envs/mosdepth.yaml"
     shell:
         """
         bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_nglmr} | bedtools sort | bedtools merge > {output.callable}
         bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}
+
+        bedtools intersect -a {input.callable_bed_minimap2} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}
+
+        bedtools intersect -a {input.callable_bed_nglmr} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}
         """

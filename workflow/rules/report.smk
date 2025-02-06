@@ -98,12 +98,12 @@ rule samplot_plot:
         bam_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam",
         bam_index_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam.bai"
     output:
-        "{wdir}/{genome}_samplot_minimap2/DUP/index.html",
-        "{wdir}/{genome}_samplot_minimap2/INV/index.html",
-        "{wdir}/{genome}_samplot_minimap2/DEL/index.html",
-        "{wdir}/{genome}_samplot_ngmlr/DUP/index.html",
-        "{wdir}/{genome}_samplot_ngmlr/INV/index.html",
-        "{wdir}/{genome}_samplot_ngmlr/DEL/index.html"
+        "{wdir}/samplot_minimap2_{genome}/DUP/index.html",
+        "{wdir}/samplot_minimap2_{genome}/INV/index.html",
+        "{wdir}/samplot_minimap2_{genome}/DEL/index.html",
+        "{wdir}/samplot_ngmlr_{genome}/DUP/index.html",
+        "{wdir}/samplot_ngmlr_{genome}/INV/index.html",
+        "{wdir}/samplot_ngmlr_{genome}/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
     params:

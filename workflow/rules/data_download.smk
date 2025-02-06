@@ -25,8 +25,7 @@ rule download_genome:
         expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/{genome}.fna",
-        temporary("{wdir}/{genome}.zip"),
-        # "{wdir}/{genome}.gff",
+        temp("{wdir}/{genome}.zip"),
         "{wdir}/{genome}_config.yaml",
         "{wdir}/{genome}_assembly_data_report.jsonl",
         "{wdir}/{genome}_sequence_report.jsonl"
