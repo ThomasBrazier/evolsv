@@ -37,5 +37,5 @@ rule jasmine:
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
-        --output_genotypes
+        --output_genotypes --ignore_strand --max_dist {config[jasmine_max_dist]}
         """
