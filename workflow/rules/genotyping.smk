@@ -5,11 +5,11 @@ rule svjedigraph:
     input:
         merged = "{wdir}/{genome}_merged.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf = temp("{wdir}/{genome}_merged_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/{genome}_merged_genotype.vcf",
+        vcf_renamed = temp("{wdir}/{genome}_merged_genotype.vcf"),
         gfa = "{wdir}/{genome}_merged.gfa",
         gaf = "{wdir}/{genome}_merged.gaf",
         aln = "{wdir}/{genome}_merged_informative_aln.json"
@@ -57,7 +57,7 @@ rule allsamples_vcf:
         jasmine = "{wdir}/{genome}_merged.vcf",
         svjedi = "{wdir}/{genome}_merged_genotype.vcf"
     output:
-        final = "{wdir}/{genome}_allsamples.vcf",
+        allsamples = temp("{wdir}/{genome}_allsamples.vcf"),
         jasmine_gz = temp("{wdir}/{genome}_merged.vcf.gz"),
         svjedi_gz = temp("{wdir}/{genome}_merged_genotype.vcf.gz")
     conda:
@@ -76,7 +76,7 @@ rule allsamples_vcf:
 
         bcftools index {output.svjedi_gz}
 
-        bcftools merge --output {output.final} {output.jasmine_gz} {output.svjedi_gz}
+        bcftools merge --output {output.allsamples} {output.jasmine_gz} {output.svjedi_gz}
         """
 
 
@@ -90,7 +90,7 @@ rule final_vcf:
         sexchromosomes = "{wdir}/{genome}.sexchromosomes",
         autosomes = "{wdir}/{genome}.autosomes"
     output:
-        final_tmp = "{wdir}/{genome}_final_tmp.vcf",
+        final_tmp = temp("{wdir}/{genome}_final_tmp.vcf"),
         final = "{wdir}/{genome}_final.vcf",
         final_sexchr = "{wdir}/{genome}_final_sexchr.vcf"   
     threads: workflow.cores

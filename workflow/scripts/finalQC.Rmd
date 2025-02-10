@@ -139,6 +139,9 @@ merged = read.table(paste0("../../", wdir, "/", genome, "_final.tsv"),
 # merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
 #                     header = TRUE, sep = "\t", quote = '"')
 
+merged = read.table("../../data/GCA_947369205.1/GCA_947369205.1_final.tsv",
+                    header = TRUE, sep = "\t", quote = '"')
+
 # saveRDS(merged, "../../data/test.Rds")
 # merged = readRDS("../../data/test.Rds")
 # 
@@ -183,60 +186,37 @@ fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) =
 
 
 
+### Test if merging all samples worked
+
+After merging, the merged callset is merged with all individual tools callset. This test checks if bcftools has been able to merge correctly individual and merged callsets. The individual callsets and merged callsets should be merged even if calls are genotyped as missing "./.".
 
 
-```{r loadingSV, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
-# sniffles = read.vcfR(paste0("../../", wdir, "/", genome, "_sniffles_noBND.vcf"))
-# gt.sniffles = as.data.frame(sniffles@gt)
-# fix.sniffles = as.data.frame(sniffles@fix)
-# gt.sniffles$Caller = "sniffles"
-# fix.sniffles$Caller = "sniffles"
-# 
-# svim = read.vcfR(paste0("../../", wdir, "/", genome, "_svim_noBND.vcf"))
-# gt.svim = as.data.frame(svim@gt)
-# fix.svim = as.data.frame(svim@fix)
-# gt.svim$Caller = "svim"
-# fix.svim$Caller = "svim"
-# 
-# cutesv = read.vcfR(paste0("../../", wdir, "/", genome, "_cutesv_noBND.vcf"))
-# gt.cutesv = as.data.frame(cutesv@gt)
-# fix.cutesv = as.data.frame(cutesv@fix)
-# gt.cutesv$Caller = "cutesv"
-# fix.cutesv$Caller = "cutesv"
-# 
-# debreak = read.vcfR(paste0("../../", wdir, "/", genome, "_debreak_noBND.vcf"))
-# gt.debreak = as.data.frame(debreak@gt)
-# fix.debreak = as.data.frame(debreak@fix)
-# gt.debreak$Caller = "debreak"
-# fix.debreak$Caller = "debreak"
-# 
-# colnames(gt.sniffles) = c("Format", "Sample", "Caller")
-# colnames(gt.svim) = c("Format", "Sample", "Caller")
-# colnames(gt.cutesv) = c("Format", "Sample", "Caller")
-# colnames(gt.debreak) = c("Format", "Sample", "Caller")
-# 
-# gt = rbind(gt.sniffles,
-#            gt.svim,
-#            gt.cutesv,
-#            gt.debreak)
-# 
-# fix = rbind(fix.sniffles,
-#            fix.svim,
-#            fix.cutesv,
-#            fix.debreak)
-# 
-# rm(fix.sniffles,
-#            fix.svim,
-#            fix.cutesv,
-#            fix.debreak)
-# 
-# rm(gt.sniffles,
-#            gt.svim,
-#            gt.cutesv,
-#            gt.debreak)
-# gc()
+```{r testMerging, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
+tmp = merged
+tmp$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
+
+pattern = "./.:NA:NA:NA:NA:.:.:."
+
+tmp$minimap2_sniffles = ifelse(grepl(pattern, tmp$minimap2_sniffles, fixed = TRUE), "0", "1")
+tmp$minimap2_svim = ifelse(grepl(pattern, tmp$minimap2_svim, fixed = TRUE), "0", "1")
+tmp$minimap2_cutesv = ifelse(grepl(pattern, tmp$minimap2_cutesv, fixed = TRUE), "0", "1")
+tmp$minimap2_debreak = ifelse(grepl(pattern, tmp$minimap2_debreak, fixed = TRUE), "0", "1")
+
+tmp$ngmlr_sniffles = ifelse(grepl(pattern, tmp$ngmlr_sniffles, fixed = TRUE), "0", "1")
+tmp$ngmlr_svim = ifelse(grepl(pattern, tmp$ngmlr_svim, fixed = TRUE), "0", "1")
+tmp$ngmlr_cutesv = ifelse(grepl(pattern, tmp$ngmlr_cutesv, fixed = TRUE), "0", "1")
+tmp$ngmlr_debreak = ifelse(grepl(pattern, tmp$ngmlr_debreak, fixed = TRUE), "0", "1")
+
+tmp$valid_supp_vec = unlist(lapply(1:nrow(tmp), function(x) {paste0(tmp[x,8:15], collapse = "")}))
 ```
 
+```{r, echo = T}
+cat("The proportion of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp), "\n")
+```
+
+
+
+### Parsing the merged callset
 
 ```{r parseSV, echo = F}
 fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
@@ -283,6 +263,8 @@ tidy_fix = rbind(fix.merged1,fix.merged2,
                  fix.merged5,fix.merged6,
                  fix.merged7,fix.merged8)
 ```
+
+
 
 ## Number of SV detected by each caller
 

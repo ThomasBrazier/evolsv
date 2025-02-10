@@ -22,6 +22,8 @@ set-threads:
   # Fastq Processing. Can use more than 1 thread.
   fastqc: 8 
   nanoplot: 1
+  chopper: 16
+  nanoplot_filtered: 1
   # Alignment. Can use more than 1 thread, except merge_bams.
   minimap2: 16
   ngmlr: 16
@@ -77,6 +79,16 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
 #   nanoplot:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   chopper:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   nanoplot_filtered:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:

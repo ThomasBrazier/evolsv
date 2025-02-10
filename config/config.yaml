@@ -9,6 +9,13 @@ samples: config/samples.tsv # The sample files with sample name and SRA number o
 
 scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 
+# READS QUALITY
+# Filter long reads with Chopper
+chopper_headcrop: 1 # Trim N nucleotides from the start of a read [default: 0]
+chopper_maxlength: 20000000  # Sets a maximum read length [default: 20 Mb]
+chopper_minlength: 500 # Sets a minimum read length [default: 500 bp]
+chopper_quality: 10 # Sets a minimum Phred average quality score [default: 10]
+chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
 
 # MAPPING
 # Mapping on the reference genome with Minimap2
@@ -25,7 +32,7 @@ min-identity: 0.65 # Alignments with an identity lower than this threshold will 
 # SV CALLING
 # Common settings
 min_coverage: 10 # minimum of coverage for the SV callers
-min_sv_size: 50 # minimum SV length to detect
+min_sv_size: 30 # minimum SV length to detect
 max_sv_size: 30000000 # maximum SV length to detect (default: 30Mb)
 min_depth: 10 # Min depth of the variant (default: 10)
 min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
@@ -70,6 +77,7 @@ min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum len
 
 
 # Merging with Jasmine/IRIS
+jasmine_max_dist: 1000 # a constant integer value such that the distance threshold for every variant will be equal to this value
 
 
 # Samplot Diagnostic plot
@@ -98,3 +106,5 @@ mappability_merge: 100 #merge passing mappability regions separated by this or f
 threshold: 0.8 # Threshold for pct of allele covered to consider hit (0.8)
 dist: 10 # Minimum distance an alignment must be from a DEL's position to be considered
 hits: 0 # Report top hits as chr:start-end.pct (max 0)
+
+grm_kmersize: 50 # Size of kmer to map (default = 50)

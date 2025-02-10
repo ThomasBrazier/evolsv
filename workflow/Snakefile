@@ -38,27 +38,23 @@ include: "rules/ensemblecalling.smk"
 include: "rules/merging.smk"
 include: "rules/genotyping.smk"
 include: "rules/report.smk"
-# include: "rules/mappability.smk"
-
-
-# rule all:
-#     input:
-#         expand("{wdir}/{genome}_filtered.vcf.gz", wdir=wdir, genome=genome),
-#         expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
-#         expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome)
-
+include: "rules/mappability.smk"
 
 
 rule all:
     input:
         expand("{wdir}/{genome}_final.vcf.gz", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_final_light.vcf.gz", wdir=wdir, genome=genome),
         expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_minimap2/DUP/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_minimap2/INV/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_minimap2/DEL/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_ngmlr/DUP/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_ngmlr/INV/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_samplot_ngmlr/DEL/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_{aligners}_svim_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
-        expand("{wdir}/{genome}_{aligners}_cutesv_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
-        expand("{wdir}/{genome}_{aligners}_sniffles_QC/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners)
+        expand("{wdir}/samplot_minimap2_{genome}/DUP/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/samplot_minimap2_{genome}/INV/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/samplot_minimap2_{genome}/DEL/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/samplot_ngmlr_{genome}/DUP/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/samplot_ngmlr_{genome}/INV/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/samplot_ngmlr_{genome}/DEL/index.html", wdir=wdir, genome=genome),
+        expand("{wdir}/{aligners}_svim_QC_{genome}/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/{aligners}_cutesv_QC_{genome}/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/{aligners}_sniffles_QC_{genome}/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/callability/{genome}_{aligners}_callable_mappable.bed", wdir=wdir, genome=genome, aligners=aligners),
+        expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome),
+        expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome)

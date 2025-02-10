@@ -168,14 +168,14 @@ rule removeBND:
         cutesv_ngmlr = "{wdir}/{genome}_ngmlr_cutesv.vcf",
         debreak_ngmlr = "{wdir}/{genome}_ngmlr_debreak.vcf"
     output:
-        svim_minimap2 = "{wdir}/{genome}_minimap2_svim_noBND.vcf",
-        cutesv_minimap2 = "{wdir}/{genome}_minimap2_cutesv_noBND.vcf",
-        debreak_minimap2 = "{wdir}/{genome}_minimap2_debreak_noBND.vcf",
-        sniffles_minimap2 = "{wdir}/{genome}_minimap2_sniffles_noBND.vcf",
-        svim_ngmlr = "{wdir}/{genome}_ngmlr_svim_noBND.vcf",
-        cutesv_ngmlr = "{wdir}/{genome}_ngmlr_cutesv_noBND.vcf",
-        debreak_ngmlr = "{wdir}/{genome}_ngmlr_debreak_noBND.vcf",
-        sniffles_ngmlr = "{wdir}/{genome}_ngmlr_sniffles_noBND.vcf"
+        svim_minimap2 = temp("{wdir}/{genome}_minimap2_svim_noBND.vcf"),
+        cutesv_minimap2 = temp("{wdir}/{genome}_minimap2_cutesv_noBND.vcf"),
+        debreak_minimap2 = temp("{wdir}/{genome}_minimap2_debreak_noBND.vcf"),
+        sniffles_minimap2 = temp("{wdir}/{genome}_minimap2_sniffles_noBND.vcf"),
+        svim_ngmlr = temp("{wdir}/{genome}_ngmlr_svim_noBND.vcf"),
+        cutesv_ngmlr = temp("{wdir}/{genome}_ngmlr_cutesv_noBND.vcf"),
+        debreak_ngmlr = temp("{wdir}/{genome}_ngmlr_debreak_noBND.vcf"),
+        sniffles_ngmlr = temp("{wdir}/{genome}_ngmlr_sniffles_noBND.vcf")
     shell:
         """
         cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
@@ -198,7 +198,7 @@ rule vcf_preprocess:
         fasta = "{wdir}/{genome}.fna",
         bam = "{wdir}/{genome}_{aligner}_sorted.bam"
     output:
-        vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
+        vcf_temp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
         vcflist = temp("{wdir}/{genome}_{aligner}_{caller}_vcf_list.txt"),
         bamlist = temp("{wdir}/{genome}_{aligner}_{caller}_bam_list.txt")
     threads: workflow.cores
@@ -229,7 +229,7 @@ rule dup_to_ins:
         vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
-        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
+        vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
     threads: workflow.cores
     conda:
         "../envs/pysam.yaml"
@@ -259,25 +259,25 @@ rule sniffles2plot:
         cutesv_ngmlr = "{wdir}/{genome}_ngmlr_cutesv_noBND.vcf",
         sniffles_ngmlr = "{wdir}/{genome}_ngmlr_sniffles_noBND.vcf"
     output:
-        "{wdir}/{genome}_minimap2_sniffles_QC/variant_count.jpg",
-        "{wdir}/{genome}_minimap2_svim_QC/variant_count.jpg",
-        "{wdir}/{genome}_minimap2_cutesv_QC/variant_count.jpg",
-        "{wdir}/{genome}_ngmlr_sniffles_QC/variant_count.jpg",
-        "{wdir}/{genome}_ngmlr_svim_QC/variant_count.jpg",
-        "{wdir}/{genome}_ngmlr_cutesv_QC/variant_count.jpg"
+        "{wdir}/minimap2_sniffles_QC_{genome}/variant_count.jpg",
+        "{wdir}/minimap2_svim_QC_{genome}/variant_count.jpg",
+        "{wdir}/minimap2_cutesv_QC_{genome}/variant_count.jpg",
+        "{wdir}/ngmlr_sniffles_QC_{genome}/variant_count.jpg",
+        "{wdir}/ngmlr_svim_QC_{genome}/variant_count.jpg",
+        "{wdir}/ngmlr_cutesv_QC_{genome}/variant_count.jpg"
     conda:
         "../envs/sniffles.yaml"
     log:
         "{wdir}/logs/{genome}_sniffles2plot.log"
     shell:
         """
-        python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/{genome}_minimap2_sniffles_QC/
-        python3 -m sniffles2_plot -i {input.svim_minimap2} -o {wdir}/{genome}_minimap2_svim_QC/
-        python3 -m sniffles2_plot -i {input.cutesv_minimap2} -o {wdir}/{genome}_minimap2_cutesv_QC/
+        python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/minimap2_sniffles_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.svim_minimap2} -o {wdir}/minimap2_svim_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.cutesv_minimap2} -o {wdir}/minimap2_cutesv_QC_{genome}/
 
-        python3 -m sniffles2_plot -i {input.sniffles_ngmlr} -o {wdir}/{genome}_ngmlr_sniffles_QC/
-        python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/{genome}_ngmlr_svim_QC/
-        python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/{genome}_ngmlr_cutesv_QC/
+        python3 -m sniffles2_plot -i {input.sniffles_ngmlr} -o {wdir}/ngmlr_sniffles_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/ngmlr_svim_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/ngmlr_cutesv_QC_{genome}/
         """
 
 
@@ -289,7 +289,7 @@ rule genotype_svim:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
@@ -320,7 +320,7 @@ rule genotype_cutesv:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_cutesv_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
@@ -351,7 +351,7 @@ rule genotype_sniffles:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_sniffles_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
@@ -375,34 +375,6 @@ rule genotype_sniffles:
         """
 
 
-# rule normalize_vcf_debreak:
-#     """
-#     Add INFO tags in Debreak output
-#     """
-#     input:
-#         vcf = "{wdir}/{genome}_{aligner}_debreak_noBND.vcf",
-#         fasta = "{wdir}/{genome}.fna",
-#         bam = "{wdir}/{genome}_{aligner}_sorted.bam"
-#     output:
-#         vcf = "{wdir}/{genome}_{aligner}_debreak_normalize.vcf",
-#         vcflist = temp("{wdir}/{genome}_{aligner}_vcf_list_debreak.txt"),
-#         bamlist = temp("{wdir}/{genome}_{aligner}_bam_list_debreak.txt")
-#     threads: workflow.cores
-#     conda:
-#         "../envs/jasminesv.yaml"
-#     log:
-#         "{wdir}/logs/{genome}_{aligner}_normalize_debreak.log"
-#     shell:
-#         """
-#         echo "{input.vcf}" > {output.vcflist}
-#         echo "{input.bam}" > {output.bamlist}
-#         jasmine file_list={output.vcflist} out_file={output.vcf} \
-#         genome_file={input.fasta} \
-#         out_dir={wdir}/debreak_normalize bam_list={output.bamlist} \
-#         --preprocess-only --dup_to_ins
-#         """
-
-
 rule genotype_debreak:
     """
     Use SVjedigraph to genotype one callset
@@ -411,7 +383,7 @@ rule genotype_debreak:
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_debreak_preprocess.vcf",
         fasta = "{wdir}/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}.fastq.gz",
+        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"     
     output:
         vcf_temp = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),

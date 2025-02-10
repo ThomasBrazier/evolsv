@@ -13,9 +13,9 @@ rule jasmine:
         debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
-        vcf = "{wdir}/{genome}_merged.vcf",
-        vcflist = "{wdir}/{genome}_vcf_list.txt",
-        bamlist = "{wdir}/{genome}_bam_list.txt"
+        vcf = temp("{wdir}/{genome}_merged.vcf"),
+        vcflist = temp("{wdir}/{genome}_vcf_list.txt"),
+        bamlist = temp("{wdir}/{genome}_bam_list.txt")
     conda:
         "../envs/jasminesv.yaml"
     log:
@@ -37,5 +37,5 @@ rule jasmine:
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
-        --output_genotypes
+        --output_genotypes --ignore_strand --max_dist {config[jasmine_max_dist]}
         """

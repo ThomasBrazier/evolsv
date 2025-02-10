@@ -53,3 +53,63 @@ rule nanoplot:
         NanoPlot --fastq {input.fastq} -t {threads} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{wildcards.sample}_' --N50 --verbose --title {wildcards.sample}
         """
 
+
+rule filter_reads_chopper:
+    """
+    Filter long reads with chopper
+    --headcrop      Trim N nucleotides from the start of a read
+    --maxlength     Sets a maximum read length
+    -l, --minlength     Sets a minimum read length
+    -q, --quality       Sets a minimum Phred average quality score
+    --tailcrop      Trim N nucleotides from the end of a read
+    """
+    input:
+        reads = "{wdir}/fastq/{genome}.fastq.gz"
+    output:
+        filtered_reads = "{wdir}/fastq/{genome}_filtered.fastq.gz"
+    conda:
+        "../envs/chopper.yaml"
+    shell:
+        """
+        chopper -q {config[chopper_quality]} \
+        -l {config[chopper_minlength]} \
+        --maxlength {config[chopper_maxlength]} \
+        --headcrop {config[chopper_headcrop]} \
+        --tailcrop {config[chopper_tailcrop]} \
+        --threads {resources.cpus_per_task}
+        -i {input.reads} | gzip > {output.filtered_reads}
+        """
+
+
+rule nanoplot_after_filtering:
+    """
+    Quality control after filtering long reads
+    """
+    input:
+        fastq = "{wdir}/fastq/{sample}_filtered.fastq.gz"
+    output:
+        "{wdir}/nanoplot_filtered/{sample}_NanoStats.txt",
+        "{wdir}/nanoplot_filtered/{sample}_LengthvsQualityScatterPlot_dot.html",
+        "{wdir}/nanoplot_filtered/{sample}_LengthvsQualityScatterPlot_dot.png",
+        "{wdir}/nanoplot_filtered/{sample}_LengthvsQualityScatterPlot_kde.html",
+        "{wdir}/nanoplot_filtered/{sample}_LengthvsQualityScatterPlot_kde.png",
+        "{wdir}/nanoplot_filtered/{sample}_NanoPlot-report.html",
+        "{wdir}/nanoplot_filtered/{sample}_Non_weightedHistogramReadlength.html",
+        "{wdir}/nanoplot_filtered/{sample}_Non_weightedHistogramReadlength.png",
+        "{wdir}/nanoplot_filtered/{sample}_Non_weightedLogTransformed_HistogramReadlength.html",
+        "{wdir}/nanoplot_filtered/{sample}_Non_weightedLogTransformed_HistogramReadlength.png",
+        "{wdir}/nanoplot_filtered/{sample}_WeightedHistogramReadlength.html",
+        "{wdir}/nanoplot_filtered/{sample}_WeightedHistogramReadlength.png",
+        "{wdir}/nanoplot_filtered/{sample}_WeightedLogTransformed_HistogramReadlength.html",
+        "{wdir}/nanoplot_filtered/{sample}_WeightedLogTransformed_HistogramReadlength.png",
+        "{wdir}/nanoplot_filtered/{sample}_Yield_By_Length.html",
+        "{wdir}/nanoplot_filtered/{sample}_Yield_By_Length.png"
+    threads: workflow.cores
+    conda:
+        "../envs/nanoplot.yaml"
+    log:
+        "{wdir}/logs/{sample}_nanoplot_filtered.log"
+    shell:
+        """
+        NanoPlot --fastq {input.fastq} -t {threads} --tsv_stats --outdir {wdir}/nanoplot_filtered/ --prefix '{wildcards.sample}_' --N50 --verbose --title {wildcards.sample}
+        """
