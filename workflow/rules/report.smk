@@ -256,12 +256,34 @@ rule final_report:
         """
 
 
+rule light_vcf:
+    """
+    Make a light VCF for faster computation
+    No sequences
+    """
+    input:
+        vcf = "{wdir}/{genome}_final.vcf",
+        vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf",
+        html = "{wdir}/{genome}_finalQC.html"
+    output:
+        ligth_vcf = "{wdir}/{genome}_final_light.vcf"
+    conda:
+        "../envs/pysam.yaml"
+    shell:
+        """
+        # Iterate over the VCF to add symbolic type to REF/ALT field
+        # instead of sequence
+        python workflow/scripts/light_vcf.py {input.vcf} {output.light_vcf}
+        """
+
+
 rule gzvcf:
     """
     BGzip final VCF
     """
     input:
         vcf = "{wdir}/{genome}_final.vcf",
+        light_vcf = "{wdir}/{genome}_final_light.vcf",
         vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf",
         html = "{wdir}/{genome}_finalQC.html"
     output:
@@ -270,17 +292,23 @@ rule gzvcf:
         vcf = "{wdir}/{genome}_final.vcf.gz",
         vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf.gz",
         vcf_idx = "{wdir}/{genome}_final.vcf.gz.csi",
-        vcf_sexchr_idx = "{wdir}/{genome}_final_sexchr.vcf.gz.csi"
+        vcf_sexchr_idx = "{wdir}/{genome}_final_sexchr.vcf.gz.csi",
+        light_tmp_vcf = temp("{wdir}/{genome}_final_newheader_light.vcf"),
+        light_vcf = "{wdir}/{genome}_final_light.vcf.gz",
+        light_vcf_idx = "{wdir}/{genome}_final_light.vcf.gz.csi"
     conda:
         "../envs/samtools.yaml"
     shell:
         """
         bcftools annotate --header-lines workflow/header/header.txt {input.vcf} > {output.tmp_vcf}
         bcftools annotate --header-lines workflow/header/header.txt {input.vcf_sexchr} > {output.tmp_vcf_sexchr}
+        bcftools annotate --header-lines workflow/header/header.txt {input.light_vcf} > {output.light_tmp_vcf}
 
         bcftools sort {output.tmp_vcf} -O v | bgzip > {output.vcf}
         bcftools sort {output.tmp_vcf_sexchr} -O v | bgzip > {output.vcf_sexchr}
+        bcftools sort {output.light_tmp_vcf} -O v | bgzip > {output.light_vcf}
 
         tabix --csi {output.vcf}
         tabix --csi {output.vcf_sexchr}
+        tabix --csi {output.light_vcf}
         """

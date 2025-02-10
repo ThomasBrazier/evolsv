@@ -44,6 +44,7 @@ include: "rules/mappability.smk"
 rule all:
     input:
         expand("{wdir}/{genome}_final.vcf.gz", wdir=wdir, genome=genome),
+        expand("{wdir}/{genome}_final_light.vcf.gz", wdir=wdir, genome=genome),
         expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
         expand("{wdir}/samplot_minimap2_{genome}/DUP/index.html", wdir=wdir, genome=genome),
         expand("{wdir}/samplot_minimap2_{genome}/INV/index.html", wdir=wdir, genome=genome),
