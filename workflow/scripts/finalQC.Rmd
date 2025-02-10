@@ -136,7 +136,10 @@ merged = read.table(paste0("../../", wdir, "/", genome, "_final.tsv"),
 # TESTING
 # merged = read.vcfR(paste0("../../", wdir, "/", "test_lightheader.vcf"), check_keys = FALSE,
 #                    verbose = TRUE)
-merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
+# merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
+#                     header = TRUE, sep = "\t", quote = '"')
+
+merged = read.table("../../data/GCA_947369205.1/GCA_947369205.1_final.tsv",
                     header = TRUE, sep = "\t", quote = '"')
 
 # saveRDS(merged, "../../data/test.Rds")
@@ -208,7 +211,7 @@ tmp$valid_supp_vec = unlist(lapply(1:nrow(tmp), function(x) {paste0(tmp[x,8:15],
 ```
 
 ```{r, echo = T}
-cat("The proportion of calls successfully merged", 1 - sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp), "\n")
+cat("The proportion of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp), "\n")
 ```
 
 
