@@ -7,6 +7,7 @@ params:
   genome: ""
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -33,7 +34,9 @@ require(eulerr)
 ```{r assemblysummary, echo = F}
 json = jsonlite::read_json(paste0("../../", wdir, "/", genome, "_assembly_data_report.jsonl"))
 
+cat("Organism name:", json$organism$organismName, "\n")
 
+cat("Assembly name:", json$assemblyInfo$assemblyName, "\n")
 cat("Accession:", json$accession, "\n")
 
 cat("Bioproject Accession:", json$assemblyInfo$bioprojectAccession, "\n")
@@ -123,9 +126,9 @@ The final VCF produced contains 9 samples:
 Below are presented the callsets for the different tools (aligner  + SV caller) before the merging with Jasmine. Hence some calls may not be represented in the final sample (lost during merging).
 
 
-How to make the difference between a call that has been merged and another that has not (called by an individual tool but removed during merging)?
+The callset of each individual tool has been filtered and genotyped with SVjedi-graph, yielding a Phred-scale log likelihood and a consistent quality score. During filtering, SV were filtered by maximum SV length (default = 30Mb), minimum allele depth (default = 5), min depth of the variant (default = 10) and max depth of the variant (default = 500), and max phred-scale likelihood PL (default = 60).
 
-"SUPP_VEC=" is not present in the INFO field.
+
 
 
 ```{r loading_final_vcf, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
@@ -219,7 +222,7 @@ cat("The proportion of calls successfully merged:", sum(tmp$valid_supp_vec == tm
 ### Parsing the merged callset
 
 ```{r parseSV, echo = F}
-fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
+fix.merged$sv_type = as.vector(gsub("OLDTYPE=", "", str_match(fix.merged$INFO, "OLDTYPE=[A-Z]+")))
 fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[+-]*[0-9]+"))))
 ```
 
@@ -282,11 +285,14 @@ table(tidy_fix$aligner, tidy_fix$caller)
 
 *Note that all SV callers do not use the same way of calculating the Quality Score and they are not all on the same scale (e.g. log/phred-scale).* Consequently, the QUAL score plotted here is the SVjedi-graph genotyping QUAL score, estimated in a consistent way across SV callers.
 
+
+
 ```{r SVqualityAligner, echo = F, warning = F, fig.cap = "SVjedi-graph quality score for each aligner."}
 ggplot(tidy_fix, aes(x = aligner, y = as.numeric(QUAL), colour = aligner, group = aligner)) +
-  geom_violin(aes(fill = aligner), color = "black") +
-  geom_boxplot(alpha = 0.5, color = "black") +
-  geom_point(alpha = 0.1) +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(alpha = 0.1, width = 0.1, fill = NA, color = "black") +
+  geom_violin(width = 1.5, fill = NA, color = "black") +
+  coord_trans(y = "log10") +
   xlab("Aligner") + ylab("Quality Score") +
   theme_bw()
 ```
@@ -295,9 +301,11 @@ ggplot(tidy_fix, aes(x = aligner, y = as.numeric(QUAL), colour = aligner, group 
 
 ```{r SVqualityCaller, echo = F, warning = F, fig.cap = "SVjedi-graph quality score for each aligner and SV caller."}
 ggplot(tidy_fix, aes(x = caller, y = as.numeric(QUAL), colour = caller, group = caller)) +
-  geom_violin(aes(fill = caller), color = "black") +
-  geom_boxplot(alpha = 0.5, color = "black") +
-  geom_point(alpha = 0.1) +  xlab("SV caller") + ylab("Quality Score") +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(alpha = 0.1, width = 0.1, fill = NA, color = "black") +
+  geom_violin(width = 1.5, fill = NA, color = "black") +
+  coord_trans(y = "log10") +
+  xlab("SV caller") + ylab("Quality Score") +
   facet_wrap(~ aligner, scales = "fixed", nrow = 2) +
   theme_bw()
 ```
@@ -307,8 +315,10 @@ ggplot(tidy_fix, aes(x = caller, y = as.numeric(QUAL), colour = caller, group = 
 ggplot(tidy_fix, aes(x = as.numeric(QUAL), colour = caller, group = caller)) +
   geom_density() +
   xlab("Quality Score") + ylab("Density") +
+  coord_trans(x = "log10") +
   facet_wrap(~ aligner + caller, scales = "free", ncol = 4) +
-  theme_bw()
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 
@@ -333,7 +343,7 @@ ggplot(tidy_fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
 ## SV length
 
 
-```{r SVlength, echo = F, warning = F, fig.cap="Total absolute length covered by SVs. The black line is the total genome size."}
+```{r SVlength, echo = F, warning = F, fig.cap="Total absolute length (left axis) and proportion of the genome (right axis) covered by SVs. The black line is the total genome size."}
 df = aggregate(sv_length ~ sv_type + caller + aligner, tidy_fix, function(x) {sum(abs(x))})
 
 df_sample_size = aggregate(sv_length ~ sv_type + caller + aligner, tidy_fix, function(x) {length(x)})
@@ -346,70 +356,32 @@ ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type
   geom_hline(yintercept = genome_size) +
   xlab("SV type") + ylab("Total absolute length (Mb)") +
   labs(fill = "SV type", colour = "SV type") +
+  scale_y_continuous(
+    # Features of the first axis
+    name = "Total absolute length (Mb)",
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(trans=~./genome_size, name="Proportion of the genome")
+  ) +
   facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
   theme_bw()
 ```
 
 
-
-
-```{r SVproportion, echo = F, warning = F, fig.cap="Proportion of the genome covered by SVs"}
-ggplot(df, aes(x = sv_type, y = proportion_genome, fill = sv_type, colour = sv_type)) +
-  geom_bar(stat = "identity") +
-  xlab("SV type") + ylab("Proportion of the genome") +
-  facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
-  labs(fill = "SV type", colour = "SV type") +
-  # ylim(0, 1) +
-  theme_bw()
-```
 
 
 
 
 # Merging with Jasmine
 
-```{r loadingSV2, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
-# merged = read.vcfR(paste0("../../", wdir, "/", genome, "_merged.vcf"))
-# gt.merged = as.data.frame(merged@gt)
-# fix.merged = as.data.frame(merged@fix)
-# 
-# fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
-# fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
-# 
-# fix.merged$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
-# fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-1]+"))))
-# 
-# 
-# fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1", 1, 0)
-# fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1", 1, 0)
-# fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1", 1, 0)
-# fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1", 1, 0)
-```
 
 How many calls were merged with jasmine?
 
 
 ```{r, echo = TRUE}
-# Absolute number
-sum(fix.merged$jasmine)
+cat("Absolute number of calls merged with Jasmine:", sum(fix.merged$jasmine), "\n")
 
-# Proportion
-sum(fix.merged$jasmine) / nrow(fix.merged)
+cat("Proportion of calls merged with Jasmine:", sum(fix.merged$jasmine) / nrow(fix.merged), "\n")
 ```
-<!-- 
-## Number of SV for each tool before/after merging (and per SV type)
-
-
-**TODO**
-
-Number of SV supported by at least two tools:
-
-
-
-Number of SV supported by at least three tools:
-
-
-Number of SV supported by the four tools: -->
 
 
 ## Venn diagram - All SV types together
@@ -477,47 +449,11 @@ plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "s
 
 
 
-## Accumulation curve
-
-
-```{r, echo = F}
-#  Cumulative number of calls supported by n, n-1, ..., 1 tool
-summary(fix.merged$n_supp)
-table(fix.merged$n_supp)
-
-cumsum(table(fix.merged$n_supp)[1:8])
-
-df = data.frame(num_tools = 1:8,
-                cumsum_num_sv = cumsum(table(fix.merged$n_supp)[1:8]))
-```
-
-
-
-
-```{r, echo = F, warning = F, fig.cap = "The cumulative number of calls (pooling tools) as a function of the number of supporting tools."}
-ggplot(df, aes(x = num_tools, y = cumsum_num_sv)) +
-  geom_point() +
-  geom_line() +
-  xlab("Minimum number of supporting tools") + ylab("Cumulative number of calls (tools pooled)") +
-  ylim(0, max(df$cumsum_num_sv)) +
-  theme_bw()
-```
-
-
-
-
-
-
 # Genotyping and final callset
 
-Now the final callset in the merged sample is presented.
 
+After merging the callsets and re-genotyping, all SV called are represented in the final callset. They have not been filtered. It is left to the user to filter them afterward, depending on the question.
 
-```{r loadingFinal, echo = F, results=FALSE}
-# geno = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
-# gt.geno = as.data.frame(geno@gt)
-# fix.geno = as.data.frame(geno@fix)
-```
 
 
 ```{r samplename, echo = F}
@@ -571,57 +507,20 @@ ggarrange(p1, p2, p3, nrow = 3)
 
 
 
-After filtering at QC > 10.
-
-
-```{r SVtablefinal2}
-table(fix.merged$sv_type[which(fix.merged$QUAL > 10)])
-
-# Proportion
-table(fix.merged$sv_type[which(fix.merged$QUAL > 10)]) / table(fix.merged$sv_type[fix.merged$sv_type != "TRA"])
-```
-
-
-
-```{r SVtypefinal2, echo = F, warning = F, fig.cap = "Joint distribution of SV length and number of SV, per SV type (after filtering for QUAL > 10)."}
-p1 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
-  geom_bar() +
-  xlab("Length of Structural Variant (bp), less than 1 kb") + ylab("SV Count") +
-  xlim(0, 1000) +
-  labs(fill = "SV type", colour = "SV type") +
-  theme_bw()
-
-p2 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
-  geom_bar() +
-  xlab("Length of Structural Variant (bp), less than 50 kb") + ylab("SV Count") +
-  xlim(0, 50000) +
-  labs(fill = "SV type", colour = "SV type") +
-  theme_bw()
-
-p3 = ggplot(fix.merged[which(fix.merged$QUAL > 10),], aes(x = abs(sv_length), fill = sv_type, colour = sv_type)) +
-  geom_bar() +
-  xlab("Length of Structural Variant (bp), unlimited scale") + ylab("SV Count") +
-  labs(fill = "SV type", colour = "SV type") +
-  theme_bw()
-
-ggarrange(p1, p2, p3, nrow = 3)
-```
-
-
-
-
 ```{r SVlengthfinal, echo = F, warning = F, fig.cap = "SV length as a function of SV type."}
 fix.merged$sv_type = as.factor(fix.merged$sv_type)
 
 p1 = ggplot(fix.merged, aes(y = abs(sv_length) / 1000, x = sv_type, fill = sv_type)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = sv_type), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5) +
   ylab("SV Length (kb)") + xlab("SV type") +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
 
 
 p2 = ggplot(fix.merged, aes(y = log10(abs(sv_length)), x = sv_type, fill = sv_type)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = sv_type), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5) +
   ylab("SV Length (log10 scale)") + xlab("SV type") +
   labs(fill = "SV type", colour = "SV type") +
   theme_bw()
@@ -692,12 +591,14 @@ Variant allelic depth of the ALT allele (higher for heterozygotes is better).
 gt.geno$GT = as.factor(gt.geno$GT)
 
 p1 = ggplot(gt.geno, aes(x = GT, y = AD_ALT, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("Variant allelic depth (AD)") +
   theme_bw()
 
 p2 = ggplot(gt.geno, aes(x = GT, y = AD_ALT, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("Variant allelic depth (AD)") +
   ylim(0, 100) +
   theme_bw()
@@ -725,12 +626,14 @@ df$GT = as.factor(df$GT)
 
 
 p1 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("Phred-scaled genotype likelihood") +
   theme_bw()
 
 p2 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("Phred-scaled genotype likelihood") +
   ylim(0, 100) +
   theme_bw()
@@ -754,12 +657,14 @@ df$GT = as.factor(df$GT)
 
 
 p1 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("HET Phred-scaled genotype likelihood") +
   theme_bw()
 
 p2 = ggplot(df, aes(x = GT, y = PL, group = GT, colour = GT)) +
-  geom_boxplot() +
+  geom_jitter(aes(color = GT), alpha = 0.1) +
+  geom_boxplot(alpha = 0.5, color = "black") +
   ylab("HET Phred-scaled genotype likelihood") +
   ylim(0, 100) +
   theme_bw()
