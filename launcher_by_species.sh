@@ -23,5 +23,5 @@ echo "Running Snakemake pipeline for species $species..."
 echo "Testing the new aligner branch"
 
 snakemake -s workflow/Snakefile --configfile config/config.yaml \
---use-conda --profile ./profiles/slurm --cores 1 --rerun-incomplete \
+--use-conda --conda-frontend conda --profile ./profiles/slurm --cores 1 --rerun-incomplete \
 --config samples="data/config/samples_$species.tsv"

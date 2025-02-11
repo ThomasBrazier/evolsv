@@ -10,6 +10,8 @@ output = args.output
 
 # input="data/GCA_947369205.1/GCA_947369205.1_minimap2_debreak_normalize.vcf"
 # output="data/GCA_947369205.1/test.vcf"
+input="data/GCA_947369205.1/GCA_947369205.1_final.vcf"
+output="data/GCA_947369205.1/GCA_947369205.1_final_light.vcf"
 
 # Import VCF
 from pysam import VariantFile
@@ -19,27 +21,16 @@ bcf_out = VariantFile(output, 'w', header=bcf_in.header)
 
 # Iterate over the VCF to add symbolic type to REF/ALT field
 with VariantFile(output, "w", header=bcf_in.header) as out:
-
     for rec in bcf_in.fetch():
         if "INS" in rec.info["OLDTYPE"]:
-            rec.alleles[1] = "<INS>"
-        
+            rec.alleles = (rec.alleles[0], "<INS>")
         if "DEL" in rec.info["OLDTYPE"]:
-            rec.alleles[0] = "<DEL>"
-        
+            rec.alleles = ("<DEL>", rec.alleles[1])
         if "DUP" in rec.info["OLDTYPE"]:
-            rec.alleles[1] = "<DUP>"
-        
+            rec.alleles = (rec.alleles[0], "<DUP>")
         if "INV" in rec.info["OLDTYPE"]:
-            rec.alleles[1] = "<INV>"
-
+            rec.alleles = (rec.alleles[0], "<INV>")
         if "TRA" in rec.info["OLDTYPE"]:
-            rec.alleles[1] = "<TRA>"
-
+            rec.alleles = (rec.alleles[0], "<TRA>")
         out.write(rec)
-
-        
-        
-
-
 

@@ -266,7 +266,7 @@ rule light_vcf:
         vcf_sexchr = "{wdir}/{genome}_final_sexchr.vcf",
         html = "{wdir}/{genome}_finalQC.html"
     output:
-        ligth_vcf = "{wdir}/{genome}_final_light.vcf"
+        light_vcf = "{wdir}/{genome}_final_light.vcf"
     conda:
         "../envs/pysam.yaml"
     shell:

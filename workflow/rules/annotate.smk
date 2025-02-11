@@ -29,7 +29,7 @@ rule truvari_repeatmasker:
         vcf = "{wdir}/{genome}_final.vcf",
         fasta = "{wdir}/{genome}.fna"
     output:
-        vcf = "{wdir}/{genome}_annotated.vcf"
+        vcf = "{wdir}/{genome}_repmasked.vcf"
     conda:
         "../envs/truvari.yaml"
     shell:

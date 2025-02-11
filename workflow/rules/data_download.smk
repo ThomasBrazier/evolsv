@@ -4,11 +4,9 @@ rule download_sra:
     and the genome from the NCBI genome assembly database
     """
     output:
-        "{wdir}/fastq/{sample}.fastq.gz"
+        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     conda:
         "../envs/download.yaml"
-    log:
-        "{wdir}/logs/{sample}_download_sra.log"
     shell:
         """
         mkdir --parents {wdir}/fastq
