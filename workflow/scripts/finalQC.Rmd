@@ -682,15 +682,25 @@ ggarrange(p1, p2, ncol = 2)
 Estimate the calling rates for each tool:
 
 
-* the TRUE POSITIVE rate is when a call is genotyped as HET by SVjedi-graph
-* the FALSE POSITIVE rate is when a call is genotyped as HOM by SVjedi-graph
-* the FALSE NEGATIVE rate is when a call is genotyped as missing (./.) while it has been called as HET for at least one other tool (we assume that a HET call is a true call, yet it an approximation and ground truth remains unknown). Note that because of this approximation we might be underestimating the false negative rate (the proportion of undetected variants) and overestimating the recall and F1 score. However, without ground truth, it is difficult to estimate the false negative rate, and our performance score is still valid to compare and weight the different tools.
-* the TRUE NEGATIVE rate is not estimated, and is not used in precision/recall calculation
-
-
-
+* the TRUE POSITIVE is when a call is genotyped as HET by SVjedi-graph
+* the FALSE POSITIVE is when a call is genotyped as HOM by SVjedi-graph
+* the FALSE NEGATIVE is when a call is genotyped as missing (./.) while it has been called as HET for at least one other tool (we assume that a HET call is a true call, yet it an approximation and ground truth remains unknown). Note that because of this approximation we might be underestimating the false negative rate (the proportion of undetected variants) and overestimating the recall and F1 score. However, without ground truth, it is difficult to estimate the false negative rate, and our performance score is still valid to compare and weight the different tools.
+* the TRUE NEGATIVE is not estimated, and is not used in precision/recall calculation
 
 Quick reminder, the precision is TP / (TP + FP) and recall is TP / (TP +  FN). The F1 score is then F1 = 2 * ((precision * recall) / (precision + recall)).
+
+
+IMPORTANT NOTE. Since the ground truth is unknown, TP, FP and FN are approximations in this context, making some assumptions:
+
+
+* the empirical ground truth depends on our filtering criteria and the definition of a TP (the TP is overestimated if some HET calls are in fact false positives, i.e. if the genotyping error rate is > 0, which is most likely). You can set a more stringent filtering to reduce this bias.
+* we assume that all true SVs in this individual has been called by at least one SV caller (the FN is underestimated if SVs have not been called by at least one tool)
+
+
+
+We are trying to estimate the true precision/recall of each tool. We want to be able to estimate the relative performance of each tool compared to the others, for a given dataset.
+These empirical performance scores are useful to give more importance to some tools and to have a proxy of the confidence we can have in a callset.
+They can be used downstream to weigth any measure of confidence you have in a call (e.g. a genotype likelihood), depending on which tools called it.
 
 
 ```{r, echo = T}
@@ -818,11 +828,11 @@ write.table(performance, paste0("../../", wdir, "/performance/", genome, "_perfo
 
 
 
-
+<!-- 
 ## Likelihood Ratio Test between the best likelihood and the HET likelihood
 
 
-An alternative measure of confidence for each call.
+An alternative measure of confidence for each call. -->
 
 
 
