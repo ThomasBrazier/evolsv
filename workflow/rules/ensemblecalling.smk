@@ -11,7 +11,7 @@ rule svim:
         svimvariants = temp("{wdir}/{genome}_{aligner}_svim/variants.vcf"),
         vcf = temp("{wdir}/{genome}_{aligner}_svim_tmp.vcf"),
         vcf_raw = temp("{wdir}/{genome}_{aligner}_svim_raw.vcf"),
-        vcf_renamed = "{wdir}/{genome}_{aligner}_svim.vcf"
+        vcf_renamed = temp("{wdir}/{genome}_{aligner}_svim.vcf")
     resources:
         tmpdir = get_big_temp
     conda:
@@ -52,7 +52,7 @@ rule sniffles:
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_sniffles_tmp.vcf"),
         vcf_raw = temp("{wdir}/{genome}_{aligner}_sniffles_raw.vcf"),
-        vcf_renamed = "{wdir}/{genome}_{aligner}_sniffles.vcf"
+        vcf_renamed = temp("{wdir}/{genome}_{aligner}_sniffles.vcf")
     resources:
         tmpdir = get_big_temp
     conda:
@@ -91,7 +91,7 @@ rule cutesv:
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_cutesv_tmp.vcf"),
         vcf_raw = temp("{wdir}/{genome}_{aligner}_cutesv_raw.vcf"),
-        vcf_renamed = "{wdir}/{genome}_{aligner}_cutesv.vcf"
+        vcf_renamed = temp("{wdir}/{genome}_{aligner}_cutesv.vcf")
     resources:
         tmpdir = get_big_temp
     conda:
@@ -129,7 +129,7 @@ rule debreak:
     output:
         vcf = temp("{wdir}/{genome}_{aligner}_debreak_tmp.vcf"),
         vcf_raw = temp("{wdir}/{genome}_{aligner}_debreak_raw.vcf"),
-        vcf_renamed = "{wdir}/{genome}_{aligner}_debreak.vcf"
+        vcf_renamed = temp("{wdir}/{genome}_{aligner}_debreak.vcf")
     conda:
         "../envs/debreak.yaml"
     resources:
@@ -293,7 +293,7 @@ rule genotype_svim:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype.vcf",
+        vcf_renamed = temp("{wdir}/svim_genotype/{genome}_{aligner}_svim_genotype.vcf"),
         gfa = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gfa",
         gaf = "{wdir}/svim_genotype/{genome}_{aligner}_svim.gaf",
         aln = "{wdir}/svim_genotype/{genome}_{aligner}_svim_informative_aln.json"
@@ -324,7 +324,7 @@ rule genotype_cutesv:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype.vcf",
+        vcf_renamed = temp("{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_genotype.vcf"),
         gfa = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gfa",
         gaf = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv.gaf",
         aln = "{wdir}/cutesv_genotype/{genome}_{aligner}_cutesv_informative_aln.json"
@@ -355,7 +355,7 @@ rule genotype_sniffles:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype.vcf",
+        vcf_renamed = temp("{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_genotype.vcf"),
         gfa = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gfa",
         gaf = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles.gaf",
         aln = "{wdir}/sniffles_genotype/{genome}_{aligner}_sniffles_informative_aln.json"
@@ -387,7 +387,7 @@ rule genotype_debreak:
         sampleids = "{wdir}/{genome}.samples"     
     output:
         vcf_temp = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype.vcf",
+        vcf_renamed = temp("{wdir}/debreak_genotype/{genome}_{aligner}_debreak_genotype.vcf"),
         gfa = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gfa",
         gaf = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak.gaf",
         aln = "{wdir}/debreak_genotype/{genome}_{aligner}_debreak_informative_aln.json"
@@ -416,7 +416,7 @@ rule basic_filter:
     input:
         vcf = "{wdir}/{caller}_genotype/{genome}_{aligner}_{caller}_genotype.vcf"
     output:
-        vcf = "{wdir}/filtered/{genome}_{aligner}_{caller}_filtered.vcf"
+        vcf = temp("{wdir}/filtered/{genome}_{aligner}_{caller}_filtered.vcf")
     threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"

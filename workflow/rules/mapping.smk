@@ -77,8 +77,8 @@ rule samtools_view:
         sam_minimap2 = "{wdir}/{genome}_minimap2.sam",
         sam_ngmlr = "{wdir}/{genome}_ngmlr.sam"
     output:
-        bam_minimap2 = "{wdir}/{genome}_minimap2.bam",
-        bam_ngmlr = "{wdir}/{genome}_ngmlr.bam"
+        bam_minimap2 = temp("{wdir}/{genome}_minimap2.bam"),
+        bam_ngmlr = temp("{wdir}/{genome}_ngmlr.bam")
     conda:
         "../envs/samtools.yaml"
     shell:

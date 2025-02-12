@@ -20,19 +20,19 @@ rule truvari_grm:
         """
 
 
-rule truvari_repeatmasker:
-    """
-    truvari anno repmask
-    Wrapper around RepeatMasker to annotate insertion sequences in a VCF.
-    """
-    input:
-        vcf = "{wdir}/{genome}_final.vcf",
-        fasta = "{wdir}/{genome}.fna"
-    output:
-        vcf = "{wdir}/{genome}_repmasked.vcf"
-    conda:
-        "../envs/truvari.yaml"
-    shell:
-        """
-        truvari anno repmask -i {input.vcf} -o {output.vcf} [-e EXECUTABLE] [-m MIN_LENGTH] [-M MAX_LENGTH] [-t THRESHOLD] [-p PARAMS] [-T THREADS]
-        """
+# rule truvari_repeatmasker:
+#     """
+#     truvari anno repmask
+#     Wrapper around RepeatMasker to annotate insertion sequences in a VCF.
+#     """
+#     input:
+#         vcf = "{wdir}/{genome}_final.vcf",
+#         fasta = "{wdir}/{genome}.fna"
+#     output:
+#         vcf = "{wdir}/{genome}_repmasked.vcf"
+#     conda:
+#         "../envs/truvari.yaml"
+#     shell:
+#         """
+#         truvari anno repmask -i {input.vcf} -o {output.vcf} [-e EXECUTABLE] [-m MIN_LENGTH] [-M MAX_LENGTH] [-t THRESHOLD] [-p PARAMS] [-T THREADS]
+#         """

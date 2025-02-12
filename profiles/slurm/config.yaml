@@ -59,6 +59,7 @@ set-threads:
   genmap: 1
   mappability_bed: 1
   add_mappability: 1
+  truvari_grm: 8
 
 
 # Control other resources used by each rule.

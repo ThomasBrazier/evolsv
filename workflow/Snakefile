@@ -39,7 +39,7 @@ include: "rules/merging.smk"
 include: "rules/genotyping.smk"
 include: "rules/report.smk"
 include: "rules/mappability.smk"
-include: "rules/annotate.smk"
+# include: "rules/annotate.smk"
 
 
 rule all:
@@ -58,4 +58,4 @@ rule all:
         expand("{wdir}/{aligners}_sniffles_QC_{genome}/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
         expand("{wdir}/callability/{genome}_{aligners}_callable_mappable.bed", wdir=wdir, genome=genome, aligners=aligners),
         expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome),
-        expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome)
+        # expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome)

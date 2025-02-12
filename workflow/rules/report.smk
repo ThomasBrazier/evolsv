@@ -107,8 +107,8 @@ rule samplot_plot:
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir_minimap2 = "{wdir}/{genome}_samplot_minimap2",
-        outdir_ngmlr = "{wdir}/{genome}_samplot_ngmlr"
+        outdir_minimap2 = "{wdir}/samplot_minimap2_{genome}",
+        outdir_ngmlr = "{wdir}/samplot_ngmlr_{genome}"
     shell:
         """
         samplot vcf \

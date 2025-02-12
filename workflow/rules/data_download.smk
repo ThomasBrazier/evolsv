@@ -72,7 +72,7 @@ rule merge_fastq:
     input:
         fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
-        merged_fastq = expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome)
+        merged_fastq = temp(expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome))
     conda:
         "../envs/samtools.yaml"
     params:

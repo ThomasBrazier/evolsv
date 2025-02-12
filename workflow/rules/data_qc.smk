@@ -66,7 +66,7 @@ rule filter_reads_chopper:
     input:
         reads = "{wdir}/fastq/{genome}.fastq.gz"
     output:
-        filtered_reads = "{wdir}/fastq/{genome}_filtered.fastq.gz"
+        filtered_reads = temp("{wdir}/fastq/{genome}_filtered.fastq.gz")
     conda:
         "../envs/chopper.yaml"
     shell:

@@ -9,12 +9,14 @@
 
 species=$1
 
-module load snakemake
+module load snakemake/8.9.0
 
 echo "Snakemake version"
 snakemake --version
 echo "SLURM version"
 srun --version
+echo "Conda version"
+conda --version
 
 git status
 
