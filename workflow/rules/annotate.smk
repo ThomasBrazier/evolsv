@@ -7,15 +7,24 @@ rule truvari_grm:
     but instead will create a pandas DataFrame and save it to a joblib object.
     """
     input:
-        vcf = "{wdir}/{genome}_final.vcf",
+        vcf = "{wdir}/{genome}_final.vcf.gz",
         fasta = "{wdir}/{genome}.fna"
     output:
-        grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl"
+        grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl",
+        tabix = "{wdir}/{genome}_final.vcf.gz.tbi",
+        amb = "{wdir}/{genome}.fna.amb",
+        ann = "{wdir}/{genome}.fna.ann",
+        bwt = "{wdir}/{genome}.fna.bwt",
+        pac = "{wdir}/{genome}.fna.pac",
+        sa = "{wdir}/{genome}.fna.sa"
     conda:
         "../envs/truvari.yaml"
     shell:
         """
-        truvari anno grm -i {input.vcf} -r {input.fasta} -o {output.grm_pandas} \
+        bwa index {input.fasta} # Reference must be indexed
+        tabix {input.vcf} # Tabix .ybi is required by truvari
+        singularity exec workflow/containers/truvari.sif truvari anno grm \
+        -i {input.vcf} -r {input.fasta} -o {output.grm_pandas} \
         -k {config[grm_kmersize]} -m {config[min_sv_size]} -t {resources.cpus_per_task}
         """
 

@@ -10,6 +10,4 @@ dependencies:
  - vcftools
  - htslib
  - bwapy
- - pip:
-
 

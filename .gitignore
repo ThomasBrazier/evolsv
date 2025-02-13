@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 dag.pdf
 data/
+workflow/containers/
 
 .R*
 *.out
