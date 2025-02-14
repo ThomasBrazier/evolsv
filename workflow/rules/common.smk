@@ -4,7 +4,7 @@ import tempfile
 import random
 import string
 
-samplelist = [wdir + "/fastq/" + s + ".fastq.gz" for s in samples["sra"]]
+samplelist = [wdir + "/fastq/" + s + "_sra.fastq.gz" for s in samples["sra"]]
 fqlist = ",".join(samplelist)
 
 

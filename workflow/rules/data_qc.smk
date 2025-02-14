@@ -3,10 +3,10 @@ rule fastqc:
     Report data quality for long reads
     """
     input:
-        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
-        expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
-        expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
+        expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"])
     conda:
         "../envs/fastqc.yaml"
     log:
@@ -23,9 +23,9 @@ rule nanoplot:
     Quality control of raw data
     """
     input:
-        fastq = "{wdir}/fastq/{sample}.fastq.gz",
-        html = "{wdir}/fastqc/{sample}_fastqc.html",
-        qczip = "{wdir}/fastqc/{sample}_fastqc.zip",
+        fastq = "{wdir}/fastq/{sample}_sra.fastq.gz",
+        html = "{wdir}/fastqc/{sample}_sra_fastqc.html",
+        qczip = "{wdir}/fastqc/{sample}_sra_fastqc.zip",
     output:
         "{wdir}/nanoplot/{sample}_NanoStats.txt",
         "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_dot.html",

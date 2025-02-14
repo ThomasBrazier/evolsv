@@ -5,10 +5,10 @@ rule minimap2:
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         fasta = "{wdir}/{genome}.fna",
-        html = expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
-        qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
+        html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
+        qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
-        nanoplot_filtered = expand("{wdir}/nanoplot_filtered/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
+        nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
         sam = temp("{wdir}/{genome}_minimap2.sam")
     conda:
@@ -49,9 +49,10 @@ rule ngmlr:
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         fasta = "{wdir}/{genome}.fna",
-        html = expand("{wdir}/fastqc/{sample}_fastqc.html", wdir=wdir, sample=samples["sra"]),
-        qczip = expand("{wdir}/fastqc/{sample}_fastqc.zip", wdir=wdir, sample=samples["sra"]),
-        nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"])
+        html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
+        qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
+        nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
+        nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
         sam = temp("{wdir}/{genome}_ngmlr.sam")
     conda:

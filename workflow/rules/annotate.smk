@@ -12,11 +12,11 @@ rule truvari_grm:
     output:
         grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl",
         tabix = "{wdir}/{genome}_final.vcf.gz.tbi",
-        amb = "{wdir}/{genome}.fna.amb",
-        ann = "{wdir}/{genome}.fna.ann",
-        bwt = "{wdir}/{genome}.fna.bwt",
-        pac = "{wdir}/{genome}.fna.pac",
-        sa = "{wdir}/{genome}.fna.sa"
+        amb = temp("{wdir}/{genome}.fna.amb"),
+        ann = temp("{wdir}/{genome}.fna.ann"),
+        bwt = temp("{wdir}/{genome}.fna.bwt"),
+        pac = temp("{wdir}/{genome}.fna.pac"),
+        sa = temp("{wdir}/{genome}.fna.sa")
     conda:
         "../envs/truvari.yaml"
     shell:

@@ -4,13 +4,14 @@ rule download_sra:
     and the genome from the NCBI genome assembly database
     """
     output:
-        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        "{wdir}/fastq/{sample}_sra.fastq.gz"
     conda:
         "../envs/download.yaml"
     shell:
         """
         mkdir --parents {wdir}/fastq
         fastq-dump -v --gzip --outdir {wdir}/fastq/ {wildcards.sample}
+        mv "{wdir}/fastq/{wildcards.sample}.fastq.gz" "{wdir}/fastq/{wildcards.sample}_sra.fastq.gz"
         cp config/samples.tsv {wdir}/{genome}_samples.tsv
         """
 
@@ -20,7 +21,7 @@ rule download_genome:
     Download the genome from the NCBI genome assembly database
     """
     input:
-        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/{genome}.fna",
         temp("{wdir}/{genome}.zip"),
@@ -52,7 +53,7 @@ rule sample_ids:
     Create a file with sample ids
     """
     input:
-        expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         sampleids = "{wdir}/{genome}.samples"
     conda:
@@ -70,7 +71,7 @@ rule merge_fastq:
     Merge fastq files for mapping
     """
     input:
-        fastq = expand("{wdir}/fastq/{sample}.fastq.gz", wdir=wdir, sample=samples["sra"])
+        fastq = expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         merged_fastq = temp(expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome))
     conda:
