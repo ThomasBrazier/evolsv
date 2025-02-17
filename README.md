@@ -100,6 +100,8 @@ Project data can be stored in the current `evolsv` git directory. The place wher
 The main output file is a VCF file containing the list of SVs, named `{wdir}/{genome}_final.vcf.gz`. It is the result of merging the eigth SV catalogues generated. Additionnally, a `{wdir}/{genome}_final.tsv` and a `{wdir}/{genome}_final_light.vcf.gz` files are produced. They contain the same set of SV calls, but they are designed to be processed more easily than the full vcf. `{wdir}/{genome}_final.tsv` is a data frame without sequences for an easy import in R for data analysis. `{wdir}/{genome}_final_light.vcf.gz` is a lighter vcf without DNA sequences in REF/ALT and INFO fields (DNA sequences can be very large with structural variation).
 
 
+We also produce an automatic report to assess the quality and empirical performance of the workflow for the given dataset. Please check `{wdir}/{genome}_finalQC.html` for details. 
+
 
 ## References
 
