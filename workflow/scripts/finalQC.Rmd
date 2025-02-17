@@ -142,8 +142,8 @@ merged = read.table(paste0("../../", wdir, "/", genome, "_final.tsv"),
 # merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
 #                     header = TRUE, sep = "\t", quote = '"')
 
-merged = read.table("../../data/GCA_947369205.1/GCA_947369205.1_final.tsv",
-                    header = TRUE, sep = "\t", quote = '"')
+# merged = read.table("../../data/GCA_947369205.1/GCA_947369205.1_final.tsv",
+#                     header = TRUE, sep = "\t", quote = '"')
 
 # saveRDS(merged, "../../data/test.Rds")
 # merged = readRDS("../../data/test.Rds")

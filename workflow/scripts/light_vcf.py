@@ -10,8 +10,8 @@ output = args.output
 
 # input="data/GCA_947369205.1/GCA_947369205.1_minimap2_debreak_normalize.vcf"
 # output="data/GCA_947369205.1/test.vcf"
-input="data/GCA_947369205.1/GCA_947369205.1_final.vcf"
-output="data/GCA_947369205.1/GCA_947369205.1_final_light.vcf"
+# input="data/GCA_947369205.1/GCA_947369205.1_final.vcf"
+# output="data/GCA_947369205.1/GCA_947369205.1_final_light.vcf"
 
 # Import VCF
 from pysam import VariantFile
