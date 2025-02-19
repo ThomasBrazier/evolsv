@@ -424,5 +424,5 @@ rule basic_filter:
         "{wdir}/logs/{genome}_{aligner}_{caller}_basic_filter.log"
     shell:
         """
-        bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(PL) < {config[max_PL]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
+        bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(PL) > {config[max_PL]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
         """
