@@ -75,7 +75,7 @@ max_sv_size: 30000000 # maximum SV length to detect (default: 30Mb)
 min_depth: 10 # Min depth of the locus (default: 10)
 max_depth: 500 # Max depth of the locus (default: 500)
 min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
-max_PL: 300 # Max quality score to keep the call (default: 300)
+max_PL: 600 # Max quality score to keep the call (default: 600)
 
 
 # Merging with Jasmine/IRIS
