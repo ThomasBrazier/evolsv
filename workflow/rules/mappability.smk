@@ -37,7 +37,7 @@ rule mosdepth_quantize:
         # prefix = "{wdir}/callability/{genome}_{aligner}",
         lower = round(config["quantize_cov_threshold_lower"]),
         upper = round(config["quantize_cov_threshold_upper"]),
-        # sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
+        sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
         upper_threshold = lambda wildcards, input: round(config["quantize_cov_threshold_upper"] * get_mean_cov(input.summary))
     shell:
         """
