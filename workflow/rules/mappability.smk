@@ -37,7 +37,7 @@ rule mosdepth_quantize:
         # prefix = "{wdir}/callability/{genome}_{aligner}",
         lower = round(config["quantize_cov_threshold_lower"]),
         upper = round(config["quantize_cov_threshold_upper"]),
-        sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
+        # sample_mean = lambda wildcards, input: get_mean_cov(input.summary),
         upper_threshold = lambda wildcards, input: round(config["quantize_cov_threshold_upper"] * get_mean_cov(input.summary))
     shell:
         """
@@ -45,9 +45,11 @@ rule mosdepth_quantize:
         export MOSDEPTH_Q1=LOW_COVERAGE
         export MOSDEPTH_Q2=CALLABLE
         export MOSDEPTH_Q3=HIGH_COVERAGE
+        
         mosdepth --no-per-base -t {threads} \
         --quantize 0:1:{params.lower}:{params.upper_threshold}: \
         {wdir}/callability/{genome}_minimap2 {input.bam}
+
         mosdepth --no-per-base -t {threads} \
         --quantize 0:1:{params.lower}:{params.upper_threshold}: \
         {wdir}/callability/{genome}_ngmlr {input.bam}

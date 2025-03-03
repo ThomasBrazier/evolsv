@@ -64,18 +64,18 @@ set-threads:
 
 # Control other resources used by each rule.
 set-resources:
-#   download_sra:
-#     mem_mb: attempt * 2000
+  download_sra:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   download_genome:
-#     mem_mb: attempt * 2000
+  download_genome:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   fastqc:
-#     mem_mb: attempt * 2000
+  fastqc:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -104,8 +104,8 @@ set-resources:
 #     slurm_partition:
     runtime: 2880 * 4
     cpus_per_task: 16
-#   samtools_view:
-#     mem_mb: attempt * 2000
+  samtools_view:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -119,8 +119,8 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   samtools_stats:
-#     mem_mb: attempt * 2000
+  samtools_stats:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -159,8 +159,8 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   basic_filter:
-#     mem_mb: attempt * 2000
+  basic_filter:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -189,13 +189,13 @@ set-resources:
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 8
-#   vcf_list:
-#     mem_mb: attempt * 2000
+  vcf_list:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   bam_list:
-#     mem_mb: attempt * 2000
+  bam_list:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
@@ -209,18 +209,18 @@ set-resources:
 #     slurm_partition:
 #     runtime:
     cpus_per_task: 16
-#   autosomes_sexchromosomes:
-#     mem_mb: attempt * 2000
+  autosomes_sexchromosomes:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   final_filtering:
-#     mem_mb: attempt * 2000
+  final_filtering:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   samplot_subset:
-#     mem_mb: attempt * 2000
+  samplot_subset:
+    mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:

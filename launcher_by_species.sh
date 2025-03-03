@@ -2,7 +2,7 @@
 #SBATCH --mail-user=thomas.brazier@univ-rennes.fr
 #SBATCH --mail-type=all
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=120GB
+#SBATCH --mem=10GB
 #SBATCH --time=20-60:00:00
 #SBATCH --job-name=evolsv-test
 #SBATCH --output=log/slurm-%A.out
@@ -25,5 +25,6 @@ echo "Running Snakemake pipeline for species $species..."
 echo "Testing the new aligner branch"
 
 snakemake -s workflow/Snakefile --configfile config/config.yaml \
---use-conda --conda-frontend conda -R filter_reads_chopper --profile ./profiles/slurm --cores 1 --rerun-incomplete \
+--use-conda --conda-frontend conda --profile ./profiles/slurm \
+--cores 1 --rerun-incomplete \
 --config samples="data/config/samples_$species.tsv"
