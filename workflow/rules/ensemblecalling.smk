@@ -306,7 +306,7 @@ rule genotype_svim:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/svim_genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
-        --minsupport [config{minsupport}]
+        --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -337,7 +337,7 @@ rule genotype_cutesv:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/cutesv_genotype/{genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
-        --minsupport [config{minsupport}]
+        --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -368,7 +368,7 @@ rule genotype_sniffles:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/sniffles_genotype/{genome}_{wildcards.aligner}_sniffles \
         -t {resources.cpus_per_task} \
-        --minsupport [config{minsupport}]
+        --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -400,7 +400,7 @@ rule genotype_debreak:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/debreak_genotype/{genome}_{wildcards.aligner}_debreak \
         -t {resources.cpus_per_task} \
-        --minsupport [config{minsupport}]
+        --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}

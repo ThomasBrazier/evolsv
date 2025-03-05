@@ -247,6 +247,7 @@ rule final_report:
         mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
     output:
         "{wdir}/{genome}_finalQC.html",
+        "{wdir}/{genome}_finalQC.pdf",
         "{wdir}/performance/{genome}_performance.tsv"
     conda:
         "../envs/Renv.yaml"
