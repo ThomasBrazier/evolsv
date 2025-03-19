@@ -1,13 +1,7 @@
 ---
 title: "SV calling from long reads in a single individual"
 date: "`r Sys.Date()`"
-output: 
-  pdf_document:
-    latex_engine: pdflatex
-  html_document:
-    toc: true
-    toc_float: true
-    code_folding: show
+output: html_document
 params:
   wdir: ""
   genome: ""

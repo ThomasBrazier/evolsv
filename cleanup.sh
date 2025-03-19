@@ -7,5 +7,5 @@ rm -rf tmp/*
 rm -rf data/GCA_*/debreak_minimap2/
 rm -rf data/GCA_*/debreak_ngmlr/
 
-rm -rf data-lewontin/GCA_*/debreak_minimap2/
-rm -rf data-lewontin/GCA_*/debreak_ngmlr/
+#rm -rf data-lewontin/GCA_*/debreak_minimap2/
+#rm -rf data-lewontin/GCA_*/debreak_ngmlr/

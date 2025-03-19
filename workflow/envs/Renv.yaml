@@ -38,3 +38,4 @@ dependencies:
   - r-latexpdf
   - pdflatex
   - r-knitlatex
+  - latexmk

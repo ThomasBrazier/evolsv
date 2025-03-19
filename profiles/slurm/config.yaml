@@ -152,6 +152,7 @@ set-resources:
   vcf_preprocess:
     mem_mb: attempt * 200000
 #     slurm_partition:
+    qos: bigmem
 #     runtime:
 #     cpus_per_task:
   dup_to_ins:
