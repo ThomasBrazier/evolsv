@@ -5,6 +5,7 @@ __pycache__/
 dag.pdf
 data/
 workflow/containers/
+data-lewontin/        
 
 .R*
 *.out
