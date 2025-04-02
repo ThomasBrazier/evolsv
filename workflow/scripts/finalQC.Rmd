@@ -441,9 +441,9 @@ plot(euler(fix.merged.dup[, colnames(fix.merged.dup) %in% c("svim", "cutesv", "s
 
 ```{r venndiaginv, echo = F, fig.width= 12, fig.height=9}
 fix.merged.inv = fix.merged[which(fix.merged$sv_type == "INV"),]
-plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
+try(plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
      quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
+     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3))))
 ```
 
 
