@@ -9,8 +9,6 @@ rule mosdepth_summary:
         "../envs/mosdepth.yaml"
     log:
         "{wdir}/logs/mosdepth/{genome}_{aligner}.txt"
-    benchmark:
-        "{wdir}/benchmarks/mosdepth/{genome}_{aligner}.txt"
     params:
         prefix = "{wdir}/callability/{genome}_{aligner}"
     shell:
@@ -31,8 +29,6 @@ rule mosdepth_quantize:
         "../envs/mosdepth.yaml"
     log:
         "{wdir}/logs/mosdepth_quantize/{genome}_{aligner}.txt"
-    benchmark:
-        "{wdir}/benchmarks/mosdepth_quantize/{genome}_{aligner}.txt"
     params:
         # prefix = "{wdir}/callability/{genome}_{aligner}",
         lower = round(config["quantize_cov_threshold_lower"]),
@@ -83,8 +79,6 @@ rule genmap:
         kmer = config['mappability_k']
     log:
         "{wdir}/logs/genmap/{genome}.txt"
-    benchmark:
-        "{wdir}/benchmarks/genmap/{genome}.txt"
     conda:
         "../envs/genmap.yaml"
     shell:
@@ -104,8 +98,6 @@ rule mappability_bed:
         tmp_map = temp("{wdir}/mappability/{genome}_temp_map.bed")
     conda:
         "../envs/genmap.yaml"
-    benchmark:
-        "{wdir}/benchmarks/genmap/{genome}.txt"
     params:
         merge = config['mappability_merge'],
         mappability = config['mappability_min']
