@@ -129,16 +129,16 @@ rule samtools_stats:
         bam = "{wdir}/{genome}_{aligner}_sorted.bam",
         bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
     output:
-        stats = "{wdir}/mapping/{genome}_{aligner}_mapping.stats",
-        stattsv = "{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv",
-        plot = "{wdir}/mapping/{genome}_{aligner}_mapping_plot.html"
+        stats = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats",
+        stattsv = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
+        plot = "{wdir}/mapping_QC/{genome}_{aligner}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
     shell:
         """
-        mkdir -p {wdir}/mapping
+        mkdir -p {wdir}/mapping_QC
         samtools stats {input.bam} > {output.stats}
         cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
-        plot-bamstats -p {wdir}/mapping/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
+        plot-bamstats -p {wdir}/mapping_QC/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
         """
