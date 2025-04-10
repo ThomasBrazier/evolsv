@@ -195,23 +195,23 @@ rule vcf_to_tsv_tools:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        minimap2_cutesv_vcf = "{wdir}/{genome}_minimap2_cutesv.vcf",
-        minimap2_svim_vcf = "{wdir}/{genome}_minimap2_svim.vcf",
-        minimap2_sniffles_vcf = "{wdir}/{genome}_minimap2_sniffles.vcf",
-        minimap2_debreak_vcf = "{wdir}/{genome}_minimap2_debreak.vcf",
-        ngmlr_cutesv_vcf = "{wdir}/{genome}_ngmlr_cutesv.vcf",
-        ngmlr_svim_vcf = "{wdir}/{genome}_ngmlr_svim.vcf",
-        ngmlr_sniffles_vcf = "{wdir}/{genome}_ngmlr_sniffles.vcf",
-        ngmlr_debreak_vcf = "{wdir}/{genome}_ngmlr_debreak.vcf"
+        minimap2_cutesv_vcf = "{wdir}/calling/{genome}_minimap2_cutesv.vcf",
+        minimap2_svim_vcf = "{wdir}/calling/{genome}_minimap2_svim.vcf",
+        minimap2_sniffles_vcf = "{wdir}/calling/{genome}_minimap2_sniffles.vcf",
+        minimap2_debreak_vcf = "{wdir}/calling/{genome}_minimap2_debreak.vcf",
+        ngmlr_cutesv_vcf = "{wdir}/calling/{genome}_ngmlr_cutesv.vcf",
+        ngmlr_svim_vcf = "{wdir}/calling/{genome}_ngmlr_svim.vcf",
+        ngmlr_sniffles_vcf = "{wdir}/calling/{genome}_ngmlr_sniffles.vcf",
+        ngmlr_debreak_vcf = "{wdir}/calling/{genome}_ngmlr_debreak.vcf"
     output:
-        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv"
+        minimap2_cutesv_tsv = "{wdir}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/calling/{genome}_ngmlr_debreak.tsv"
     shell:
         """
         # Tool specific output
@@ -233,18 +233,18 @@ rule final_report:
     """
     input:
         vcf = "{wdir}/{genome}_final.vcf",
-        merged = "{wdir}/{genome}_merged_genotype.vcf",
+        merged = "{wdir}/genotype/{genome}_merged_genotype.vcf",
         tsv = "{wdir}/{genome}_final.tsv",
-        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv",
-        mapping_minimap2 = "{wdir}/mapping/{genome}_minimap2_mapping.stats.tsv",
-        mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
+        minimap2_cutesv_tsv = "{wdir}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/calling/{genome}_ngmlr_debreak.tsv",
+        mapping_minimap2 = "{wdir}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
+        mapping_ngmlr = "{wdir}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv"
     output:
         "{wdir}/{genome}_finalQC.html",
         # "{wdir}/{genome}_finalQC.pdf",

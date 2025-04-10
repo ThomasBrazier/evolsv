@@ -186,7 +186,7 @@ rule vcf_preprocess:
     Preprocess VCF with Jasmine to convert DUP to INS and add consistent INFO tags
     """
     input:
-        vcf = "{wdir}/{genome}_{aligner}_{caller}_noBND.vcf",
+        vcf = "{wdir}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta = "{wdir}/genome/{genome}.fna",
         bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam"
     output:
