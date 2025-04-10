@@ -4,7 +4,7 @@ rule samplot_subset_DUP:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_dup_tmp = temp("{wdir}/samplot/{genome}_samplot_DUP_tmp.vcf"),
         subset_dup = temp("{wdir}/samplot/{genome}_samplot_DUP.vcf")
@@ -25,7 +25,7 @@ rule samplot_subset_INV:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_inv_tmp = temp("{wdir}/samplot/{genome}_samplot_INV_tmp.vcf"),
         subset_inv = temp("{wdir}/samplot/{genome}_samplot_INV.vcf")
@@ -67,7 +67,7 @@ rule samplot_subset_DEL:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_del_tmp = temp("{wdir}/samplot/{genome}_samplot_DEL_tmp.vcf"),
         subset_del = temp("{wdir}/samplot/{genome}_samplot_DEL.vcf")

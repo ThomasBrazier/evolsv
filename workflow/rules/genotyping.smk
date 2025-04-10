@@ -3,16 +3,16 @@ rule svjedigraph:
     Use SVjedi-graph on the merged dataset to genotype SVs
     """
     input:
-        merged = "{wdir}/{genome}_merged.vcf",
+        merged = "{wdir}/merging/{genome}_merged.vcf",
         fasta = "{wdir}/genome/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
-        vcf = temp("{wdir}/{genome}_merged_genotype_tmp.vcf"),
-        vcf_renamed = temp("{wdir}/{genome}_merged_genotype.vcf"),
-        gfa = "{wdir}/{genome}_merged.gfa",
-        gaf = "{wdir}/{genome}_merged.gaf",
-        aln = "{wdir}/{genome}_merged_informative_aln.json"
+        vcf = temp("{wdir}/genotype/{genome}_merged_genotype_tmp.vcf"),
+        vcf_renamed = temp("{wdir}/genotype/{genome}_merged_genotype.vcf"),
+        gfa = "{wdir}/genotype/{genome}_merged.gfa",
+        gaf = "{wdir}/genotype/{genome}_merged.gaf",
+        aln = "{wdir}/genotype/{genome}_merged_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
     log:
@@ -20,7 +20,7 @@ rule svjedigraph:
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{genome}_merged \
+        -q {input.merged_fastq} -p {wdir}/genotype/{genome}_merged \
         -t {resources.cpus_per_task} --minsupport {config[minsupport]}
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
@@ -56,12 +56,12 @@ rule allsamples_vcf:
     Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
     """
     input:
-        jasmine = "{wdir}/{genome}_merged.vcf",
-        svjedi = "{wdir}/{genome}_merged_genotype.vcf"
+        jasmine = "{wdir}/merging/{genome}_merged.vcf",
+        svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         allsamples = "{wdir}/{genome}_allsamples.vcf",
-        jasmine_gz = temp("{wdir}/{genome}_merged.vcf.gz"),
-        svjedi_gz = temp("{wdir}/{genome}_merged_genotype.vcf.gz")
+        jasmine_gz = temp("{wdir}/merging/{genome}_merged.vcf.gz"),
+        svjedi_gz = temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz")
     conda:
         "../envs/bcftools.yaml"
     shell:

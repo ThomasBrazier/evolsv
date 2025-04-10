@@ -584,6 +584,16 @@ ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
 ```
 
 
+
+```{r SV_DP_500, echo = F, warning = F, fig.cap = "Genotype quality. Variant allele read depth (AD) as a function of the genotype. Subset of read depth < 500 for details."}
+ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
+  geom_point(alpha = 0.3) +
+  xlab("Reference allele read depth (AD) (< 500)") + ylab("Variant allele read depth (AD) (< 500)") +
+  xlim(0, 500) + y;lim(0, 500) +
+  theme_bw()
+```
+
+
 Variant allelic depth of the ALT allele (higher for heterozygotes is better).
 
 

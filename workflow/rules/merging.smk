@@ -13,9 +13,9 @@ rule jasmine:
         debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
         fasta = "{wdir}/genome/{genome}.fna"
     output:
-        vcf = "{wdir}/{genome}_merged.vcf",
-        vcflist = temp("{wdir}/{genome}_vcf_list.txt"),
-        bamlist = temp("{wdir}/{genome}_bam_list.txt")
+        vcf = "{wdir}/merging/{genome}_merged.vcf",
+        vcflist = temp("{wdir}/merging/{genome}_vcf_list.txt"),
+        bamlist = temp("{wdir}/merging/{genome}_bam_list.txt")
     conda:
         "../envs/jasminesv.yaml"
     log:
