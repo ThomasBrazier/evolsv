@@ -32,7 +32,7 @@ require(eulerr)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-json = jsonlite::read_json(paste0("../../", wdir, "/", genome, "_assembly_data_report.jsonl"))
+json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
 
 cat("Organism name:", json$organism$organismName, "\n")
 
@@ -59,7 +59,7 @@ cat("GC percent:", json$assemblyStats$gcPercent, "\n")
 
 
 ```{r chromosomes, echo = F}
-dat = tidyjson::read_json(paste0("../../", wdir, "/", genome, "_sequence_report.jsonl"), format = "jsonl")
+dat = tidyjson::read_json(paste0("../../", wdir, "/genome/", genome, "_sequence_report.jsonl"), format = "jsonl")
 chr = data.frame(idx = dat$document.id)
 
 chr$seqname = NA
@@ -580,6 +580,16 @@ Approximate read depth (should be balanced between reference and variant if unbi
 ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
   geom_point(alpha = 0.3) +
   xlab("Reference allele read depth (AD)") + ylab("Variant allele read depth (AD)") +
+  theme_bw()
+```
+
+
+
+```{r SV_DP_500, echo = F, warning = F, fig.cap = "Genotype quality. Variant allele read depth (AD) as a function of the genotype. Subset of read depth < 500 for details."}
+ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
+  geom_point(alpha = 0.3) +
+  xlab("Reference allele read depth (AD) (< 500)") + ylab("Variant allele read depth (AD) (< 500)") +
+  xlim(0, 500) + y;lim(0, 500) +
   theme_bw()
 ```
 
