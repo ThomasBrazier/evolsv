@@ -3,8 +3,8 @@ rule svim:
     SV calling with SVIM
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/genome/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -45,8 +45,8 @@ rule sniffles:
     SV calling with Sniffles
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/genome/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -84,8 +84,8 @@ rule cutesv:
     SV calling with CuteSV
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/genome/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -122,8 +122,8 @@ rule debreak:
     SV calling with DeBreak
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai",
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
         fasta = "{wdir}/genome/{genome}.fna",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -196,7 +196,7 @@ rule vcf_preprocess:
     input:
         vcf = "{wdir}/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta = "{wdir}/genome/{genome}.fna",
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam"
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam"
     output:
         vcf_temp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
         vcflist = temp("{wdir}/{genome}_{aligner}_{caller}_vcf_list.txt"),

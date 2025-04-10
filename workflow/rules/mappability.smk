@@ -1,7 +1,7 @@
 rule mosdepth_summary:
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
     output:
         dist = "{wdir}/callability/{genome}_{aligner}.mosdepth.global.dist.txt",
         summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt"
@@ -20,8 +20,8 @@ rule mosdepth_summary:
 rule mosdepth_quantize:
     input:
         summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt",
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
     output:
         quantized = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz",
         quantized_idx = "{wdir}/callability/{genome}_{aligner}.quantized.bed.gz.csi"

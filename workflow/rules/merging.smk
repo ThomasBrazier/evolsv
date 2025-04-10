@@ -31,8 +31,8 @@ rule jasmine:
         echo "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf" >> {output.vcflist}
         echo "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf" >> {output.vcflist}
 
-        echo "{wdir}/{genome}_minimap2_sorted.bam" > {output.bamlist}
-        echo "{wdir}/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
+        echo "{wdir}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
+        echo "{wdir}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
 
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
