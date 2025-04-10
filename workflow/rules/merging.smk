@@ -43,6 +43,7 @@ rule jasmine:
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
+        --use_end --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --run_iris iris_args "--also_deletions,--pacbio,max_out_length={config["max_sv_size"]}"\
-        --output_genotypes --ignore_strand --max_dist {config[jasmine_max_dist]}
+        --output_genotypes
         """

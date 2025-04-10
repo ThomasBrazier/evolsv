@@ -281,6 +281,7 @@ rule genotype_svim:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
+        vcf_svjedi = temp("{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf"),
         vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype_nosvlen.vcf",
         gfa = "{wdir}/genotype/{genome}_{aligner}_svim.gfa",
         gaf = "{wdir}/genotype/{genome}_{aligner}_svim.gaf",
@@ -293,7 +294,7 @@ rule genotype_svim:
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
         --minsupport {config[minsupport]}
-        mv {output.vcf_renamed} {output.vcf_temp}
+        mv {output.vcf_svjedi} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
@@ -369,7 +370,8 @@ rule genotype_debreak:
         sampleids = "{wdir}/{genome}.samples"     
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf",
+        vcf_svjedi = temp("{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf"),
+        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype_wrongsvlen.vcf",
         gfa = "{wdir}/genotype/{genome}_{aligner}_debreak.gfa",
         gaf = "{wdir}/genotype/{genome}_{aligner}_debreak.gaf",
         aln = "{wdir}/genotype/{genome}_{aligner}_debreak_informative_aln.json"
@@ -381,7 +383,7 @@ rule genotype_debreak:
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_debreak \
         -t {resources.cpus_per_task} \
         --minsupport {config[minsupport]}
-        mv {output.vcf_renamed} {output.vcf_temp}
+        mv {output.vcf_svjedi} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
@@ -400,6 +402,22 @@ rule add_svlen_to_inv_svim:
     shell:
         """
         python workflow/scripts/add_svlen_to_inv_svim.py {input.vcf} {output.vcf}
+        """
+
+
+rule fix_svlen_in_debreak_del:
+    """
+    Add SVLEN to Svim vcf
+    """
+    input:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype_wrongsvlen.vcf"
+    output:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf"
+    conda:
+        "../envs/pysam.yaml"
+    shell:
+        """
+        python workflow/scripts/fix_svlen_in_debreak_del.py {input.vcf} {output.vcf}
         """
 
 
