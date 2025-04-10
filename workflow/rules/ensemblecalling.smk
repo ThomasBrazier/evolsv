@@ -281,7 +281,7 @@ rule genotype_svim:
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf",
+        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype_nosvlen.vcf",
         gfa = "{wdir}/genotype/{genome}_{aligner}_svim.gfa",
         gaf = "{wdir}/genotype/{genome}_{aligner}_svim.gaf",
         aln = "{wdir}/genotype/{genome}_{aligner}_svim_informative_aln.json"
@@ -384,6 +384,22 @@ rule genotype_debreak:
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
+        """
+
+
+rule add_svlen_to_inv_svim:
+    """
+    Add SVLEN to Svim vcf
+    """
+    input:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_genotype_nosvlen.vcf"
+    output:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf"
+    conda:
+        "../envs/pysam.yaml"
+    shell:
+        """
+        python workflow/scripts/add_svlen_to_inv_svim.py {input.vcf} {output.vcf}
         """
 
 
