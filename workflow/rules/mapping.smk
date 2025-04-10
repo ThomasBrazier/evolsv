@@ -4,7 +4,7 @@ rule minimap2:
     """
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
-        fasta = "{wdir}/{genome}.fna",
+        fasta = "{wdir}/genome/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
@@ -48,7 +48,7 @@ rule ngmlr:
     """
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
-        fasta = "{wdir}/{genome}.fna",
+        fasta = "{wdir}/genome/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),

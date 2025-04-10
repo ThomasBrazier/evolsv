@@ -4,7 +4,7 @@ rule svjedigraph:
     """
     input:
         merged = "{wdir}/{genome}_merged.vcf",
-        fasta = "{wdir}/{genome}.fna",
+        fasta = "{wdir}/genome/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
@@ -34,19 +34,19 @@ rule autosomes_sexchromosomes:
     Get the names of sex chromosomes and autosomes to copy in separate vcf files
     """
     input: 
-        seq = "{wdir}/{genome}_sequence_report.jsonl"
+        seq = "{wdir}/genome/{genome}_sequence_report.jsonl"
     output: 
-        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
-        autosomes = "{wdir}/{genome}.autosomes",
-        chromosome_names = "{wdir}/{genome}.chromosomes"
+        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
+        autosomes = "{wdir}/genome/{genome}.autosomes",
+        chromosome_names = "{wdir}/genome/{genome}.chromosomes"
     conda:
         "../envs/Renv.yaml"
     params:
-        seq = "{wdir}/{genome}_sequence_report.jsonl",
-        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
-        autosomes = "{wdir}/{genome}.autosomes",
+        seq = "{wdir}/genome/{genome}_sequence_report.jsonl",
+        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
+        autosomes = "{wdir}/genome/{genome}.autosomes",
         scaffolds_to_exclude = config["scaffolds_to_exclude"],
-        chromosome_names = "{wdir}/{genome}.chromosomes"
+        chromosome_names = "{wdir}/genome/{genome}.chromosomes"
     script:
         "../scripts/autosomes_sexchromosomes.R"
 
@@ -89,8 +89,8 @@ rule final_vcf:
     """
     input:
         vcf = "{wdir}/{genome}_allsamples.vcf",
-        sexchromosomes = "{wdir}/{genome}.sexchromosomes",
-        autosomes = "{wdir}/{genome}.autosomes"
+        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
+        autosomes = "{wdir}/genome/{genome}.autosomes"
     output:
         final_tmp = temp("{wdir}/{genome}_final_tmp.vcf"),
         final = "{wdir}/{genome}_final.vcf",

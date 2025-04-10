@@ -8,7 +8,7 @@ rule truvari_grm:
     """
     input:
         vcf = "{wdir}/{genome}_final.vcf.gz",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/genome/{genome}.fna"
     output:
         grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl",
         tabix = "{wdir}/{genome}_final.vcf.gz.tbi",

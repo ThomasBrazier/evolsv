@@ -92,7 +92,7 @@ rule samplot_plot:
         subset_DUP = expand("{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome),
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
-        fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
+        fasta = expand("{wdir}/genome/{genome}.fna", wdir=wdir, genome=genome),
         bam_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam",
         bam_index_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam.bai",
         bam_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam",

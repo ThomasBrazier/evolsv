@@ -32,7 +32,7 @@ require(eulerr)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-json = jsonlite::read_json(paste0("../../", wdir, "/", genome, "_assembly_data_report.jsonl"))
+json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
 
 cat("Organism name:", json$organism$organismName, "\n")
 
@@ -59,7 +59,7 @@ cat("GC percent:", json$assemblyStats$gcPercent, "\n")
 
 
 ```{r chromosomes, echo = F}
-dat = tidyjson::read_json(paste0("../../", wdir, "/", genome, "_sequence_report.jsonl"), format = "jsonl")
+dat = tidyjson::read_json(paste0("../../", wdir, "/genome/", genome, "_sequence_report.jsonl"), format = "jsonl")
 chr = data.frame(idx = dat$document.id)
 
 chr$seqname = NA

@@ -11,7 +11,7 @@ rule jasmine:
         svim_ngmlr = "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
         cutesv_ngmlr = "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
         debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/genome/{genome}.fna"
     output:
         vcf = "{wdir}/{genome}_merged.vcf",
         vcflist = temp("{wdir}/{genome}_vcf_list.txt"),

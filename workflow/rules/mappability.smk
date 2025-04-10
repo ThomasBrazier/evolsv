@@ -69,7 +69,7 @@ rule callable_bed:
 
 rule genmap:
     input:
-        ref = "{wdir}/{genome}.fna"
+        ref = "{wdir}/genome/{genome}.fna"
     output:
         bg = temp("{wdir}/genmap/{genome}.genmap.bedgraph"),
         sorted_bg = "{wdir}/genmap/{genome}_sorted_mappability.bg"
