@@ -98,17 +98,17 @@ rule samplot_plot:
         bam_ngmlr = "{wdir}/bam/{genome}_ngmlr_sorted.bam",
         bam_index_ngmlr = "{wdir}/bam/{genome}_ngmlr_sorted.bam.bai"
     output:
-        "{wdir}/samplot_minimap2_{genome}/DUP/index.html",
-        "{wdir}/samplot_minimap2_{genome}/INV/index.html",
-        "{wdir}/samplot_minimap2_{genome}/DEL/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/DUP/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/INV/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/DEL/index.html"
+        "{wdir}/samplot/minimap2_{genome}/DUP/index.html",
+        "{wdir}/samplot/minimap2_{genome}/INV/index.html",
+        "{wdir}/samplot/minimap2_{genome}/DEL/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/DUP/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/INV/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir_minimap2 = "{wdir}/samplot_minimap2_{genome}",
-        outdir_ngmlr = "{wdir}/samplot_ngmlr_{genome}"
+        outdir_minimap2 = "{wdir}/samplot/minimap2_{genome}",
+        outdir_ngmlr = "{wdir}/samplot/ngmlr_{genome}"
     shell:
         """
         samplot vcf \

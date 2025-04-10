@@ -259,25 +259,25 @@ rule sniffles2plot:
         cutesv_ngmlr = "{wdir}/{genome}_ngmlr_cutesv_noBND.vcf",
         sniffles_ngmlr = "{wdir}/{genome}_ngmlr_sniffles_noBND.vcf"
     output:
-        "{wdir}/minimap2_sniffles_QC_{genome}/variant_count.jpg",
-        "{wdir}/minimap2_svim_QC_{genome}/variant_count.jpg",
-        "{wdir}/minimap2_cutesv_QC_{genome}/variant_count.jpg",
-        "{wdir}/ngmlr_sniffles_QC_{genome}/variant_count.jpg",
-        "{wdir}/ngmlr_svim_QC_{genome}/variant_count.jpg",
-        "{wdir}/ngmlr_cutesv_QC_{genome}/variant_count.jpg"
+        "{wdir}/calling_QC/minimap2_sniffles_QC_{genome}/variant_count.jpg",
+        "{wdir}/calling_QC/minimap2_svim_QC_{genome}/variant_count.jpg",
+        "{wdir}/calling_QC/minimap2_cutesv_QC_{genome}/variant_count.jpg",
+        "{wdir}/calling_QC/ngmlr_sniffles_QC_{genome}/variant_count.jpg",
+        "{wdir}/calling_QC/ngmlr_svim_QC_{genome}/variant_count.jpg",
+        "{wdir}/calling_QC/ngmlr_cutesv_QC_{genome}/variant_count.jpg"
     conda:
         "../envs/sniffles.yaml"
     log:
         "{wdir}/logs/{genome}_sniffles2plot.log"
     shell:
         """
-        python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/minimap2_sniffles_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.svim_minimap2} -o {wdir}/minimap2_svim_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.cutesv_minimap2} -o {wdir}/minimap2_cutesv_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/calling_QC/minimap2_sniffles_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.svim_minimap2} -o {wdir}/calling_QC/minimap2_svim_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.cutesv_minimap2} -o {wdir}/calling_QC/minimap2_cutesv_QC_{genome}/
 
-        python3 -m sniffles2_plot -i {input.sniffles_ngmlr} -o {wdir}/ngmlr_sniffles_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/ngmlr_svim_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/ngmlr_cutesv_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.sniffles_ngmlr} -o {wdir}/calling_QC/ngmlr_sniffles_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/calling_QC/ngmlr_svim_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/calling_QC/ngmlr_cutesv_QC_{genome}/
         """
 
 
