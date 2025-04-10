@@ -48,11 +48,7 @@ rule mosdepth_quantize:
         
         mosdepth --no-per-base -t {threads} \
         --quantize 0:1:{params.lower}:{params.upper_threshold}: \
-        {wdir}/callability/{genome}_minimap2 {input.bam}
-
-        mosdepth --no-per-base -t {threads} \
-        --quantize 0:1:{params.lower}:{params.upper_threshold}: \
-        {wdir}/callability/{genome}_ngmlr {input.bam}
+        {wdir}/callability/{genome}_{wildcards.aligner} {input.bam}
         """
 
 
