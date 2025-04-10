@@ -65,7 +65,14 @@ rule callable_bed:
     conda:
         "../envs/mosdepth.yaml"
     shell:
-        "zcat {input.quantized} | grep CALLABLE | bedtools sort | bedtools merge > {output.callable_bed} || true"
+        """
+        zcat {input.quantized} | grep CALLABLE | bedtools sort | bedtools merge > {output.callable_bed}
+        # Check if file has any lines
+        if [ $(wc -l < {output.callable_bed}) -eq 0 ]; then
+            echo "File {output.callable_bed} is empty"
+            exit 1
+        fi
+        """
 
 
 rule genmap:

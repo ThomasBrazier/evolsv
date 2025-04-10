@@ -91,7 +91,7 @@ minsupport: 1 # Minimum number of alignments to genotype a SV (default: 3>=)
 
 # Mosdepth
 quantize_cov_threshold_lower: 10 # Must be integer
-quantize_cov_threshold_upper: 3 # Must be integer
+quantize_cov_threshold_upper: 5 # Must be integer
 
 # Genmap
 ## callable sites bed file options ##
