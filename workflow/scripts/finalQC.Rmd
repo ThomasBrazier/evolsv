@@ -90,7 +90,7 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 
 
 ```{r mapping_minimap2, echo = F}
-mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping/", genome, "_minimap2_mapping.stats.tsv"))
+mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_minimap2_mapping.stats.tsv"))
 
 print("Mapping with minimap2")
 print(gsub("\t", " ", mapping_minimap2))
@@ -100,7 +100,7 @@ print(gsub("\t", " ", mapping_minimap2))
 
 
 ```{r mapping_ngmlr, echo = F}
-mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping/", genome, "_ngmlr_mapping.stats.tsv"))
+mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_ngmlr_mapping.stats.tsv"))
 
 print("Mapping with ngmlr")
 print(gsub("\t", " ", mapping_ngmlr))
@@ -109,7 +109,7 @@ print(gsub("\t", " ", mapping_ngmlr))
 
 
 
-The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping/` directory.
+The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping_QC/` directory.
 
 
 
@@ -589,7 +589,7 @@ ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
 ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
   geom_point(alpha = 0.3) +
   xlab("Reference allele read depth (AD) (< 500)") + ylab("Variant allele read depth (AD) (< 500)") +
-  xlim(0, 500) + y;lim(0, 500) +
+  xlim(0, 500) + ylim(0, 500) +
   theme_bw()
 ```
 

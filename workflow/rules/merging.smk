@@ -16,11 +16,8 @@ rule jasmine:
         vcf = "{wdir}/merging/{genome}_merged.vcf",
         vcflist = temp("{wdir}/merging/{genome}_vcf_list.txt"),
         bamlist = temp("{wdir}/merging/{genome}_bam_list.txt")
-    shadow: "minimal" # Use shadow directory to handle temp files of IRIS outputted to current directory
     conda:
         "../envs/jasminesv.yaml"
-    log:
-        "{wdir}/logs/{genome}_jasmine.log"
     shell:
         """
         echo "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
@@ -35,15 +32,9 @@ rule jasmine:
         echo "{wdir}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
         echo "{wdir}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
 
-        # jasmine file_list={output.vcflist} \
-        # out_file={output.vcf} genome_file={input.fasta} \
-        # out_dir={wdir}/jasmine bam_list={output.bamlist} \
-        # --output_genotypes --ignore_strand --max_dist {config[jasmine_max_dist]}
-
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
         --use_end --ignore_strand --max_dist {config[jasmine_max_dist]} \
-        --run_iris iris_args "--also_deletions,--pacbio,max_out_length={config["max_sv_size"]}"\
         --output_genotypes
         """
