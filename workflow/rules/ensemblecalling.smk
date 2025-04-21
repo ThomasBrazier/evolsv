@@ -26,14 +26,16 @@ rule svim:
         --min_mapq {config[min_mapq]} \
         --segment_gap_tolerance {config[segment_gap_tolerance]} \
         --segment_overlap_tolerance {config[segment_overlap_tolerance]}
+
         # SVIM does not filter SV itself and outputs all variants
         echo "Filter SVIM output"
-        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/{genome}_{wildcards.aligner}_svim/variants.vcf
-        # Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)
+        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/calling/{genome}_{wildcards.aligner}_svim/variants.vcf
+        
+        echo "Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)"
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
         sed -i 's/DUP:TANDEM/DUP/g' {output.vcf}
-        # Consistent renaming of VCF header with sample id
-        echo "Renaming VCF header with sample id"
+        
+        echo "Consistent renaming of VCF header with sample id"
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
         bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
