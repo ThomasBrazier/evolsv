@@ -10,7 +10,7 @@ rule minimap2:
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
         nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
-        sam = temp("{wdir}/bam/{genome}_minimap2.sam")
+        sam = "{wdir}/bam/{genome}_minimap2.sam"
     conda:
         "../envs/minimap2.yaml"
     log:
@@ -54,7 +54,7 @@ rule ngmlr:
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
         nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
-        sam = temp("{wdir}/bam/{genome}_ngmlr.sam")
+        sam = "{wdir}/bam/{genome}_ngmlr.sam"
     conda:
         "../envs/ngmlr.yaml"
     log:
@@ -78,8 +78,8 @@ rule samtools_view:
         sam_minimap2 = "{wdir}/bam/{genome}_minimap2.sam",
         sam_ngmlr = "{wdir}/bam/{genome}_ngmlr.sam"
     output:
-        bam_minimap2 = temp("{wdir}/bam/{genome}_minimap2.bam"),
-        bam_ngmlr = temp("{wdir}/bam/{genome}_ngmlr.bam")
+        bam_minimap2 = "{wdir}/bam/{genome}_minimap2.bam",
+        bam_ngmlr = "{wdir}/bam/{genome}_ngmlr.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
