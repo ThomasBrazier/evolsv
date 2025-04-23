@@ -26,11 +26,20 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
         start = rec.pos
         # END=POS + LEN(REF) - 1
         # end = start + rec.rlen - 1
-        end = rec.info["SVLEN"]
+        # end = rec.info["END"]
         
-        if "<INV>" in rec.alleles:
-            svlen = abs(end - start)\
+        # if "<INV>" in rec.alleles:
+        if rec.info["OLDTYPE"] == "INV":
+            # svlen = abs(end - start)
+            svlen = len(rec.ref)
+            end = start + svlen
+            print(start)
+            print(end)
+            print(svlen)
+            rec.info["END"]=end
             rec.info["SVLEN"]=svlen
+            print(rec.info["SVLEN"])
+            print("...")
             out.write(rec)
         else:
             out.write(rec)
