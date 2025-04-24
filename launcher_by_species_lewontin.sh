@@ -10,6 +10,9 @@
 species=$1
 
 module load snakemake/8.9.0
+# . /local/env/envconda.sh
+# source activate snakemake
+
 
 echo "Snakemake version"
 snakemake --version

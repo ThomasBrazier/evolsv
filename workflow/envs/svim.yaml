@@ -5,3 +5,4 @@ channels:
 dependencies:
  - svim
  - bcftools
+ - matplotlib<3.9

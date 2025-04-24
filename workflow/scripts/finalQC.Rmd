@@ -32,7 +32,7 @@ require(eulerr)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-json = jsonlite::read_json(paste0("../../", wdir, "/", genome, "_assembly_data_report.jsonl"))
+json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
 
 cat("Organism name:", json$organism$organismName, "\n")
 
@@ -59,7 +59,7 @@ cat("GC percent:", json$assemblyStats$gcPercent, "\n")
 
 
 ```{r chromosomes, echo = F}
-dat = tidyjson::read_json(paste0("../../", wdir, "/", genome, "_sequence_report.jsonl"), format = "jsonl")
+dat = tidyjson::read_json(paste0("../../", wdir, "/genome/", genome, "_sequence_report.jsonl"), format = "jsonl")
 chr = data.frame(idx = dat$document.id)
 
 chr$seqname = NA
@@ -90,7 +90,7 @@ kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assemb
 
 
 ```{r mapping_minimap2, echo = F}
-mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping/", genome, "_minimap2_mapping.stats.tsv"))
+mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_minimap2_mapping.stats.tsv"))
 
 print("Mapping with minimap2")
 print(gsub("\t", " ", mapping_minimap2))
@@ -100,7 +100,7 @@ print(gsub("\t", " ", mapping_minimap2))
 
 
 ```{r mapping_ngmlr, echo = F}
-mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping/", genome, "_ngmlr_mapping.stats.tsv"))
+mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_ngmlr_mapping.stats.tsv"))
 
 print("Mapping with ngmlr")
 print(gsub("\t", " ", mapping_ngmlr))
@@ -109,7 +109,7 @@ print(gsub("\t", " ", mapping_ngmlr))
 
 
 
-The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping/` directory.
+The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping_QC/` directory.
 
 
 
@@ -580,6 +580,16 @@ Approximate read depth (should be balanced between reference and variant if unbi
 ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
   geom_point(alpha = 0.3) +
   xlab("Reference allele read depth (AD)") + ylab("Variant allele read depth (AD)") +
+  theme_bw()
+```
+
+
+
+```{r SV_DP_500, echo = F, warning = F, fig.cap = "Genotype quality. Variant allele read depth (AD) as a function of the genotype. Subset of read depth < 500 for details."}
+ggplot(gt.geno, aes(x = AD_REF, y = AD_ALT, group = GT, colour = GT)) +
+  geom_point(alpha = 0.3) +
+  xlab("Reference allele read depth (AD) (< 500)") + ylab("Variant allele read depth (AD) (< 500)") +
+  xlim(0, 500) + ylim(0, 500) +
   theme_bw()
 ```
 

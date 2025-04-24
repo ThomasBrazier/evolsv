@@ -6,6 +6,7 @@ dag.pdf
 data/
 workflow/containers/
 data-lewontin/        
+data-lewontin/
 
 .R*
 *.out
