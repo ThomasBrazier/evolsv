@@ -192,14 +192,14 @@ rule vcf_preprocess:
         fasta = "{wdir}/genome/{genome}.fna",
         bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam"
     output:
-        vcf_temp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
+        vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
         vcflist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_vcf_list.txt"),
         bamlist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_bam_list.txt")
     threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
     shell:
-        """
+        """s
         echo "{input.vcf}" > {output.vcflist}
         echo "{input.bam}" > {output.bamlist}
         jasmine file_list={output.vcflist} out_file={output.vcf_temp} \
@@ -221,7 +221,7 @@ rule dup_to_ins:
         vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
         fasta = "{wdir}/genome/{genome}.fna"
     output:
-        vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
     threads: workflow.cores
     conda:
         "../envs/pysam.yaml"
@@ -270,6 +270,22 @@ rule sniffles2plot:
         python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/calling_QC/ngmlr_cutesv_QC_{genome}/
         """
 
+rule add_svlen_to_inv_svim:
+    """
+    Add SVLEN to Svim vcf
+    """
+    input:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_preprocess.vcf"
+    output:
+        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_preprocess_svlen.vcf"
+    conda:
+        "../envs/pysam.yaml"
+    shell:
+        """
+        python workflow/scripts/add_svlen_to_inv_svim.py {input.vcf} {output.vcf}
+        """
+
+
 
 rule genotype_svim:
     """
@@ -277,13 +293,13 @@ rule genotype_svim:
     used downstream to estimate uncertainty with ensemble methods
     """
     input:
-        vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf",
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess_svlen.vcf",
         fasta = "{wdir}/genome/{genome}.fna",
         merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
         sampleids = "{wdir}/{genome}.samples"
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype_nosvlen.vcf",
+        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf",
         gfa = "{wdir}/genotype/{genome}_{aligner}_svim.gfa",
         gaf = "{wdir}/genotype/{genome}_{aligner}_svim.gaf",
         aln = "{wdir}/genotype/{genome}_{aligner}_svim_informative_aln.json"
@@ -386,22 +402,6 @@ rule genotype_debreak:
         mv {wdir}/genotype/{genome}_{wildcards.aligner}_debreak_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
-        """
-
-
-rule add_svlen_to_inv_svim:
-    """
-    Add SVLEN to Svim vcf
-    """
-    input:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_genotype_nosvlen.vcf"
-    output:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf"
-    conda:
-        "../envs/pysam.yaml"
-    shell:
-        """
-        python workflow/scripts/add_svlen_to_inv_svim.py {input.vcf} {output.vcf}
         """
 
 
