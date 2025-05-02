@@ -4,3 +4,6 @@ channels:
  - bioconda
 dependencies:
  - nanoplot
+ - openssl
+ - htslib
+ - pysam

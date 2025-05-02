@@ -5,6 +5,8 @@ __pycache__/
 dag.pdf
 data/
 workflow/containers/
+data-lewontin/        
+data-lewontin/
 
 .R*
 *.out
@@ -12,6 +14,8 @@ workflow/containers/
 *.txt
 *.tsv
 *.fa
+
+*.sif
 
 
 launcher_test_Bombus_terrestris.sh

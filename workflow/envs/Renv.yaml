@@ -34,3 +34,8 @@ dependencies:
   - r-kableExtra
   - r-eulerr
   - r-stringr
+  - texlive-core
+  - r-latexpdf
+  - pdflatex
+  - r-knitlatex
+  - latexmk

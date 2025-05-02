@@ -73,14 +73,14 @@ min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum len
 # BASIC FILTERING
 max_sv_size: 30000000 # maximum SV length to detect (default: 30Mb)
 min_depth: 10 # Min depth of the locus (default: 10)
-max_depth: 500 # Max depth of the locus (default: 500)
+# max_depth: 500 # Max depth of the locus (default: 500)
 min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
 # max_PL: 600 # Max quality score to keep the call (default: 600)
 
 
 # Merging with Jasmine/IRIS
-jasmine_max_dist: 1000 # a constant integer value such that the distance threshold for every variant will be equal to this value
-
+jasmine_max_dist: 100 # a constant integer value such that the distance threshold for every variant will be equal to this value (default = 100bp)
+jasmine_min_seq_id: 0 # the sequence identity threshold required for two insertions to be merged (default = 0, no seq identity filtering)
 
 # Samplot Diagnostic plot
 n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot
@@ -91,7 +91,7 @@ minsupport: 1 # Minimum number of alignments to genotype a SV (default: 3>=)
 
 # Mosdepth
 quantize_cov_threshold_lower: 10 # Must be integer
-quantize_cov_threshold_upper: 3 # Must be integer
+quantize_cov_threshold_upper: 5 # Must be integer
 
 # Genmap
 ## callable sites bed file options ##

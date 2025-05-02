@@ -4,7 +4,7 @@ rule samplot_subset_DUP:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_dup_tmp = temp("{wdir}/samplot/{genome}_samplot_DUP_tmp.vcf"),
         subset_dup = temp("{wdir}/samplot/{genome}_samplot_DUP.vcf")
@@ -25,7 +25,7 @@ rule samplot_subset_INV:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_inv_tmp = temp("{wdir}/samplot/{genome}_samplot_INV_tmp.vcf"),
         subset_inv = temp("{wdir}/samplot/{genome}_samplot_INV.vcf")
@@ -67,7 +67,7 @@ rule samplot_subset_DEL:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
         subset_del_tmp = temp("{wdir}/samplot/{genome}_samplot_DEL_tmp.vcf"),
         subset_del = temp("{wdir}/samplot/{genome}_samplot_DEL.vcf")
@@ -92,23 +92,23 @@ rule samplot_plot:
         subset_DUP = expand("{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome),
         subset_INV = expand("{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome),
         subset_DEL = expand("{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome),
-        fasta = expand("{wdir}/{genome}.fna", wdir=wdir, genome=genome),
-        bam_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam",
-        bam_index_minimap2 = "{wdir}/{genome}_minimap2_sorted.bam.bai",
-        bam_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam",
-        bam_index_ngmlr = "{wdir}/{genome}_ngmlr_sorted.bam.bai"
+        fasta = expand("{wdir}/genome/{genome}.fna", wdir=wdir, genome=genome),
+        bam_minimap2 = "{wdir}/bam/{genome}_minimap2_sorted.bam",
+        bam_index_minimap2 = "{wdir}/bam/{genome}_minimap2_sorted.bam.bai",
+        bam_ngmlr = "{wdir}/bam/{genome}_ngmlr_sorted.bam",
+        bam_index_ngmlr = "{wdir}/bam/{genome}_ngmlr_sorted.bam.bai"
     output:
-        "{wdir}/samplot_minimap2_{genome}/DUP/index.html",
-        "{wdir}/samplot_minimap2_{genome}/INV/index.html",
-        "{wdir}/samplot_minimap2_{genome}/DEL/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/DUP/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/INV/index.html",
-        "{wdir}/samplot_ngmlr_{genome}/DEL/index.html"
+        "{wdir}/samplot/minimap2_{genome}/DUP/index.html",
+        "{wdir}/samplot/minimap2_{genome}/INV/index.html",
+        "{wdir}/samplot/minimap2_{genome}/DEL/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/DUP/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/INV/index.html",
+        "{wdir}/samplot/ngmlr_{genome}/DEL/index.html"
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir_minimap2 = "{wdir}/samplot_minimap2_{genome}",
-        outdir_ngmlr = "{wdir}/samplot_ngmlr_{genome}"
+        outdir_minimap2 = "{wdir}/samplot/minimap2_{genome}",
+        outdir_ngmlr = "{wdir}/samplot/ngmlr_{genome}"
     shell:
         """
         samplot vcf \
@@ -195,23 +195,23 @@ rule vcf_to_tsv_tools:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        minimap2_cutesv_vcf = "{wdir}/{genome}_minimap2_cutesv.vcf",
-        minimap2_svim_vcf = "{wdir}/{genome}_minimap2_svim.vcf",
-        minimap2_sniffles_vcf = "{wdir}/{genome}_minimap2_sniffles.vcf",
-        minimap2_debreak_vcf = "{wdir}/{genome}_minimap2_debreak.vcf",
-        ngmlr_cutesv_vcf = "{wdir}/{genome}_ngmlr_cutesv.vcf",
-        ngmlr_svim_vcf = "{wdir}/{genome}_ngmlr_svim.vcf",
-        ngmlr_sniffles_vcf = "{wdir}/{genome}_ngmlr_sniffles.vcf",
-        ngmlr_debreak_vcf = "{wdir}/{genome}_ngmlr_debreak.vcf"
+        minimap2_cutesv_vcf = "{wdir}/calling/{genome}_minimap2_cutesv.vcf",
+        minimap2_svim_vcf = "{wdir}/calling/{genome}_minimap2_svim.vcf",
+        minimap2_sniffles_vcf = "{wdir}/calling/{genome}_minimap2_sniffles.vcf",
+        minimap2_debreak_vcf = "{wdir}/calling/{genome}_minimap2_debreak.vcf",
+        ngmlr_cutesv_vcf = "{wdir}/calling/{genome}_ngmlr_cutesv.vcf",
+        ngmlr_svim_vcf = "{wdir}/calling/{genome}_ngmlr_svim.vcf",
+        ngmlr_sniffles_vcf = "{wdir}/calling/{genome}_ngmlr_sniffles.vcf",
+        ngmlr_debreak_vcf = "{wdir}/calling/{genome}_ngmlr_debreak.vcf"
     output:
-        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv"
+        minimap2_cutesv_tsv = "{wdir}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/calling/{genome}_ngmlr_debreak.tsv"
     shell:
         """
         # Tool specific output
@@ -233,20 +233,21 @@ rule final_report:
     """
     input:
         vcf = "{wdir}/{genome}_final.vcf",
-        merged = "{wdir}/{genome}_merged_genotype.vcf",
+        merged = "{wdir}/genotype/{genome}_merged_genotype.vcf",
         tsv = "{wdir}/{genome}_final.tsv",
-        minimap2_cutesv_tsv = "{wdir}/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv = "{wdir}/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv = "{wdir}/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv = "{wdir}/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv = "{wdir}/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv = "{wdir}/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv = "{wdir}/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv = "{wdir}/{genome}_ngmlr_debreak.tsv",
-        mapping_minimap2 = "{wdir}/mapping/{genome}_minimap2_mapping.stats.tsv",
-        mapping_ngmlr = "{wdir}/mapping/{genome}_ngmlr_mapping.stats.tsv"
+        minimap2_cutesv_tsv = "{wdir}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv = "{wdir}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv = "{wdir}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv = "{wdir}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv = "{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv = "{wdir}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv = "{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv = "{wdir}/calling/{genome}_ngmlr_debreak.tsv",
+        mapping_minimap2 = "{wdir}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
+        mapping_ngmlr = "{wdir}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv"
     output:
         "{wdir}/{genome}_finalQC.html",
+        # "{wdir}/{genome}_finalQC.pdf",
         "{wdir}/performance/{genome}_performance.tsv"
     conda:
         "../envs/Renv.yaml"

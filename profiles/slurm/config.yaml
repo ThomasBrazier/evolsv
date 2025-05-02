@@ -1,6 +1,6 @@
 executor: slurm
 use-conda: True
-jobs: 100 # Have up to N jobs submitted at any given time
+jobs: 25 # Have up to N jobs submitted at any given time
 latency-wait: 100 # Wait N seconds for output files due to latency
 retries: 6 # Retry jobs N times.
 
@@ -152,6 +152,7 @@ set-resources:
   vcf_preprocess:
     mem_mb: attempt * 200000
 #     slurm_partition:
+    qos: bigmem
 #     runtime:
 #     cpus_per_task:
   dup_to_ins:
@@ -171,23 +172,27 @@ set-resources:
 #     cpus_per_task:
   genotype_svim:
     mem_mb: attempt * 20000
-#     slurm_partition:
-#     runtime:
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 8
   genotype_cutesv:
     mem_mb: attempt * 20000
-#     slurm_partition:
-#     runtime:
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 8
   genotype_sniffles:
     mem_mb: attempt * 20000
-#     slurm_partition:
-#     runtime:
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 8
   genotype_debreak:
     mem_mb: attempt * 40000
-#     slurm_partition:
-#     runtime:
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 8
   vcf_list:
     mem_mb: attempt * 2000
@@ -201,13 +206,15 @@ set-resources:
 #     cpus_per_task:
   jasmine:
     mem_mb: attempt * 200000
-#     slurm_partition:
-#     runtime:
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 16
   svjedigraph:
-#     mem_mb: attempt * 2000
-#     slurm_partition:
-#     runtime:
+    mem_mb: attempt * 20000
+    # slurm_partition: bigmem
+    qos: bigmem
+    #     runtime:
     cpus_per_task: 16
   autosomes_sexchromosomes:
     mem_mb: attempt * 2000

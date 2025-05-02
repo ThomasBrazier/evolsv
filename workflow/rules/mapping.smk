@@ -4,13 +4,13 @@ rule minimap2:
     """
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
-        fasta = "{wdir}/{genome}.fna",
+        fasta = "{wdir}/genome/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
         nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
-        sam = temp("{wdir}/{genome}_minimap2.sam")
+        sam = "{wdir}/bam/{genome}_minimap2.sam"
     conda:
         "../envs/minimap2.yaml"
     log:
@@ -48,13 +48,13 @@ rule ngmlr:
     """
     input:
         fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
-        fasta = "{wdir}/{genome}.fna",
+        fasta = "{wdir}/genome/{genome}.fna",
         html = expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
         qczip = expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]),
         nanoplot = expand("{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]),
         nanoplot_filtered = "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt"
     output:
-        sam = temp("{wdir}/{genome}_ngmlr.sam")
+        sam = "{wdir}/bam/{genome}_ngmlr.sam"
     conda:
         "../envs/ngmlr.yaml"
     log:
@@ -75,11 +75,11 @@ rule samtools_view:
     Transform the sam file to a bam file
     """
     input:
-        sam_minimap2 = "{wdir}/{genome}_minimap2.sam",
-        sam_ngmlr = "{wdir}/{genome}_ngmlr.sam"
+        sam_minimap2 = "{wdir}/bam/{genome}_minimap2.sam",
+        sam_ngmlr = "{wdir}/bam/{genome}_ngmlr.sam"
     output:
-        bam_minimap2 = temp("{wdir}/{genome}_minimap2.bam"),
-        bam_ngmlr = temp("{wdir}/{genome}_ngmlr.bam")
+        bam_minimap2 = "{wdir}/bam/{genome}_minimap2.bam",
+        bam_ngmlr = "{wdir}/bam/{genome}_ngmlr.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -94,9 +94,9 @@ rule samtools_sort:
     Sort the bam file
     """
     input:
-        "{wdir}/{genome}_{aligner}.bam"
+        "{wdir}/bam/{genome}_{aligner}.bam"
     output:
-        "{wdir}/{genome}_{aligner}_sorted.bam"
+        "{wdir}/bam/{genome}_{aligner}_sorted.bam"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -110,9 +110,9 @@ rule samtools_index:
     Create an index related file of the sorted bam file
     """
     input:
-        "{wdir}/{genome}_{aligner}_sorted.bam"
+        "{wdir}/bam/{genome}_{aligner}_sorted.bam"
     output:
-        "{wdir}/{genome}_{aligner}_sorted.bam.bai"
+        "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -126,19 +126,19 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam = "{wdir}/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/{genome}_{aligner}_sorted.bam.bai"
+        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
     output:
-        stats = "{wdir}/mapping/{genome}_{aligner}_mapping.stats",
-        stattsv = "{wdir}/mapping/{genome}_{aligner}_mapping.stats.tsv",
-        plot = "{wdir}/mapping/{genome}_{aligner}_mapping_plot.html"
+        stats = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats",
+        stattsv = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
+        plot = "{wdir}/mapping_QC/{genome}_{aligner}_mapping_plot.html"
     conda:
         "../envs/samtools.yaml"
     shell:
         """
-        mkdir -p {wdir}/mapping
+        mkdir -p {wdir}/mapping_QC
         samtools stats {input.bam} > {output.stats}
         cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
-        plot-bamstats -p {wdir}/mapping/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
+        plot-bamstats -p {wdir}/mapping_QC/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
         """

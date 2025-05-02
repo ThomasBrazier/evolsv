@@ -8,15 +8,15 @@ rule truvari_grm:
     """
     input:
         vcf = "{wdir}/{genome}_final.vcf.gz",
-        fasta = "{wdir}/{genome}.fna"
+        fasta = "{wdir}/genome/{genome}.fna"
     output:
         grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl",
         tabix = "{wdir}/{genome}_final.vcf.gz.tbi",
-        amb = temp("{wdir}/{genome}.fna.amb"),
-        ann = temp("{wdir}/{genome}.fna.ann"),
-        bwt = temp("{wdir}/{genome}.fna.bwt"),
-        pac = temp("{wdir}/{genome}.fna.pac"),
-        sa = temp("{wdir}/{genome}.fna.sa")
+        amb = temp("{wdir}/genome/{genome}.fna.amb"),
+        ann = temp("{wdir}/genome/{genome}.fna.ann"),
+        bwt = temp("{wdir}/genome/{genome}.fna.bwt"),
+        pac = temp("{wdir}/genome/{genome}.fna.pac"),
+        sa = temp("{wdir}/genome/{genome}.fna.sa")
     conda:
         "../envs/truvari.yaml"
     shell:
