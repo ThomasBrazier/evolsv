@@ -3,6 +3,8 @@
 #SBATCH --mail-type=all
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10GB
+#SBATCH --account=landrec
+#SBATCH --partition=long
 #SBATCH --time=20-60:00:00
 #SBATCH --job-name=evolsv-lewontin
 #SBATCH --output=log/slurm-%A.out
@@ -28,5 +30,5 @@ echo "Running Snakemake pipeline for species $species..."
 
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
---cores 1 --rerun-incomplete \
+--cores 1 --rerun-incomplete --printshellcmds \
 --config samples="data-lewontin/config/samples_$species.tsv"
