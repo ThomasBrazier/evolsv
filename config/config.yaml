@@ -79,8 +79,8 @@ min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
 
 
 # Merging with Jasmine/IRIS
-jasmine_max_dist: 1000 # a constant integer value such that the distance threshold for every variant will be equal to this value
-
+jasmine_max_dist: 100 # a constant integer value such that the distance threshold for every variant will be equal to this value (default = 100bp)
+jasmine_min_seq_id: 0 # the sequence identity threshold required for two insertions to be merged (default = 0, no seq identity filtering)
 
 # Samplot Diagnostic plot
 n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot

@@ -125,7 +125,7 @@ rule debreak:
     output:
         vcf = temp("{wdir}/calling/{genome}_{aligner}_debreak_tmp.vcf"),
         vcf_raw = temp("{wdir}/calling/{genome}_{aligner}_debreak_raw.vcf"),
-        vcf_renamed = "{wdir}/calling/{genome}_{aligner}_debreak.vcf"
+        vcf_renamed = "{wdir}/calling/{genome}_{aligner}_debreak_wrongsvlen.vcf"
     conda:
         "../envs/debreak.yaml"
     resources:
@@ -145,6 +145,26 @@ rule debreak:
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
         bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
+
+
+
+rule fix_svlen_in_debreak_del:
+    """
+    Add SVLEN to Svim vcf
+    """
+    input:
+        vcf = "{wdir}/calling/{genome}_{aligner}_debreak_wrongsvlen.vcf",
+        fasta = "{wdir}/genome/{genome}.fna"
+    output:
+        vcf = "{wdir}/calling/{genome}_{aligner}_debreak.vcf"
+    conda:
+        "../envs/pysam.yaml"
+    shell:
+        """
+        python workflow/scripts/fix_svlen_in_debreak_del.py {input.vcf} {output.vcf} {input.fasta}
+        """
+
+
 
 
 rule removeBND:
@@ -273,6 +293,7 @@ rule sniffles2plot:
 rule add_svlen_to_inv_svim:
     """
     Add SVLEN to Svim vcf
+    It is a correction of SVIM output after Jasmine preprocess
     """
     input:
         vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf"
@@ -387,7 +408,7 @@ rule genotype_debreak:
         sampleids = "{wdir}/{genome}.samples"     
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
-        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype_wrongsvlen.vcf",
+        vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf",
         gfa = "{wdir}/genotype/{genome}_{aligner}_debreak.gfa",
         gaf = "{wdir}/genotype/{genome}_{aligner}_debreak.gaf",
         aln = "{wdir}/genotype/{genome}_{aligner}_debreak_informative_aln.json"
@@ -404,21 +425,6 @@ rule genotype_debreak:
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
 
-
-rule fix_svlen_in_debreak_del:
-    """
-    Add SVLEN to Svim vcf
-    """
-    input:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype_wrongsvlen.vcf"
-    output:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf"
-    conda:
-        "../envs/pysam.yaml"
-    shell:
-        """
-        python workflow/scripts/fix_svlen_in_debreak_del.py {input.vcf} {output.vcf}
-        """
 
 
 rule basic_filter:
