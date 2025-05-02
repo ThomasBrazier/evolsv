@@ -199,7 +199,7 @@ rule vcf_preprocess:
     conda:
         "../envs/jasminesv.yaml"
     shell:
-        """s
+        """
         echo "{input.vcf}" > {output.vcflist}
         echo "{input.bam}" > {output.bamlist}
         jasmine file_list={output.vcflist} out_file={output.vcf_temp} \
@@ -275,9 +275,9 @@ rule add_svlen_to_inv_svim:
     Add SVLEN to Svim vcf
     """
     input:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_preprocess.vcf"
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf"
     output:
-        vcf = "{wdir}/genotype/{genome}_{aligner}_svim_preprocess_svlen.vcf"
+        vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess_svlen.vcf"
     conda:
         "../envs/pysam.yaml"
     shell:

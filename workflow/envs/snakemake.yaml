@@ -1,9 +1,7 @@
-name: snakemake
+name: snakemake_v2
 channels:
- - bioconda
  - conda-forge
+ - bioconda
 dependencies:
- - snakemake>8.9
- - conda
- - mamba
- - pandas
+- snakemake=8.29.3
+- snakemake-executor-plugin-slurm
