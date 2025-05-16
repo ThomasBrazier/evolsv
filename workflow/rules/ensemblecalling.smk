@@ -215,11 +215,19 @@ rule vcf_preprocess:
         vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
         vcflist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_vcf_list.txt"),
         bamlist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_bam_list.txt")
-    threads: workflow.cores
     conda:
         "../envs/jasminesv.yaml"
     shell:
         """
+        # Make sure local decimal point is '.'
+        LC_NUMERIC=C
+        export LC_NUMERIC
+
+        locale decimal_point
+
+        LANG=en_US
+        export LANG
+
         echo "{input.vcf}" > {output.vcflist}
         echo "{input.bam}" > {output.bamlist}
         jasmine file_list={output.vcflist} out_file={output.vcf_temp} \
@@ -332,7 +340,7 @@ rule genotype_svim:
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
         --minsupport {config[minsupport]}
-        mv {wdir}/genotype/{genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
+        mv --force {wdir}/genotype/{genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """

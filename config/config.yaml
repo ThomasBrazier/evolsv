@@ -79,7 +79,7 @@ min_alt_depth: 5 # Min depth of alt allele of the variant (default: 5)
 
 
 # Merging with Jasmine/IRIS
-jasmine_max_dist: 100 # a constant integer value such that the distance threshold for every variant will be equal to this value (default = 100bp)
+jasmine_max_dist: 1000 # a constant integer value such that the distance threshold for every variant will be equal to this value (default = 100bp)
 jasmine_min_seq_id: 0 # the sequence identity threshold required for two insertions to be merged (default = 0, no seq identity filtering)
 
 # Samplot Diagnostic plot
@@ -101,7 +101,7 @@ mappability_k: 150 #the kmer used to compute mappability with genmap; you should
 #this ignores small regions of abberatant coverage/mappability as often these are just below the threshold
 #to do strict filtering, set to 0
 
-mappability_merge: 100 #merge passing mappability regions separated by this or fewer bp into a single region
+mappability_merge: 100 # merge passing mappability regions separated by this or fewer bp into a single region
 
 
 # Annotation with Truvari

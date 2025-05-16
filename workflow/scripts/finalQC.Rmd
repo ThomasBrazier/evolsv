@@ -23,6 +23,7 @@ require(ggplot2)
 require(ggpubr)
 require(stringr)
 require(eulerr)
+library(tidyverse)
 ```
 
 
@@ -378,10 +379,25 @@ How many calls were merged with jasmine?
 
 
 ```{r, echo = TRUE}
-cat("Absolute number of calls merged with Jasmine:", sum(fix.merged$jasmine), "\n")
+cat("Absolute number of calls after merging with Jasmine:", sum(fix.merged$jasmine), "\n")
 
-cat("Proportion of calls merged with Jasmine:", sum(fix.merged$jasmine) / nrow(fix.merged), "\n")
+cat("Proportion of calls after merging with Jasmine:", sum(fix.merged$jasmine) / nrow(fix.merged), "\n")
 ```
+
+
+Among these calls, how many SVs remained unmerged?
+
+We consider that variants overlapping with less than 25 bp of difference in start/end positions are unmerged variants.
+It can be variants of different types (e.g. DEL vs INS).
+
+```{r, echo = TRUE}
+unmerged = read_tsv(paste0("../../", wdir, "/merging_qc/", genome, "_unmerged_sv.tsv"))
+
+cat("Absolute number of calls UNMERGED:", nrow(unmerged), "\n")
+
+cat("Proportion of calls UNMERGED:", nrow(unmerged) / nrow(fix.merged), "\n")
+```
+
 
 
 ## Venn diagram - All SV types together
