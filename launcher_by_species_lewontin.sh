@@ -30,5 +30,5 @@ echo "Running Snakemake pipeline for species $species..."
 
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
---cores 1 --rerun-incomplete --printshellcmds \
+--cores 1 --rerun-incomplete --printshellcmds -R vcf_sv_specification \
 --config samples="data-lewontin/config/samples_$species.tsv"

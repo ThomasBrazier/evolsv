@@ -47,4 +47,7 @@ rule jasmine:
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
         --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --output_genotypes
+
+        #  --allow_intrasample raises an error - no bugfix in JasmineSV
+        # see https://github.com/mkirsche/Jasmine/issues/58
         """

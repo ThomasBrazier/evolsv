@@ -65,13 +65,13 @@ svlen = as.numeric(svlen)
 
 # sum(svlen == 0)
 
-if (sum(svlen == 0) > 0) {warning("SVLEN = 0")}
+if (sum(svlen == 0) > 0) {print("SVLEN = 0")}
 
 # which(svlen == 0)
 
 # View(merged[which(svlen == 0),])
 
-write_tsv(merged[which(svlen == 0),], paste0(wdir, "/merging_qc/", genome, "_svlen_equal_zero.tsv"))
+write_tsv(merged[which(svlen == 0),], paste0(wdir, "/merging_QC/", genome, "_svlen_equal_zero.tsv"))
 
 
 #--------------------------------------------------------
@@ -86,13 +86,13 @@ avglen = as.numeric(avglen)
 
 # sum(avglen == 0)
 
-if (sum(avglen == 0) > 0) {warning("AVG_LEN = 0")}
+if (sum(avglen == 0) > 0) {print("AVG_LEN = 0")}
 
 # which(avglen == 0)
 
 # View(merged[which(avglen == 0),])
 
-write_tsv(merged[which(avglen == 0),], paste0(wdir, "/merging_qc/", genome, "_avglen_equal_zero.tsv"))
+write_tsv(merged[which(avglen == 0),], paste0(wdir, "/merging_QC/", genome, "_avglen_equal_zero.tsv"))
 
 
 
@@ -108,12 +108,12 @@ end_exists = unlist(lapply(1:nrow(merged), end_exists_func))
 
 # sum(!end_exists)
 
-if (sum(!end_exists) > 0) {warning("END field (AVG_END) does not exist")}
+if (sum(!end_exists) > 0) {print("END field (AVG_END) does not exist")}
 
 # View(merged[which(!end_exists),])
 
 
-write_tsv(merged[which(!end_exists),], paste0(wdir, "/merging_qc/", genome, "_no_avgend_field.tsv"))
+write_tsv(merged[which(!end_exists),], paste0(wdir, "/merging_QC/", genome, "_no_avgend_field.tsv"))
 
 
 #--------------------------------------------------------
@@ -182,7 +182,7 @@ hits = hits[seq(1, length(hits), by = 2)]
 # length(hits)
 # length(hits) / nrow(merged)
 
-if (length(hits) > 0) {warning(paste0( 2 * length(hits), " variants (", round(2* length(hits) / nrow(merged), digits = 3) * 100, "%) not correctly merged."))}
+if (length(hits) > 0) {print(paste0( 2 * length(hits), " variants (", round(2* length(hits) / nrow(merged), digits = 3) * 100, "%) not correctly merged."))}
 
 
 # sv_ranges[1764]
@@ -194,7 +194,7 @@ idx = sort(c(queryHits(hits), subjectHits(hits)))
 # View(merged[idx,])
 
 
-write_tsv(merged[idx,], paste0(wdir, "/merging_qc/", genome, "_unmerged_sv.tsv"))
+write_tsv(merged[idx,], paste0(wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
 
-if (length(hits) / nrow(merged) > 0.01) {warning("More than 1% of variants were not merged successfully")}
+if (length(hits) / nrow(merged) > 0.01) {print("More than 1% of variants were not merged successfully")}
 
