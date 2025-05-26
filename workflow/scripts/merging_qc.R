@@ -171,30 +171,34 @@ sv_ranges$end = sv_ranges$start + abs(sv_ranges$avg_len)
 
 sv_ranges = makeGRangesFromDataFrame(sv_ranges)
 
-hits = findOverlaps(sv_ranges, sv_ranges, type = "equal", maxgap = 25)
+hits = findOverlaps(sv_ranges, sv_ranges, type = "equal", maxgap = 50)
 
 hits
 hits = hits[queryHits(hits) != subjectHits(hits)]
+hits
 
 # keep only one over two - duplicates
-hits = hits[seq(1, length(hits), by = 2)]
+# hits = hits[seq(1, length(hits), by = 2)]
 
 # length(hits)
 # length(hits) / nrow(merged)
 
-if (length(hits) > 0) {print(paste0( 2 * length(hits), " variants (", round(2* length(hits) / nrow(merged), digits = 3) * 100, "%) not correctly merged."))}
+if (length(hits) > 0) {print(paste0( length(hits), " variants (", round(length(hits) / nrow(merged), digits = 3) * 100, "%) not correctly merged."))}
 
 
 # sv_ranges[1764]
 # sv_ranges[1765]
 # 
 # View(merged[c(1764, 1765),])
-idx = sort(c(queryHits(hits), subjectHits(hits)))
+# idx = sort(c(queryHits(hits), subjectHits(hits)))
+idx = queryHits(hits)
 # idx
 # View(merged[idx,])
+unmerged = merged[idx,]
+unmerged$query = queryHits(hits)
+unmerged$subject = subjectHits(hits)
 
-
-write_tsv(merged[idx,], paste0(wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
+write_tsv(unmerged, paste0(wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
 
 if (length(hits) / nrow(merged) > 0.01) {print("More than 1% of variants were not merged successfully")}
 
