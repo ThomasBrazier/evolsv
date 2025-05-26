@@ -22,7 +22,7 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
 
     for rec in bcf_in.fetch():
         # Coerce INFO/END, required for SVjedi graph
-        chr = rec.chrom
+        # chr = rec.chrom
         start = rec.pos
         # END=POS + LEN(REF) - 1
         # end = start + rec.rlen - 1
@@ -31,13 +31,21 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
         # if "<INV>" in rec.alleles:
         if rec.info["OLDTYPE"] == "INV":
             # svlen = abs(end - start)
-            svlen = len(rec.ref)
-            end = start + svlen
+            # svlen = len(rec.ref)
+            # end = start + svlen
+
+            svlen = int(round(abs(float(rec.info["AVG_LEN"])), 0))
+            end = int(round(float(rec.info["AVG_END"]), 0))
             print(start)
             print(end)
             print(svlen)
+            first_base = rec.ref[0]
             rec.info["END"]=end
             rec.info["SVLEN"]=svlen
+
+            rec.info["AVG_LEN"] = str(abs(float(rec.info["AVG_LEN"])))
+
+            rec.alleles = [first_base,"<INV>"]
             print(rec.info["SVLEN"])
             print("...")
             out.write(rec)

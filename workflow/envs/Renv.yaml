@@ -39,3 +39,4 @@ dependencies:
   - pdflatex
   - r-knitlatex
   - latexmk
+  - r-tidyverse

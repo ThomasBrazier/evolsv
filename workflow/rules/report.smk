@@ -189,6 +189,29 @@ rule vcf_to_tsv:
         bash workflow/scripts/vcf_to_tsv.sh {input.vcf} {output.tsv}
         """
 
+rule merging_qc:
+    """
+    Run test on the merged VCF to find errors due to parsing or processing in Jasmine
+    Or inconsistencies between callers
+    """
+    input:
+        tsv = "{wdir}/{genome}_final.tsv"
+    output:
+        "{wdir}/merging_QC/{genome}_svlen_equal_zero.tsv",
+        "{wdir}/merging_QC/{genome}_avglen_equal_zero.tsv",
+        "{wdir}/merging_QC/{genome}_no_avgend_field.tsv",
+        "{wdir}/merging_QC/{genome}_unmerged_sv.tsv"
+    conda:
+        "../envs/Renv.yaml"
+    shell:
+        """
+        Rscript workflow/scripts/merging_qc.R {wdir} {genome}
+        """
+
+
+
+
+
 
 rule vcf_to_tsv_tools:
     """
@@ -235,6 +258,10 @@ rule final_report:
         vcf = "{wdir}/{genome}_final.vcf",
         merged = "{wdir}/genotype/{genome}_merged_genotype.vcf",
         tsv = "{wdir}/{genome}_final.tsv",
+        svlen_equal_zero = "{wdir}/merging_QC/{genome}_svlen_equal_zero.tsv",
+        avglen_equal_zero = "{wdir}/merging_QC/{genome}_avglen_equal_zero.tsv",
+        no_avgend_field = "{wdir}/merging_QC/{genome}_no_avgend_field.tsv",
+        unmerged_sv = "{wdir}/merging_QC/{genome}_unmerged_sv.tsv",
         minimap2_cutesv_tsv = "{wdir}/calling/{genome}_minimap2_cutesv.tsv",
         minimap2_svim_tsv = "{wdir}/calling/{genome}_minimap2_svim.tsv",
         minimap2_sniffles_tsv = "{wdir}/calling/{genome}_minimap2_sniffles.tsv",
