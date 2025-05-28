@@ -122,8 +122,8 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
         # Filter out SVs starting at pos 1
         # Mostly <INV> called by CuteSV, most likely erroneous calls
         # Produces errors in SVjedi-graph
-        if rec.pos == 1:
-            print("SV starting at position 1")
+        if rec.pos < 10:
+            print("SV starting at position < 10")
         else:
             out.write(rec)
 

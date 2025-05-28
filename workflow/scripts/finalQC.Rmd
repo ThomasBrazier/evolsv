@@ -391,7 +391,7 @@ We consider that variants overlapping with less than 25 bp of difference in star
 It can be variants of different types (e.g. DEL vs INS).
 
 ```{r, echo = TRUE}
-unmerged = read_tsv(paste0("../../", wdir, "/merging_qc/", genome, "_unmerged_sv.tsv"))
+unmerged = read_tsv(paste0("../../", wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
 
 cat("Absolute number of calls UNMERGED:", nrow(unmerged), "\n")
 
