@@ -33,7 +33,7 @@ library(tidyverse)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
+# json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
 
 cat("Organism name:", json$organism$organismName, "\n")
 
@@ -215,7 +215,7 @@ tmp$valid_supp_vec = unlist(lapply(1:nrow(tmp), function(x) {paste0(tmp[x,8:15],
 ```
 
 ```{r, echo = T}
-cat("The proportion of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp), "\n")
+cat("The percentage of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp) * 100, "%\n")
 ```
 
 
