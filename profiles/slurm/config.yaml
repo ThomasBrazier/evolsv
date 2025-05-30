@@ -149,7 +149,7 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-  vcf_preprocess:
+  vcf_sv_specification:
     mem_mb: attempt * 200000
 #     slurm_partition:
     qos: bigmem

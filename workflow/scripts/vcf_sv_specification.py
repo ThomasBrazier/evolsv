@@ -51,8 +51,9 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
                 seqref = seqalt[0]
                 rec.alleles = (seqref, seqalt)
             # ```INFO/SVLEN``` is the length of the sequence in ```ALT``` field
-            svlen = len(seqalt) - 1
-            rec.info["SVLEN"] = svlen
+            if seqalt != "<INS>" :
+                svlen = len(seqalt) - 1
+                rec.info["SVLEN"] = svlen
 
         if rec.info["SVTYPE"] == "DUP":
             # HOMOGENIZE WITH INS
