@@ -34,7 +34,7 @@ rule download_genome:
         """
         SSL_CERT_FILE="ssl/cert.pem"
         echo $SSL_CERT_FILE
-        cat $SSL_CERT_FILE
+
         datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
 	    unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
 	    cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna

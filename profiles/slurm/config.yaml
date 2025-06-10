@@ -149,10 +149,10 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-  vcf_preprocess:
+  vcf_sv_specification:
     mem_mb: attempt * 200000
-#     slurm_partition:
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
 #     runtime:
 #     cpus_per_task:
   dup_to_ins:
@@ -172,26 +172,26 @@ set-resources:
 #     cpus_per_task:
   genotype_svim:
     mem_mb: attempt * 20000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_cutesv:
     mem_mb: attempt * 20000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_sniffles:
     mem_mb: attempt * 20000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_debreak:
     mem_mb: attempt * 40000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   vcf_list:
@@ -206,14 +206,14 @@ set-resources:
 #     cpus_per_task:
   jasmine:
     mem_mb: attempt * 200000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 16
   svjedigraph:
     mem_mb: attempt * 20000
-    # slurm_partition: bigmem
-    qos: bigmem
+    slurm_partition: bigmem
+    # qos: bigmem
     #     runtime:
     cpus_per_task: 16
   autosomes_sexchromosomes:

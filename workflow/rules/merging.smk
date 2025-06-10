@@ -21,6 +21,15 @@ rule jasmine:
         "../envs/jasminesv.yaml"
     shell:
         """
+        # Make sure local decimal point is '.'
+        LC_NUMERIC=C
+        export LC_NUMERIC
+
+        locale decimal_point
+
+        LANG=en_US
+        export LANG
+
         echo "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
         echo "{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf" >> {output.vcflist}
         echo "{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf" >> {output.vcflist}
@@ -36,6 +45,9 @@ rule jasmine:
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
-        --use-end --ignore_strand --max_dist {config[jasmine_max_dist]} \
-        --min_seq_id {config[jasmine_min_seq_id]} --output_genotypes
+        --ignore_strand --max_dist {config[jasmine_max_dist]} \
+        --output_genotypes
+
+        #  --allow_intrasample raises an error - no bugfix in JasmineSV
+        # see https://github.com/mkirsche/Jasmine/issues/58
         """
