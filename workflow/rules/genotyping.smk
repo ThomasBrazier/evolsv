@@ -59,7 +59,7 @@ rule allsamples_vcf:
         jasmine = "{wdir}/merging/{genome}_merged.vcf",
         svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
-        allsamples = "{wdir}/{genome}_allsamples.vcf",
+        allsamples = temp("{wdir}/{genome}_allsamples.vcf"),
         jasmine_gz = temp("{wdir}/merging/{genome}_merged.vcf.gz"),
         svjedi_gz = temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz")
     conda:
