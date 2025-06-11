@@ -33,7 +33,7 @@ library(tidyverse)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-# json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
+json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
 
 cat("Organism name:", json$organism$organismName, "\n")
 
