@@ -182,14 +182,14 @@ rule removeBND:
         cutesv_ngmlr = "{wdir}/calling/{genome}_ngmlr_cutesv.vcf",
         debreak_ngmlr = "{wdir}/calling/{genome}_ngmlr_debreak.vcf"
     output:
-        svim_minimap2 = "{wdir}/calling/{genome}_minimap2_svim_noBND.vcf",
-        cutesv_minimap2 = "{wdir}/calling/{genome}_minimap2_cutesv_noBND.vcf",
-        debreak_minimap2 = "{wdir}/calling/{genome}_minimap2_debreak_noBND.vcf",
-        sniffles_minimap2 = "{wdir}/calling/{genome}_minimap2_sniffles_noBND.vcf",
-        svim_ngmlr = "{wdir}/calling/{genome}_ngmlr_svim_noBND.vcf",
-        cutesv_ngmlr = "{wdir}/calling/{genome}_ngmlr_cutesv_noBND.vcf",
-        debreak_ngmlr = "{wdir}/calling/{genome}_ngmlr_debreak_noBND.vcf",
-        sniffles_ngmlr = "{wdir}/calling/{genome}_ngmlr_sniffles_noBND.vcf"
+        svim_minimap2 = temp("{wdir}/calling/{genome}_minimap2_svim_noBND.vcf"),
+        cutesv_minimap2 = temp("{wdir}/calling/{genome}_minimap2_cutesv_noBND.vcf"),
+        debreak_minimap2 = temp("{wdir}/calling/{genome}_minimap2_debreak_noBND.vcf"),
+        sniffles_minimap2 = temp("{wdir}/calling/{genome}_minimap2_sniffles_noBND.vcf"),
+        svim_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_svim_noBND.vcf"),
+        cutesv_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
+        debreak_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
+        sniffles_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_sniffles_noBND.vcf")
     shell:
         """
         cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
@@ -273,7 +273,7 @@ rule vcf_sv_specification:
         vcf = "{wdir}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta = "{wdir}/genome/{genome}.fna"
     output:
-        vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
+        vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
     conda:
         "../envs/pysam.yaml"
     shell:

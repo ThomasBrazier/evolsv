@@ -4,7 +4,7 @@ rule download_sra:
     and the genome from the NCBI genome assembly database
     """
     output:
-        "{wdir}/fastq/{sample}_sra.fastq.gz"
+        temp("{wdir}/fastq/{sample}_sra.fastq.gz")
     conda:
         "../envs/download.yaml"
     shell:
@@ -32,9 +32,6 @@ rule download_genome:
         "../envs/download.yaml"
     shell:
         """
-        SSL_CERT_FILE="ssl/cert.pem"
-        echo $SSL_CERT_FILE
-
         datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
 	    unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
 	    cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna
@@ -74,7 +71,7 @@ rule merge_fastq:
     input:
         fastq = expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
-        merged_fastq = expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome)
+        merged_fastq = temp(expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome))
     conda:
         "../envs/samtools.yaml"
     params:

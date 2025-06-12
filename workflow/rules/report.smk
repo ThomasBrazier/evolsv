@@ -120,7 +120,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             -b {input.bam_minimap2} \
             --sample_ids {sample_id} \
-            --debug || true
+            --debug
         samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
@@ -130,7 +130,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
             -b {input.bam_minimap2} \
-            --debug || true
+            --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
@@ -140,7 +140,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
             -b {input.bam_minimap2} \
-            --debug || true
+            --debug
 
         samplot vcf \
             --vcf {input.subset_DUP} \
@@ -151,7 +151,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             -b {input.bam_ngmlr} \
             --sample_ids {sample_id} \
-            --debug || true
+            --debug
         samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
@@ -161,7 +161,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
             -b {input.bam_ngmlr} \
-            --debug || true
+            --debug
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
@@ -171,7 +171,7 @@ rule samplot_plot:
             --format GT,DP,AD,PL \
             --sample_ids {sample_id} \
             -b {input.bam_ngmlr} \
-            --debug || true
+            --debug
         """
 
 
