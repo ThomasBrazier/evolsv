@@ -132,6 +132,11 @@ rule debreak:
         tmpdir = get_big_temp
     shell:
         """
+        echo $PATH
+        conda --version
+        python --version
+        python -c 'import sys; print(sys.prefix), print(sys.path)'
+
         debreak --bam {input.bam} \
         --outpath {wdir}/debreak_{wildcards.aligner}/ \
         --rescue_large_ins \
@@ -145,25 +150,6 @@ rule debreak:
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
         bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
         """
-
-
-
-# rule fix_svlen_in_debreak_del:
-#     """
-#     Add SVLEN to Svim vcf
-#     """
-#     input:
-#         vcf = "{wdir}/calling/{genome}_{aligner}_debreak_wrongsvlen.vcf",
-#         fasta = "{wdir}/genome/{genome}.fna"
-#     output:
-#         vcf = "{wdir}/calling/{genome}_{aligner}_debreak.vcf"
-#     conda:
-#         "../envs/pysam.yaml"
-#     shell:
-#         """
-#         python workflow/scripts/fix_svlen_in_debreak_del.py {input.vcf} {output.vcf} {input.fasta}
-#         """
-
 
 
 
@@ -202,65 +188,6 @@ rule removeBND:
         cat {input.debreak_ngmlr} | grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA' > {output.debreak_ngmlr}
         cat {input.sniffles_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_ngmlr}
         """
-
-# rule vcf_preprocess:
-#     """
-#     Preprocess VCF with Jasmine to convert DUP to INS and add consistent INFO tags
-#     """
-#     input:
-#         vcf = "{wdir}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
-#         fasta = "{wdir}/genome/{genome}.fna",
-#         bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam"
-#     output:
-#         vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
-#         vcflist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_vcf_list.txt"),
-#         bamlist = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_bam_list.txt")
-#     conda:
-#         "../envs/jasminesv.yaml"
-#     shell:
-#         """
-#         # Make sure local decimal point is '.'
-#         LC_NUMERIC=C
-#         export LC_NUMERIC
-
-#         locale decimal_point
-
-#         LANG=en_US
-#         export LANG
-
-#         echo "{input.vcf}" > {output.vcflist}
-#         echo "{input.bam}" > {output.bamlist}
-#         jasmine file_list={output.vcflist} out_file={output.vcf_temp} \
-#         genome_file={input.fasta} \
-#         out_dir={wdir}/preprocess bam_list={output.bamlist} \
-#         --preprocess-only --dup_to_ins
-#         """
-
-
-
-# rule dup_to_ins:
-#     """
-#     Convert DUP to INS
-#     - must be defined as an insertion event whith `CHR` and `POS` corresponding to the position of insertion of the novel copy
-#     - `INFO` field must contain `SVTYPE=INS`
-#     - `ALT` field must contain the sequence of the duplication
-#     """
-#     input:
-#         vcf_temp = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf",
-#         fasta = "{wdir}/genome/{genome}.fna"
-#     output:
-#         vcf = "{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
-#     threads: workflow.cores
-#     conda:
-#         "../envs/pysam.yaml"
-#     shell:
-#         """
-#         # Add DUP sequence in ALT
-#         # ISSUE. This code require an older pysam version (= 0.10).
-#         # More recent versions remove the END INFO tag, hence errors in SVjedi-graph
-#         python workflow/scripts/add_dup_to_ins.py {input.vcf_temp} {output.vcf} {input.fasta}
-#         sed -i 's/SVTYPE=DUP/SVTYPE=INS/g' {output.vcf}
-#         """
 
 
 
@@ -315,23 +242,6 @@ rule sniffles2plot:
         python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/calling_QC/ngmlr_svim_QC_{genome}/
         python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/calling_QC/ngmlr_cutesv_QC_{genome}/
         """
-
-# rule add_svlen_to_inv_svim:
-#     """
-#     Add SVLEN to Svim vcf
-#     It is a correction of SVIM output after Jasmine preprocess
-#     """
-#     input:
-#         vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess.vcf"
-#     output:
-#         vcf = "{wdir}/preprocess/{genome}_{aligner}_svim_preprocess_svlen.vcf"
-#     conda:
-#         "../envs/pysam.yaml"
-#     shell:
-#         """
-#         python workflow/scripts/add_svlen_to_inv_svim.py {input.vcf} {output.vcf}
-#         """
-
 
 
 rule genotype_svim:

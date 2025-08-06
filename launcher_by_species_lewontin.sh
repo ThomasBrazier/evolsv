@@ -11,9 +11,13 @@
 
 species=$1
 
-module load snakemake/8.9.0
+# module load snakemake/8.9.0
+# module load snakemake/8.27.1
+# module load snakemake/9.4.0
 # . /local/env/envconda.sh
 # source activate snakemake
+module load conda
+source activate snakemake_v2
 
 
 echo "Snakemake version"
@@ -30,5 +34,6 @@ echo "Running Snakemake pipeline for species $species..."
 
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
---cores 1 --rerun-incomplete --printshellcmds -R vcf_sv_specification \
+--profile ./profiles/slurm \
+--cores 1 --rerun-incomplete --printshellcmds \
 --config samples="data-lewontin/config/samples_$species.tsv"

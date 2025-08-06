@@ -102,7 +102,7 @@ set-resources:
   ngmlr:
     mem_mb: attempt * 20000
 #     slurm_partition:
-    runtime: 2880 * 4
+    runtime: 2880 * 12
     cpus_per_task: 16
   samtools_view:
     mem_mb: attempt * 2000
@@ -266,4 +266,8 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-
+  truvari_grm:
+    mem_mb: attempt * 20000
+    # slurm_partition:
+    # runtime:
+    # cpus_per_task:
