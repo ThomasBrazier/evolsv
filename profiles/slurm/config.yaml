@@ -156,7 +156,7 @@ set-resources:
 #     cpus_per_task:
   vcf_sv_specification:
     mem_mb: attempt * 200000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
 #     runtime:
 #     cpus_per_task:
@@ -177,25 +177,25 @@ set-resources:
 #     cpus_per_task:
   genotype_svim:
     mem_mb: attempt * 20000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_cutesv:
     mem_mb: attempt * 20000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_sniffles:
     mem_mb: attempt * 20000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 8
   genotype_debreak:
     mem_mb: attempt * 40000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 8
@@ -211,13 +211,13 @@ set-resources:
 #     cpus_per_task:
   jasmine:
     mem_mb: attempt * 200000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 16
   svjedigraph:
     mem_mb: attempt * 20000
-    slurm_partition: bigmem
+    slurm_partition: bigmem,ecobio,genouest
     # qos: bigmem
     #     runtime:
     cpus_per_task: 16
