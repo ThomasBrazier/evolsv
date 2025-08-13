@@ -347,8 +347,8 @@ rule genotype_svim:
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_svim_genotype.vcf",
-        gfa = "{wdir}/genotype/{genome}_{aligner}_svim.gfa",
-        gaf = "{wdir}/genotype/{genome}_{aligner}_svim.gaf",
+        gfa = temp("{wdir}/genotype/{genome}_{aligner}_svim.gfa"),
+        gaf = temp("{wdir}/genotype/{genome}_{aligner}_svim.gaf"),
         aln = "{wdir}/genotype/{genome}_{aligner}_svim_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
@@ -376,8 +376,8 @@ rule genotype_cutesv:
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_cutesv_genotype.vcf",
-        gfa = "{wdir}/genotype/{genome}_{aligner}_cutesv.gfa",
-        gaf = "{wdir}/genotype/{genome}_{aligner}_cutesv.gaf",
+        gfa = temp("{wdir}/genotype/{genome}_{aligner}_cutesv.gfa"),
+        gaf = temp("{wdir}/genotype/{genome}_{aligner}_cutesv.gaf"),
         aln = "{wdir}/genotype/{genome}_{aligner}_cutesv_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
@@ -405,8 +405,8 @@ rule genotype_sniffles:
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_sniffles_genotype.vcf",
-        gfa = "{wdir}/genotype/{genome}_{aligner}_sniffles.gfa",
-        gaf = "{wdir}/genotype/{genome}_{aligner}_sniffles.gaf",
+        gfa = temp("{wdir}/genotype/{genome}_{aligner}_sniffles.gfa"),
+        gaf = temp("{wdir}/genotype/{genome}_{aligner}_sniffles.gaf"),
         aln = "{wdir}/genotype/{genome}_{aligner}_sniffles_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
@@ -435,8 +435,8 @@ rule genotype_debreak:
     output:
         vcf_temp = temp("{wdir}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
         vcf_renamed = "{wdir}/genotype/{genome}_{aligner}_debreak_genotype.vcf",
-        gfa = "{wdir}/genotype/{genome}_{aligner}_debreak.gfa",
-        gaf = "{wdir}/genotype/{genome}_{aligner}_debreak.gaf",
+        gfa = temp("{wdir}/genotype/{genome}_{aligner}_debreak.gfa"),
+        gaf = temp("{wdir}/genotype/{genome}_{aligner}_debreak.gaf"),
         aln = "{wdir}/genotype/{genome}_{aligner}_debreak_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"

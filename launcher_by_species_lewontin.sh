@@ -25,8 +25,8 @@ git status
 
 echo "Running Snakemake pipeline for species $species..."
 
-SSL_CERT_FILE="ssl/cert.pem"
-echo $SSL_CERT_FILE
+# SSL_CERT_FILE="ssl/cert.pem"
+# echo $SSL_CERT_FILE
 # cat $SSL_CERT_FILE
 
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
