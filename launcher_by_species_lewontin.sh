@@ -41,5 +41,5 @@ snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
 --profile ./profiles/slurm \
---cores 1 --rerun-incomplete --printshellcmds --slurm-status-attempts 1000 \
+--cores 1 --rerun-incomplete --printshellcmds --slurm-status-attempts 100000 \
 --config samples="data-lewontin/config/samples_$species.tsv"

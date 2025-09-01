@@ -202,7 +202,7 @@ rule vcf_sv_specification:
     output:
         vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
     conda:
-        "../envs/pysam.yaml"
+        "../envs/pysam_v2.yaml"
     shell:
         """
         python workflow/scripts/vcf_sv_specification.py {input.vcf} {output.vcf} {input.fasta}
