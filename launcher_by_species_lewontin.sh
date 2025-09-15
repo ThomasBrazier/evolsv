@@ -31,15 +31,12 @@ git status
 
 echo "Running Snakemake pipeline for species $species..."
 
-
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
---profile ./profiles/slurm \
 --cores 1 --rerun-incomplete --printshellcmds --unlock \
 --config samples="data-lewontin/config/samples_$species.tsv"
 
 snakemake -s workflow/Snakefile --configfile data-lewontin/config/config.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm \
---profile ./profiles/slurm \
 --cores 1 --rerun-incomplete --printshellcmds --slurm-status-attempts 100000 \
 --config samples="data-lewontin/config/samples_$species.tsv"
