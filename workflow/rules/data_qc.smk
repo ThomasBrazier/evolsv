@@ -29,9 +29,9 @@ rule nanoplot:
         qczip = "{wdir}/fastqc/{sample}_sra_fastqc.zip",
     output:
         "{wdir}/nanoplot/{sample}_NanoStats.txt",
-        "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_dot.html",
+        # "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_dot.html",
         # "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_dot.png",
-        "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_kde.html",
+        # "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_kde.html",
         # "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_kde.png",
         "{wdir}/nanoplot/{sample}_NanoPlot-report.html",
         "{wdir}/nanoplot/{sample}_Non_weightedHistogramReadlength.html",
