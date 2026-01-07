@@ -96,6 +96,9 @@ rule cutesv:
         "../envs/cutesv.yaml"
     shell:
         """
+        if [ -d "{wdir}/cutesv_{wildcards.aligner}" ]; then
+        rm -rf {wdir}/cutesv_{wildcards.aligner}
+      	fi
         mkdir -p {wdir}/cutesv_{wildcards.aligner}
         cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} \
         --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
