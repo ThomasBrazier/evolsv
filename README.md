@@ -22,14 +22,14 @@ The following dependencies must be installed before launching the pipeline:
 * python
 * pandas
 
-First you can clone the github repository where you wish to run analyses.
+First you have to clone the github repository where you wish to run analyses.
 
 ```
 git clone https://github.com/thomasbrazier/evolsv.git
 cd evolsv
 ```
 
-And then, you can install dependencies in a `conda` environment.
+Then, you can install dependencies in a `conda` environment.
 
 ```
 conda env create -f workflow/envs/snakemake.yaml

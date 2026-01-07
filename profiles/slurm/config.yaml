@@ -9,8 +9,8 @@ default-resources:
   mem_mb: attempt * 20000
   mem_mb_reduced: (attempt * 20000) * 0.9 # Reduced mem allocated to prevent OOM errors
   cpus_per_task: 1
-  slurm_partition: "long"
-  slurm_account: "landrec" # Same as sbatch -A. Not all clusters use this.
+  slurm_partition: "partition_name"
+  slurm_account: "account_name" # Same as sbatch -A. Not all clusters use this.
   runtime: 2880 # In minutes
 
 
