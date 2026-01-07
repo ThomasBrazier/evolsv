@@ -65,7 +65,7 @@ rule sniffles:
         --threads {resources.cpus_per_task} \
         --allow-overwrite \
         --minsvlen {config[min_sv_size]} \
-        --minsupport {config[minsupport]} \
+        --minsupport {config[sniffles_minsupport]} \
         --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} \
         --mapq {config[mapq]} \
         --cluster-binsize {config[cluster-binsize]} \
@@ -270,7 +270,7 @@ rule genotype_svim:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[svjedigraph_minsupport]}
         mv --force {wdir}/genotype/{genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -299,7 +299,7 @@ rule genotype_cutesv:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[SVjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}

@@ -35,7 +35,7 @@ min_coverage: 10 # minimum of coverage for the SV callers
 min_sv_size: 30 # minimum SV length to detect
 
 # Sniffles2 specific
-minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)
+sniffles_minsupport: "auto" #  Minimum number of supporting reads for a SV to be reported (default: automatically choose based on coverage)
 minsvlen-screen-ratio: 0.9 # minsvlen-screen-ratio N Minimum length for SV candidates (as fraction of --minsvlen) (default: 0.9)
 mapq: 25 # mapq N Alignments with mapping quality lower than this value will be ignored (default: 25)
 cluster-binsize: 100 # cluster-binsize N Initial screening bin size in bp (default: 100)
@@ -86,7 +86,7 @@ jasmine_min_seq_id: 0 # the sequence identity threshold required for two inserti
 n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot
 
 # Genotyping with SVJedi-graph
-minsupport: 1 # Minimum number of alignments to genotype a SV (default: 3>=)
+svjedigraph_minsupport: 1 # Minimum number of alignments to genotype a SV (default: 3>=)
 
 
 # Mosdepth
