@@ -1,3 +1,6 @@
+launcher_lewontin.sh
+profiles/slurm/config_merot.yaml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
