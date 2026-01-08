@@ -10,8 +10,8 @@ rule svjedigraph:
     output:
         vcf = temp("{wdir}/genotype/{genome}_merged_genotype_tmp.vcf"),
         vcf_renamed = temp("{wdir}/genotype/{genome}_merged_genotype.vcf"),
-        gfa = "{wdir}/genotype/{genome}_merged.gfa",
-        gaf = "{wdir}/genotype/{genome}_merged.gaf",
+        gfa = temp("{wdir}/genotype/{genome}_merged.gfa"),
+        gaf = temp("{wdir}/genotype/{genome}_merged.gaf"),
         aln = "{wdir}/genotype/{genome}_merged_informative_aln.json"
     conda:
         "../envs/svjedi-graph.yaml"
@@ -59,7 +59,7 @@ rule allsamples_vcf:
         jasmine = "{wdir}/merging/{genome}_merged.vcf",
         svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf"
     output:
-        allsamples = "{wdir}/{genome}_allsamples.vcf",
+        allsamples = temp("{wdir}/{genome}_allsamples.vcf"),
         jasmine_gz = temp("{wdir}/merging/{genome}_merged.vcf.gz"),
         svjedi_gz = temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz")
     conda:

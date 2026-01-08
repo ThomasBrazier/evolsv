@@ -13,7 +13,7 @@ rule jasmine:
         debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
         fasta = "{wdir}/genome/{genome}.fna"
     output:
-        tempvcf = "{wdir}/jasmine/{genome}_merged_noGenotypes.vcf",
+        tempvcf = temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
         vcf = "{wdir}/merging/{genome}_merged.vcf",
         vcflist = "{wdir}/merging/{genome}_vcf_list.txt",
         bamlist = "{wdir}/merging/{genome}_bam_list.txt"
@@ -47,4 +47,7 @@ rule jasmine:
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
         --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --output_genotypes
+
+        #  --allow_intrasample raises an error - no bugfix in JasmineSV
+        # see https://github.com/mkirsche/Jasmine/issues/58
         """

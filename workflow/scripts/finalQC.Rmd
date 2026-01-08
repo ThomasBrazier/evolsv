@@ -215,7 +215,7 @@ tmp$valid_supp_vec = unlist(lapply(1:nrow(tmp), function(x) {paste0(tmp[x,8:15],
 ```
 
 ```{r, echo = T}
-cat("The proportion of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp), "\n")
+cat("The percentage of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp) * 100, "%\n")
 ```
 
 
@@ -391,7 +391,7 @@ We consider that variants overlapping with less than 25 bp of difference in star
 It can be variants of different types (e.g. DEL vs INS).
 
 ```{r, echo = TRUE}
-unmerged = read_tsv(paste0("../../", wdir, "/merging_qc/", genome, "_unmerged_sv.tsv"))
+unmerged = read_tsv(paste0("../../", wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
 
 cat("Absolute number of calls UNMERGED:", nrow(unmerged), "\n")
 
