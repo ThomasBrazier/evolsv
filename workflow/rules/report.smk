@@ -296,7 +296,7 @@ rule light_vcf:
     output:
         light_vcf = "{wdir}/{genome}_final_light.vcf"
     conda:
-        "../envs/pysam.yaml"
+        "../envs/pysam_v2.yaml"
     shell:
         """
         # Iterate over the VCF to add symbolic type to REF/ALT field

@@ -9,8 +9,8 @@ default-resources:
   mem_mb: attempt * 20000
   mem_mb_reduced: (attempt * 20000) * 0.9 # Reduced mem allocated to prevent OOM errors
   cpus_per_task: 1
-  slurm_partition: "long"
-  slurm_account: "landrec" # Same as sbatch -A. Not all clusters use this.
+  slurm_partition: "partition_name"
+  slurm_account: "account_name" # Same as sbatch -A. Not all clusters use this.
   runtime: 2880 # In minutes
 
 
@@ -20,10 +20,10 @@ set-threads:
   download_sra: 1
   download_genome: 1
   # Fastq Processing. Can use more than 1 thread.
-  fastqc: 8 
+  fastqc: attempt * 16 
   nanoplot: 1
   chopper: 16
-  nanoplot_filtered: 1
+  nanoplot_after_filtering: 1
   # Alignment. Can use more than 1 thread, except merge_bams.
   minimap2: 16
   ngmlr: 16
@@ -75,10 +75,12 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   fastqc:
-    mem_mb: attempt * 2000
+  # fastqc provides 250Mb of RAM per threads
+  # mem_mb must be a multiple of the number of CPUS/threads
+    mem_mb: attempt * 16 * 1000
 #     slurm_partition:
 #     runtime:
-#     cpus_per_task:
+    cpus_per_task: attempt * 16
 #   nanoplot:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
@@ -89,7 +91,7 @@ set-resources:
 #     slurm_partition:
 #     runtime:
 #     cpus_per_task:
-#   nanoplot_filtered:
+#   nanoplot_after_filtering:
 #     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:

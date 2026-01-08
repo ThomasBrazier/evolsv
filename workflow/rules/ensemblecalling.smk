@@ -65,7 +65,7 @@ rule sniffles:
         --threads {resources.cpus_per_task} \
         --allow-overwrite \
         --minsvlen {config[min_sv_size]} \
-        --minsupport {config[minsupport]} \
+        --minsupport {config[sniffles_minsupport]} \
         --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} \
         --mapq {config[mapq]} \
         --cluster-binsize {config[cluster-binsize]} \
@@ -96,6 +96,9 @@ rule cutesv:
         "../envs/cutesv.yaml"
     shell:
         """
+        if [ -d "{wdir}/cutesv_{wildcards.aligner}" ]; then
+        rm -rf {wdir}/cutesv_{wildcards.aligner}
+      	fi
         mkdir -p {wdir}/cutesv_{wildcards.aligner}
         cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} \
         --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
@@ -202,7 +205,7 @@ rule vcf_sv_specification:
     output:
         vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
     conda:
-        "../envs/pysam.yaml"
+        "../envs/pysam_v2.yaml"
     shell:
         """
         python workflow/scripts/vcf_sv_specification.py {input.vcf} {output.vcf} {input.fasta}
@@ -267,7 +270,7 @@ rule genotype_svim:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[svjedigraph_minsupport]}
         mv --force {wdir}/genotype/{genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -296,7 +299,7 @@ rule genotype_cutesv:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[SVjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
