@@ -21,7 +21,7 @@ rule svjedigraph:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_merged \
-        -t {resources.cpus_per_task} --minsupport {config[minsupport]}
+        -t {resources.cpus_per_task} --minsupport {config[svjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}

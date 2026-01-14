@@ -299,7 +299,7 @@ rule genotype_cutesv:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
-        --minsupport {config[SVjedigraph_minsupport]}
+        --minsupport {config[svjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -328,7 +328,7 @@ rule genotype_sniffles:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_sniffles \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[svjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -358,7 +358,7 @@ rule genotype_debreak:
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
         -q {input.merged_fastq} -p {wdir}/genotype/{genome}_{wildcards.aligner}_debreak \
         -t {resources.cpus_per_task} \
-        --minsupport {config[minsupport]}
+        --minsupport {config[svjedigraph_minsupport]}
         mv {wdir}/genotype/{genome}_{wildcards.aligner}_debreak_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
