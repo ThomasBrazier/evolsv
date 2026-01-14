@@ -86,7 +86,7 @@ jasmine_min_seq_id: 0 # the sequence identity threshold required for two inserti
 n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot
 
 # Genotyping with SVJedi-graph
-svjedigraph_minsupport: 1 # Minimum number of alignments to genotype a SV (default: 3>=)
+svjedigraph_minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)
 
 
 # Mosdepth
