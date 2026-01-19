@@ -51,28 +51,35 @@ rule autosomes_sexchromosomes:
         "../scripts/autosomes_sexchromosomes.R"
 
 
-rule allsamples_vcf:
+rule all_samples_vcf:
     """
     Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
     """
     input:
         jasmine = "{wdir}/merging/{genome}_merged.vcf",
-        svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf"
+        svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf",
+        genome_index="{wdir}/genome/{genome}.fna.fai"
     output:
         allsamples = temp("{wdir}/{genome}_allsamples.vcf"),
+        jasmine_reheadered = temp("{wdir}/merging/{genome}_reheadered.vcf"),
         jasmine_gz = temp("{wdir}/merging/{genome}_merged.vcf.gz"),
+        svjedi_reheadered = temp("{wdir}/genotype/{genome}_merged_genotype_reheadered.vcf"),
         svjedi_gz = temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz")
     conda:
         "../envs/bcftools.yaml"
     shell:
         """
-        bcftools annotate --header-lines workflow/header/header.txt -Ou {input.jasmine} | \
+        bcftools reheader --fai {input.genome_index} {input.jasmine} > {output.jasmine_reheadered}
+
+        bcftools annotate --header-lines workflow/header/header.txt -Ou {output.jasmine_reheadered} | \
         bcftools sort -Ou | \
         bcftools view -Oz -o {output.jasmine_gz}
 
         bcftools index {output.jasmine_gz}
 
-        bcftools annotate --header-lines workflow/header/header.txt -Ou {input.svjedi} | \
+        bcftools reheader --fai {input.genome_index} {input.svjedi} > {output.svjedi_reheadered}
+
+        bcftools annotate --header-lines workflow/header/header.txt -Ou {output.svjedi_reheadered} | \
         bcftools sort -Ou | \
         bcftools view -Oz -o {output.svjedi_gz}
 
