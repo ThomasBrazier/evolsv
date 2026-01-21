@@ -24,6 +24,7 @@ rule download_genome:
         expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
     output:
         "{wdir}/genome/{genome}.fna",
+        "{wdir}/genome/{genome}.fna.fai",
         temp("{wdir}/genome/{genome}.zip"),
         "{wdir}/genome/{genome}_config.yaml",
         "{wdir}/genome/{genome}_assembly_data_report.jsonl",
@@ -35,12 +36,15 @@ rule download_genome:
         datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
 	    unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
 	    cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna
+        samtools faidx {wdir}/genome/{genome}.fna 
+
         if test -f {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff
         then
         echo "GFF annotation exists."
         cp {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff {wdir}/genome/{genome}.gff
         fi
-	    cp {wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/genome/{genome}_assembly_data_report.jsonl
+	    
+        cp {wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/genome/{genome}_assembly_data_report.jsonl
 	    cp {wdir}/genome/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/genome/{genome}_sequence_report.jsonl
         cp config/config.yaml {wdir}/genome/{genome}_config.yaml
         """

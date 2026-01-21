@@ -5,3 +5,4 @@ channels:
 dependencies:
  - sra-tools
  - ncbi-datasets-cli
+ - samtools
