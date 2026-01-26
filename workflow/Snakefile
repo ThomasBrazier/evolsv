@@ -59,4 +59,4 @@ rule all:
         expand("{wdir}/callability/{genome}_{aligners}_callable_mappable.bed", wdir=wdir, genome=genome, aligners=aligners),
         expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome),
         expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome),
-        expand("{wdir}/mapping_QC/{genome}_{aligner}_coverage.tsv", wdir=wdir, genome=genome, aligners=aligners)
+        expand("{wdir}/mapping_QC/{genome}_{aligners}_coverage.tsv", wdir=wdir, genome=genome, aligners=aligners)
