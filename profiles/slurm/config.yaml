@@ -31,6 +31,7 @@ set-threads:
   samtools_sort: 1 # Does NOT use more than 1 thread.
   samtools_index: 1
   samtools_stats: 1
+  samtools_coverage: 1
   # Ensemble calling
   svim: 8
   sniffles: 8
@@ -122,6 +123,11 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   samtools_stats:
+    mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  samtools_coverage:
     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:

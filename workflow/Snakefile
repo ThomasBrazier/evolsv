@@ -58,4 +58,5 @@ rule all:
         expand("{wdir}/calling_QC/{aligners}_sniffles_QC_{genome}/variant_count.jpg", wdir=wdir, genome=genome, aligners=aligners),
         expand("{wdir}/callability/{genome}_{aligners}_callable_mappable.bed", wdir=wdir, genome=genome, aligners=aligners),
         expand("{wdir}/callability/{genome}_callable_mappable.bed", wdir=wdir, genome=genome),
-        expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome)
+        expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome),
+        expand("{wdir}/mapping_QC/{genome}_{aligner}_coverage.tsv", wdir=wdir, genome=genome, aligners=aligners)
