@@ -156,7 +156,7 @@ rule samtools_coverage:
         coverage_hist = "{wdir}/mapping_QC/{genome}_{aligner}_coverage_hist.txt",
         coverage_depth = "{wdir}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt"
     conda:
-        "../envs/samtools.yaml"
+        "../envs/samtools_coverage.yaml"
     shell:
         """
         # store coverage in a tsv/tab-separated file
