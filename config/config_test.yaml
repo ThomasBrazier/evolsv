@@ -70,6 +70,7 @@ svjedigraph_minsupport: 3 # Minimum number of alignments to genotype a SV (defau
 # Mosdepth
 quantize_cov_threshold_lower: 10 # Must be integer
 quantize_cov_threshold_upper: 3 # Must be integer
+mosdepth_windows_size: 1000
 
 # Genmap
 ## callable sites bed file options ##

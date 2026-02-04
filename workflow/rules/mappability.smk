@@ -4,7 +4,8 @@ rule mosdepth_summary:
         bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
     output:
         dist = "{wdir}/callability/{genome}_{aligner}.mosdepth.global.dist.txt",
-        summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt"
+        summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt",
+        coverage_windows = "{wdir}/callability/{genome}_{aligner}.mosdepth.regions.bed.gz"
     conda:
         "../envs/mosdepth.yaml"
     log:
@@ -13,7 +14,11 @@ rule mosdepth_summary:
         prefix = "{wdir}/callability/{genome}_{aligner}"
     shell:
         """
-        mosdepth --no-per-base -t {threads} {params.prefix} {input.bam}
+        mosdepth --no-per-base \
+            -t {threads} \
+            --by {config[mosdepth_windows_size]} \
+            {params.prefix} \
+            {input.bam}
         """
 
 
