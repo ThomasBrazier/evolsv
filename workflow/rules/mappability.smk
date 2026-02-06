@@ -5,7 +5,7 @@ rule mosdepth_summary:
     output:
         dist = "{wdir}/callability/{genome}_{aligner}.mosdepth.global.dist.txt",
         summary = "{wdir}/callability/{genome}_{aligner}.mosdepth.summary.txt",
-        coverage_windows = "{wdir}/callability/{genome}_{aligner}.mosdepth.regions.bed.gz"
+        coverage_windows = "{wdir}/callability/{genome}_{aligner}.regions.bed.gz"
     conda:
         "../envs/mosdepth.yaml"
     log:
