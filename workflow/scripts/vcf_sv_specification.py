@@ -11,7 +11,6 @@ input = args.input
 output = args.output
 fasta = args.fasta
 
-
 # Import FASTA
 from pysam import FastaFile
  # read FASTA file
@@ -21,11 +20,17 @@ sequences = FastaFile(fasta)
 from pysam import VariantFile
 
 bcf_in = VariantFile(input)  # auto-detect input format
-bcf_in.header.info.add("OLDTYPE", ".", "String", "Type before DUP to INS")
+# bcf_in.header.info.add("OLDTYPE", ".", "String", "Type before DUP to INS")
 
 bcf_out = VariantFile(output, 'w', header=bcf_in.header)
 # bcf_out.header.add_meta(key="INFO", items=[("ID", "OLDTYPE"), ("Number", "1"), ("Type", "Integer"), ("Description", "Type before DUP to INS")])
 # bcf_out.header.info.add("OLDTYPE", ".", "Integer", "Type before DUP to INS")
+
+dist_to_chromosome_end = []
+
+chrom_lengths = {name: contig.length for name, contig in bcf_in.header.contigs.items()}
+
+output_ignored = VariantFile(output + ".ignored", "w", header=bcf_in.header)
 
 # Iterate over the VCF
 with VariantFile(output, "w", header=bcf_in.header) as out:
@@ -120,11 +125,22 @@ with VariantFile(output, "w", header=bcf_in.header) as out:
                 rec.info["SVLEN"] = svlen
                 rec.alleles = (seqref[0], "<INV>")
         
+        end = rec.info["END"]
+        chr_length = chrom_lengths[chr]
+        dist_chr_end = chr_length - end
+
+        dist_to_chromosome_end.append(dist_chr_end)
+
         # Filter out SVs starting at pos 1
         # Mostly <INV> called by CuteSV, most likely erroneous calls
         # Produces errors in SVjedi-graph
-        if rec.pos < 100:
-            print("SV starting at position < 100")
+        if rec.pos < 100 or dist_chr_end < 100:
+            print("SV starting or ending at less than 100bp of chromosome end")
+            output_ignored.write(rec)
         else:
             out.write(rec)
 
+
+with open(output + '.dist_to_chromosome_end.txt', 'w') as f:
+    for line in dist_to_chromosome_end:
+        f.write(f"{line}\n")
