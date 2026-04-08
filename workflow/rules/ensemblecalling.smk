@@ -171,14 +171,14 @@ rule removeBND:
         cutesv_ngmlr = "{wdir}/calling/{genome}_ngmlr_cutesv.vcf",
         debreak_ngmlr = "{wdir}/calling/{genome}_ngmlr_debreak.vcf"
     output:
-        svim_minimap2 = temp("{wdir}/calling/{genome}_minimap2_svim_noBND.vcf"),
-        cutesv_minimap2 = temp("{wdir}/calling/{genome}_minimap2_cutesv_noBND.vcf"),
-        debreak_minimap2 = temp("{wdir}/calling/{genome}_minimap2_debreak_noBND.vcf"),
-        sniffles_minimap2 = temp("{wdir}/calling/{genome}_minimap2_sniffles_noBND.vcf"),
-        svim_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_svim_noBND.vcf"),
-        cutesv_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
-        debreak_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
-        sniffles_ngmlr = temp("{wdir}/calling/{genome}_ngmlr_sniffles_noBND.vcf")
+        svim_minimap2 = ("{wdir}/calling/{genome}_minimap2_svim_noBND.vcf"),
+        cutesv_minimap2 = ("{wdir}/calling/{genome}_minimap2_cutesv_noBND.vcf"),
+        debreak_minimap2 = ("{wdir}/calling/{genome}_minimap2_debreak_noBND.vcf"),
+        sniffles_minimap2 = ("{wdir}/calling/{genome}_minimap2_sniffles_noBND.vcf"),
+        svim_ngmlr = ("{wdir}/calling/{genome}_ngmlr_svim_noBND.vcf"),
+        cutesv_ngmlr = ("{wdir}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
+        debreak_ngmlr = ("{wdir}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
+        sniffles_ngmlr = ("{wdir}/calling/{genome}_ngmlr_sniffles_noBND.vcf")
     shell:
         """
         cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
@@ -203,12 +203,20 @@ rule vcf_sv_specification:
         vcf = "{wdir}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta = "{wdir}/genome/{genome}.fna"
     output:
-        vcf = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf")
+        vcf = ("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"),
+        vcf_tmp = temp("{wdir}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"),
     conda:
         "../envs/pysam_v2.yaml"
     shell:
         """
-        python workflow/scripts/vcf_sv_specification.py {input.vcf} {output.vcf} {input.fasta}
+        mkdir -p {wdir}/preprocess
+        python workflow/scripts/vcf_sv_specification.py {input.vcf} {output.vcf_tmp} {input.fasta}
+        if [ -f "{config[filter_variant_positions]}" ]; then
+        bcftools view -T ^{config[filter_variant_positions]} {output.vcf_tmp} > {output.vcf}
+        #vcftools --exclude-positions {config[filter_variant_positions]} --vcf {output.vcf_tmp} --recode-INFO-all --stdout > {output.vcf}
+        else
+        cp {output.vcf_tmp} {output.vcf}
+        fi
         """
 
 
@@ -384,3 +392,6 @@ rule basic_filter:
         # bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
         bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]}" -o {output.vcf} -O v {input.vcf}
         """
+
+
+

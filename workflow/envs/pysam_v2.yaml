@@ -5,3 +5,4 @@ channels:
 dependencies:
  - python
  - pysam==0.10
+ - vcftools

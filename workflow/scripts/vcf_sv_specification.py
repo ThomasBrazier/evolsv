@@ -20,7 +20,7 @@ sequences = FastaFile(fasta)
 from pysam import VariantFile
 
 bcf_in = VariantFile(input)  # auto-detect input format
-# bcf_in.header.info.add("OLDTYPE", ".", "String", "Type before DUP to INS")
+bcf_in.header.info.add("OLDTYPE", ".", "String", "Type before DUP to INS")
 
 bcf_out = VariantFile(output, 'w', header=bcf_in.header)
 # bcf_out.header.add_meta(key="INFO", items=[("ID", "OLDTYPE"), ("Number", "1"), ("Type", "Integer"), ("Description", "Type before DUP to INS")])

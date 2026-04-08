@@ -8,6 +8,7 @@ samples: config/samples.tsv # The sample files with sample name and SRA number o
 # genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
 scaffolds_to_exclude: "MT,Mt,Un,Pltd" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
+filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
 
 # READS QUALITY
 # Filter long reads with Chopper
