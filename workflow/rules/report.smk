@@ -4,7 +4,7 @@ rule samplot_subset_DUP:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf.gz"
     output:
         subset_dup_tmp = temp("{wdir}/samplot/{genome}_samplot_DUP_tmp.vcf"),
         subset_dup = temp("{wdir}/samplot/{genome}_samplot_DUP.vcf")
@@ -16,7 +16,7 @@ rule samplot_subset_DUP:
         # Subset N random SNPs (default=100)
         N={config[n_samplot]}
         cat {output.subset_dup_tmp} | grep '^#' > {output.subset_dup}
-        cat {output.subset_dup_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_dup}
+        cat {output.subset_dup_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_dup} || true
         """
 
 rule samplot_subset_INV:
@@ -25,7 +25,7 @@ rule samplot_subset_INV:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf.gz"
     output:
         subset_inv_tmp = temp("{wdir}/samplot/{genome}_samplot_INV_tmp.vcf"),
         subset_inv = temp("{wdir}/samplot/{genome}_samplot_INV.vcf")
@@ -37,7 +37,7 @@ rule samplot_subset_INV:
         # Subset N random SNPs (default=100)
         N={config[n_samplot]}
         cat {output.subset_inv_tmp} | grep '^#' > {output.subset_inv}
-        cat {output.subset_inv_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_inv}
+        cat {output.subset_inv_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_inv} || true
         """
 
 # rule samplot_subset_INS:
@@ -46,7 +46,7 @@ rule samplot_subset_INV:
 #     Subset N variants of each type DEL/DUP/INS/INV
 #     """
 #     input:
-#         final = "{wdir}/{genome}_final.vcf"
+#         final = "{wdir}/{genome}_final.vcf.gz"
 #     output:
 #         subset_ins_tmp = temp("{wdir}/samplot/{genome}_samplot_INS_tmp.vcf"),
 #         subset_ins = temp("{wdir}/samplot/{genome}_samplot_INS.vcf")
@@ -67,7 +67,7 @@ rule samplot_subset_DEL:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final = "{wdir}/genotype/{genome}_merged_genotype.vcf"
+        final = "{wdir}/genotype/{genome}_merged_genotype.vcf.gz"
     output:
         subset_del_tmp = temp("{wdir}/samplot/{genome}_samplot_DEL_tmp.vcf"),
         subset_del = temp("{wdir}/samplot/{genome}_samplot_DEL.vcf")
@@ -79,7 +79,7 @@ rule samplot_subset_DEL:
         # Subset N random SNPs (default=100)
         N={config[n_samplot]}
         cat {output.subset_del_tmp} | grep '^#' > {output.subset_del}
-        cat {output.subset_del_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_del}
+        cat {output.subset_del_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_del} || true
         """
 
 
@@ -111,7 +111,11 @@ rule samplot_plot:
         outdir_ngmlr = "{wdir}/samplot/ngmlr_{genome}"
     shell:
         """
-        samplot vcf \
+        if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No duplication found."
+            touch {wdir}/samplot/minimap2_{genome}/DUP/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_DUP} \
             --plot_all \
             --threads {threads} \
@@ -121,7 +125,13 @@ rule samplot_plot:
             -b {input.bam_minimap2} \
             --sample_ids {sample_id} \
             --debug
-        samplot vcf \
+        fi
+
+        if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No inversion found."
+            touch {wdir}/samplot/minimap2_{genome}/INV/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
             --threads {threads} \
@@ -131,6 +141,8 @@ rule samplot_plot:
             --sample_ids {sample_id} \
             -b {input.bam_minimap2} \
             --debug
+        fi
+        
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
@@ -142,7 +154,11 @@ rule samplot_plot:
             -b {input.bam_minimap2} \
             --debug
 
-        samplot vcf \
+        if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No duplication found."
+            touch {wdir}/samplot/ngmlr_{genome}/DUP/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_DUP} \
             --plot_all \
             --threads {threads} \
@@ -152,7 +168,13 @@ rule samplot_plot:
             -b {input.bam_ngmlr} \
             --sample_ids {sample_id} \
             --debug
-        samplot vcf \
+        fi
+
+        if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No inversion found."
+            touch {wdir}/samplot/ngmlr_{genome}/INV/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_INV} \
             --plot_all \
             --threads {threads} \
@@ -162,6 +184,8 @@ rule samplot_plot:
             --sample_ids {sample_id} \
             -b {input.bam_ngmlr} \
             --debug
+        fi
+
         samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \

@@ -15,6 +15,9 @@ rule jasmine:
     output:
         tempvcf = temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
         vcf = "{wdir}/merging/{genome}_merged.vcf",
+        vcf_annotated = temp("{wdir}/merging/{genome}_annotated.vcf"),
+        vcfgz = "{wdir}/merging/{genome}_merged.vcf.gz",
+        vcftabix = "{wdir}/merging/{genome}_merged.vcf.gz.tsi",
         vcflist = "{wdir}/merging/{genome}_vcf_list.txt",
         bamlist = "{wdir}/merging/{genome}_bam_list.txt"
     conda:
@@ -47,6 +50,13 @@ rule jasmine:
         out_dir={wdir}/jasmine bam_list={output.bamlist} \
         --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --output_genotypes
+
+        # Re-annotate header and fields, then sort
+        bcftools annotate --header-lines workflow/header/header.txt -o {output.vcf_annotated} {output.vcf} 
+        bcftools sort -o {output.vcf} {output.vcf_annotated}
+        
+        bgzip --force --keep {output.vcf}
+        tabix {output.vcfgz}
 
         #  --allow_intrasample raises an error - no bugfix in JasmineSV
         # see https://github.com/mkirsche/Jasmine/issues/58
