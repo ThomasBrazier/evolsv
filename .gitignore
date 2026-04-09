@@ -10,6 +10,7 @@ data/
 workflow/containers/
 data-lewontin/        
 data-lewontin/
+debug/
 
 .R*
 *.out
