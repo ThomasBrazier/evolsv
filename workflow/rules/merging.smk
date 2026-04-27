@@ -11,7 +11,8 @@ rule jasmine:
         svim_ngmlr = "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
         cutesv_ngmlr = "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
         debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
-        fasta = "{wdir}/genome/{genome}.fna"
+        fasta = "{wdir}/genome/{genome}.fna",
+        fasta_fai = "{wdir}/genome/{genome}.fna.fai"
     output:
         tempvcf = temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
         vcf = "{wdir}/merging/{genome}_merged.vcf",
@@ -44,6 +45,15 @@ rule jasmine:
 
         echo "{wdir}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
         echo "{wdir}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
+
+        # Modify header to prevent missing contig
+        for aligner in minimap2 ngmlr; do
+        for tool in sniffles svim cutesv debreak; do
+        bcftools reheader --fai {wdir}/genome/{genome}.fna.fai -o {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        rm {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        mv {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        done 
+        done 
 
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
