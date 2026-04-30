@@ -12,7 +12,7 @@ rule download_sra:
         mkdir --parents {wdir}/fastq
         fastq-dump -v --gzip --outdir {wdir}/fastq/ {wildcards.sample}
         mv "{wdir}/fastq/{wildcards.sample}.fastq.gz" "{wdir}/fastq/{wildcards.sample}_sra.fastq.gz"
-        cp config/samples.tsv {wdir}/{genome}_samples.tsv
+        cp {config[samples]} {wdir}/{genome}_samples.tsv
         """
 
 
