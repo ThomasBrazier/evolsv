@@ -18,7 +18,7 @@ rule jasmine:
         vcf = "{wdir}/merging/{genome}_merged.vcf",
         vcf_annotated = temp("{wdir}/merging/{genome}_annotated.vcf"),
         vcfgz = "{wdir}/merging/{genome}_merged.vcf.gz",
-        vcftabix = "{wdir}/merging/{genome}_merged.vcf.gz.tsi",
+        vcftabix = "{wdir}/merging/{genome}_merged.vcf.gz.tbi",
         vcflist = "{wdir}/merging/{genome}_vcf_list.txt",
         bamlist = "{wdir}/merging/{genome}_bam_list.txt"
     conda:
