@@ -24,6 +24,7 @@ set-threads:
   nanoplot: 1
   chopper: 16
   nanoplot_after_filtering: 1
+  filter_reads_chopper: 1
   # Alignment. Can use more than 1 thread, except merge_bams.
   minimap2: 16
   ngmlr: 16
@@ -45,6 +46,7 @@ set-threads:
   vcf_list: 1
   bam_list: 1
   jasmine: 8
+  merging_qc: 1
   # Genotyping
   svjedigraph: 8
   autosomes_sexchromosomes: 1
@@ -218,6 +220,9 @@ set-resources:
     qos: bigmem
     #     runtime:
     cpus_per_task: 16
+  merging_qc:
+    mem_mb: attempt * 20000
+    cpus_per_task: 1
   svjedigraph:
     mem_mb: attempt * 20000
     # slurm_partition: bigmem
