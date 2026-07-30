@@ -37,6 +37,22 @@ conda activate snakemake
 ```
 
 
+## New features coming
+
+
+The current version is fully functional, yet I plan to implement in a near future new features to address more types of data (e.g., ONT) and improve computation times:
+* Start directly from an already aligned BAM file (with minimap2), scalability. E.g., if you already have aligned your data for calling SNPs.
+* Running one or both aligners (minimap2 or ngmlr, optional), scalability.
+* Support ONT data.
+* Simplify the rule 'final_report' to generalize better to different options and datasets.
+* Support other cluster engines than SLURM.
+* Better cleanup and compression for temporary and output files (optimize storage).
+* Improved documentation and tests.
+
+
+
+All these changes are being implemented in the `caterpillar` branch.
+
 
 ## Using the pipeline
 
