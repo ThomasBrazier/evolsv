@@ -8,11 +8,15 @@ configfile: "config/config.yaml"
 # Import sample config (sample name, sra accession)
 import pandas as pd
 
-samples = (
-    pd.read_csv(config["samples"], sep="\t", dtype={"sample_name": str, "sra": str, "genome": str})
-    .set_index("sample_name", drop=False)
-    .sort_index()
-)
+samples = pd.read_csv(config["samples"], sep="\t", dtype=str).fillna("")
+
+# Columns only used when starting from pre-aligned BAM files. They are optional so
+# that sample sheets written for the FASTQ entry point keep working unchanged.
+for optional_column in ["bam_minimap2", "bam_ngmlr", "fastq"]:
+    if optional_column not in samples.columns:
+        samples[optional_column] = ""
+
+samples = samples.set_index("sample_name", drop=False).sort_index()
 
 # Only accepts a single genome and a single sample/individual
 # genome = config['genome']
@@ -23,17 +27,29 @@ wdir = config['datadir'] + genome
 
 aligners = ["minimap2","ngmlr"]
 
+# Input mode. When True, the SRA download, read QC and alignment stages are replaced
+# by staging user-supplied, pre-aligned BAM files (one per aligner) and their reads.
+bam_mode = bool(config.get("start_from_bam", False))
+
 wildcard_constraints:
     wdir = wdir,
     genome = genome,
     sample_id = sample_id,
-    aligners = aligners
+    aligner = "|".join(aligners)
 
 include: "common.smk"
 include: "rules/common.smk"
 include: "rules/data_download.smk"
-include: "rules/data_qc.smk"
-include: "rules/mapping.smk"
+
+if bam_mode:
+    # Pre-aligned BAMs are staged at the canonical path; read QC and alignment are skipped.
+    include: "rules/bam_input.smk"
+else:
+    include: "rules/data_qc.smk"
+    include: "rules/mapping.smk"
+
+# Alignment-level QC runs in both input modes.
+include: "rules/mapping_qc.smk"
 include: "rules/ensemblecalling.smk"
 include: "rules/merging.smk"
 include: "rules/genotyping.smk"

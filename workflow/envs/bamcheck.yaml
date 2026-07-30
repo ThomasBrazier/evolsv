@@ -1,0 +1,7 @@
+name: bamcheck
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - python
+ - pysam

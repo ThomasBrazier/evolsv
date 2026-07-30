@@ -7,6 +7,10 @@ bigtmp: "tmp/" #Set to a path with lots of free space to use for commands that r
 samples: 'config/samples_test.tsv' # The sample files with sample name and SRA number of the long-read SRA archive
 # genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
+# INPUT MODE
+start_from_bam: false # true: skip the SRA download, read QC and alignment stages and use the pre-aligned BAM files declared in samples.tsv (columns bam_minimap2, bam_ngmlr, fastq)
+reference_fasta: "" # Optional path to a local reference FASTA. Leave empty to download the assembly from NCBI
+
 scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
 

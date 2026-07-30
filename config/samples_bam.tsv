@@ -1,0 +1,2 @@
+sample_name	sra	genome	bam_minimap2	bam_ngmlr	fastq
+SAMEA8724893		GCA_947247005.1	/path/to/SAMEA8724893_minimap2.bam	/path/to/SAMEA8724893_ngmlr.bam	/path/to/SAMEA8724893_reads.fastq.gz

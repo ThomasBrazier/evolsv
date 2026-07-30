@@ -25,6 +25,9 @@ set-threads:
   chopper: 16
   nanoplot_after_filtering: 1
   filter_reads_chopper: 1
+  # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
+  stage_bam: 1
+  stage_fastq: 1
   # Alignment. Can use more than 1 thread, except merge_bams.
   minimap2: 16
   ngmlr: 16
@@ -73,6 +76,16 @@ set-resources:
 #     runtime:
 #     cpus_per_task:
   download_genome:
+    mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  stage_bam:
+    mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  stage_fastq:
     mem_mb: attempt * 2000
 #     slurm_partition:
 #     runtime:

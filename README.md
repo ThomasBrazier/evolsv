@@ -41,7 +41,6 @@ conda activate snakemake
 
 
 The current version is fully functional, yet I plan to implement in a near future new features to address more types of data (e.g., ONT) and improve computation times:
-* Start directly from an already aligned BAM file (with minimap2), scalability. E.g., if you already have aligned your data for calling SNPs.
 * Running one or both aligners (minimap2 or ngmlr, optional), scalability.
 * Support ONT data.
 * Simplify the rule 'final_report' to generalize better to different options and datasets.
@@ -91,6 +90,41 @@ snakemake -s workflow/Snakefile --configfile data/config/config_$species.yaml \
 --use-conda --conda-frontend conda --profile ./profiles/slurm --cores 1 \
 --config samples="data/config/samples_$species.tsv"
 ```
+
+
+### Starting from pre-aligned BAM files
+
+If your reads are already aligned — for instance because you mapped them to call SNPs — you can skip the SRA download, the read QC and both alignments, which are by far the most expensive stages of the workflow. Set in `config/config.yaml`:
+
+```yaml
+start_from_bam: true
+reference_fasta: "/path/to/the/reference/used/for/the/alignment.fna" # optional
+```
+
+and declare the input files in three extra columns of the sample sheet (see `config/samples_bam.tsv` for a template). The `sra` column is not used in this mode and can be left empty:
+
+```
+sample_name	sra	genome	bam_minimap2	bam_ngmlr	fastq
+SAMEA8724893		GCA_947247005.1	/path/mm2.bam	/path/ngmlr.bam	/path/reads.fastq.gz
+```
+
+**One BAM per aligner is required.** The ensemble method relies on eight independent callsets produced by four callers on two different alignments, and the merging step (JasmineSV/IRIS) is given both BAM files. Supplying the same alignment twice would make the same evidence count as two independent observations and would inflate both the consensus and the per-tool performance scores.
+
+**The reads are still required.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column; several rows are concatenated, as in the SRA mode.
+
+Requirements on the BAM files, all checked before the run proceeds (see `workflow/scripts/check_bam_reference.py`, which writes a report to `{wdir}/bam/{genome}_{aligner}_bam_check.txt`):
+
+* coordinate-sorted, with a `.bai` index next to the BAM (a `.csi` index is not accepted);
+* an `@RG` line whose `SM` tag equals `sample_name` in the sample sheet, because Samplot selects reads by sample id;
+* contig names *and* lengths matching the reference. This is the check most likely to fire: the pipeline downloads the GenBank assembly from NCBI, so a BAM aligned against a RefSeq or UCSC copy of the same assembly will be rejected. Point `reference_fasta` at the exact FASTA you aligned to. Assembly metadata is still downloaded from NCBI in that case, since the final report and the sex-chromosome detection need it.
+
+Caveats to be aware of when interpreting the results:
+
+* **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour.
+* **Read-level QC (FastQC, NanoPlot) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
+* **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
+
+The BAM files are symlinked, not copied, so no extra storage is used.
 
 
 ## Data directory setup

@@ -21,6 +21,9 @@ debug/
 *.tsv
 *.fa
 
+# Sample sheets in config/ are part of the workflow, not data
+!config/*.tsv
+
 *.sif
 
 launcher_by_species_lewontin_cmerot.sh
