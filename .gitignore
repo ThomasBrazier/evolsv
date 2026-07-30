@@ -12,6 +12,8 @@ data-lewontin/
 data-lewontin/
 debug/
 
+.devcontainer/devcontainer-lock.json
+
 .R*
 *.out
 .snakemake
