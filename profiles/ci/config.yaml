@@ -1,0 +1,9 @@
+# Minimal profile for CI dry runs and local DAG checks.
+#
+# No executor and no resource sizing: the only thing needed is cpus_per_task, which
+# 14 rules interpolate into shell: as {resources.cpus_per_task}. In real runs that
+# value comes from default-resources in profiles/slurm/config.yaml; without it,
+# a dry run with --printshellcmds fails to format those rules.
+cores: 1
+default-resources:
+  cpus_per_task: 1

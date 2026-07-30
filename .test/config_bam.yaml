@@ -1,0 +1,12 @@
+# CI dry-run config: pre-aligned BAM entry point (start_from_bam).
+#
+# Only the keys that differ are listed. Snakemake loads the `configfile:` directive
+# in workflow/Snakefile first, then applies the CLI --configfile on top, so every
+# other key is inherited from config/config.yaml.
+#
+# Paths are relative to the repo root: snakemake must be run from there because
+# several rules hardcode workflow/scripts/... and config/config.yaml.
+start_from_bam: true
+samples: .test/fixtures/samples_bam.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

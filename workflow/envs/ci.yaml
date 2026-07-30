@@ -1,0 +1,9 @@
+name: ci
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Snakemake only, for DAG construction in CI. pandas is listed explicitly because
+  # workflow/Snakefile imports it to read the sample sheet at parse time.
+  - snakemake=8.29.3
+  - pandas

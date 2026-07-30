@@ -1,0 +1,7 @@
+# CI dry-run config: local reference FASTA instead of the NCBI assembly copy.
+#
+# This does not change the DAG (reference_fasta only feeds a params: in rule
+# download_genome), so the CI job asserts on the printed shell command instead.
+reference_fasta: .test/fixtures/ref.fna
+datadir: .test/fixtures/data/
+bigtmp: ""
