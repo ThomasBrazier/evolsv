@@ -48,6 +48,7 @@ The current version is fully functional, yet I plan to implement in a near futur
 * Support other cluster engines than SLURM.
 * Better cleanup and compression for temporary and output files (optimize storage).
 * Improved documentation and tests.
+* CI/CD.
 
 
 
