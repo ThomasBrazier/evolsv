@@ -12,3 +12,12 @@ evolsv = "evolsv:main"
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+# The dry-run suite lives in .test/ rather than tests/ so it sits next to the CI
+# fixtures and configs it drives. Tests must run from the repo root: workflow/Snakefile
+# hardcodes `configfile: "config/config.yaml"`.
+testpaths = [".test"]
+# .test/ has no __init__.py, so importmode=prepend puts it on sys.path and lets the
+# tests import list_envs.py directly.
+addopts = "-ra"

@@ -1,0 +1,7 @@
+# CI dry-run config (negative case): the bam_ngmlr column is blank.
+# The ensemble needs one BAM per aligner. Expected to fail in check_readable_file with
+# "no bam_ngmlr file was declared".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_no_ngmlr.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

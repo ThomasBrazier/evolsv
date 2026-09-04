@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): bam_minimap2 exists but is zero bytes.
+# Expected to fail in check_readable_file with "is empty".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_empty_bam.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

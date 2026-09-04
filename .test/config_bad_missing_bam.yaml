@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): bam_minimap2 points at a path that does not exist.
+# Expected to fail in check_readable_file with "does not exist".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_missing_bam.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

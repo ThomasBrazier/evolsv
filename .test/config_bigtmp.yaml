@@ -1,0 +1,7 @@
+# CI dry-run config: a non-empty bigtmp.
+#
+# The other .test configs set `bigtmp: ""` so get_big_temp (workflow/rules/common.smk)
+# falls back to tempfile.gettempdir(). This case takes the other branch, where the
+# configured path gets a random 12-character subdirectory appended.
+datadir: .test/fixtures/data/
+bigtmp: "./tmp/"

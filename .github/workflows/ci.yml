@@ -1,0 +1,182 @@
+name: Tests
+
+# CI scope: this workflow checks that the DAG builds for every supported dataset shape,
+# that bad input is still rejected at DAG-construction time, and that every conda env
+# referenced by a rule still resolves. It never runs the pipeline for real — that needs
+# an SRA download, an NCBI assembly and hours of alignment/calling. A green run means
+# "the workflow parses and its envs are installable", not "the results are correct".
+#
+# Two levels of conda checking:
+#   CondaSolve   - every push/PR. Resolves the dependency graph without downloading.
+#                  Fast, catches stale pins and packages that left the channels.
+#   CondaInstall - weekly + manual. Genuinely downloads and links every env, and runs
+#                  the pip: sections. Slow, catches packages that solve but fail to
+#                  install.
+
+on:
+  push:
+    branches: [main, caterpillar]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays 03:00 UTC. Only CondaInstall runs on this trigger.
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Formatting:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Formatting
+        uses: super-linter/super-linter@v7
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_SNAKEMAKE_SNAKEFMT: true
+          VALIDATE_YAML_PRETTIER: true
+
+  Linting:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    # Non-blocking: `snakemake --lint` currently fails on pre-existing issues —
+    # most rules interpolate {config[...]} straight into shell: instead of going
+    # through params:, and many have no log: directive. Flip this back to blocking
+    # once those are fixed.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint workflow
+        uses: snakemake/snakemake-github-action@v2
+        with:
+          directory: .
+          snakefile: workflow/Snakefile
+          args: "--lint"
+
+  DryRun:
+    name: Dry run tests
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: workflow/envs/ci.yaml
+          cache-environment: true
+
+      # .test/conftest.py regenerates the fixtures itself, so this is only here to make
+      # a fixture-generation failure show up as its own step rather than as a confusing
+      # collection error.
+      - name: Create fixtures
+        shell: bash -el {0}
+        run: bash .test/setup_fixtures.sh
+
+      # Every dataset shape and every rejection case, positive and negative, lives in
+      # .test/. Running from the repo root is required: workflow/Snakefile hardcodes
+      # `configfile: "config/config.yaml"` and several rules hardcode workflow/scripts/...
+      - name: Dry-run test suite
+        shell: bash -el {0}
+        run: pytest .test/ -v --junitxml=dryrun.xml
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dryrun-report
+          path: dryrun.xml
+          if-no-files-found: ignore
+
+  ListEnvs:
+    runs-on: ubuntu-latest
+    outputs:
+      envs: ${{ steps.list.outputs.envs }}
+    steps:
+      - uses: actions/checkout@v4
+      # .test/list_envs.py derives the list from the rules' conda: directives rather
+      # than globbing workflow/envs/, so new envs are picked up automatically and
+      # unreferenced legacy files do not fail the build. The test suite uses the same
+      # module, so the matrix and the tests cannot drift apart.
+      - id: list
+        run: |
+          envs=$(python3 .test/list_envs.py)
+          echo "Testing envs: $envs"
+          echo "envs=$envs" >> "$GITHUB_OUTPUT"
+
+  CondaSolve:
+    name: Solve ${{ matrix.env }}
+    if: github.event_name != 'schedule'
+    needs: ListEnvs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJson(needs.ListEnvs.outputs.envs) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          micromamba-version: latest
+
+      # --dry-run resolves the dependency graph without downloading anything, which
+      # catches stale pins and packages that have left the channels. It solves the
+      # conda section only: the pip: blocks in nanoplot.yaml (kaleido) and
+      # sniffles.yaml (sniffles2-plot) are NOT verified here — CondaInstall does that.
+      - name: Solve environment
+        shell: bash -el {0}
+        run: micromamba create --dry-run -y -n probe -f "${{ matrix.env }}"
+
+  CondaInstall:
+    name: Install ${{ matrix.env }}
+    # Weekly and on demand only: a genuine install of all 22 envs is far too slow to
+    # gate a pull request on. Renv pulls texlive-core, truvari pulls repeatmasker.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: ListEnvs
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJson(needs.ListEnvs.outputs.envs) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          micromamba-version: latest
+
+      # No --dry-run and no caching: packages are genuinely downloaded and linked, and
+      # the pip: sections actually execute. Caching would defeat the purpose, which is
+      # to detect upstream channel drift.
+      - name: Install environment
+        shell: bash -el {0}
+        run: micromamba create -y -n probe -f "${{ matrix.env }}"
+
+      # A successful link already proves the conda binaries landed, so there is no
+      # per-tool smoke command for the other 20 envs. Only the two pip: sections need
+      # confirming, because pip failures do not always fail the create.
+      # .test/test_conda_envs.py fails if a new pip: block appears without being added here.
+      - name: Smoke test the pip section (nanoplot)
+        if: matrix.env == 'workflow/envs/nanoplot.yaml'
+        shell: bash -el {0}
+        run: micromamba run -n probe python -c "import kaleido; print(kaleido.__version__)"
+
+      # `pip show` rather than an import or a console script: sniffles2-plot is a
+      # source-only distribution that needs pkg_resources to build, and its entry-point
+      # name is not stable enough to assert on. A non-zero exit here means pip silently
+      # failed inside `micromamba create`, which is the failure mode worth catching.
+      - name: Smoke test the pip section (sniffles)
+        if: matrix.env == 'workflow/envs/sniffles.yaml'
+        shell: bash -el {0}
+        run: micromamba run -n probe python -m pip show sniffles2-plot

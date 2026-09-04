@@ -18,7 +18,6 @@ dependencies:
   - r-ggplot2
   - r-pbmcapply
   - r-viridis
-  - r-ggpubr
   - r-tidyr
   - r-tidyverse
   - r-gridExtra
@@ -27,9 +26,7 @@ dependencies:
   - r-data.table
   - r-plyr
   - bioconductor-genomicranges
-  - r-yaml
   - r-jsonlite
-  - r-purrr
   - r-tidyjson
   - r-kableExtra
   - r-eulerr
@@ -39,4 +36,3 @@ dependencies:
   - pdflatex
   - r-knitlatex
   - latexmk
-  - r-tidyverse

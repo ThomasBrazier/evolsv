@@ -1,0 +1,8 @@
+# CI dry-run config: scaffold exclusion disabled.
+#
+# config/config.yaml documents `scaffolds_to_exclude` as "set to blank to disable", but
+# nothing exercised that branch. The DAG shape is unchanged; this case only asserts the
+# workflow still parses and builds when the filter list is empty.
+scaffolds_to_exclude: ""
+datadir: .test/fixtures/data/
+bigtmp: ""

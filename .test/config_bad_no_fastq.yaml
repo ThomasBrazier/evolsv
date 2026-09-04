@@ -1,0 +1,7 @@
+# CI dry-run config (negative case): the fastq column is blank.
+# SVJedi-graph genotypes by mapping reads onto a variation graph, so a BAM cannot
+# substitute. Expected to fail with "Reads are required to genotype the SVs".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_no_fastq.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

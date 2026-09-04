@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): a readable BAM with no BAI beside it.
+# Expected to fail in resolve_bam_index with "No BAI index found".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_no_index.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

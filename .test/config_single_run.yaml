@@ -1,0 +1,8 @@
+# CI dry-run config: a sample sheet with a single SRA run.
+#
+# config/samples.tsv declares two runs for the same individual, so the default dry run
+# builds two `download_sra` jobs. This case keeps one, which pins the fact that the job
+# count comes from the sheet rather than from a hardcoded assumption in the workflow.
+samples: .test/fixtures/samples_single_run.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""
