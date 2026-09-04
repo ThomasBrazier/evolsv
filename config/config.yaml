@@ -14,6 +14,12 @@ reference_fasta: "" # Optional path to a local reference FASTA (uncompressed or 
 scaffolds_to_exclude: "MT,Mt,Un,Pltd" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
 
+# SEQUENCING TECHNOLOGY
+# Drives every technology-dependent parameter from a single preset (see TECH_PRESETS in
+# workflow/rules/common.smk): the minimap2 and NGMLR presets, the @RG PL tag and the four
+# cuteSV clustering parameters. Any of those keys set explicitly below still wins.
+sequencing_technology: hifi # hifi (PacBio HiFi/CCS) | ont (Oxford Nanopore)
+
 # READS QUALITY
 # Filter long reads with Chopper
 chopper_headcrop: 0 # Trim N nucleotides from the start of a read [default: 0]
@@ -24,11 +30,12 @@ chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
 
 # MAPPING
 # Mapping on the reference genome with Minimap2
-minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
+# minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual). Leave commented to use the sequencing_technology preset (hifi -> map-hifi, ont -> map-ont)
 minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # Mapping on the reference genome with NGMLR
-min-identity: 0.65 # Alignments with an identity lower than this threshold will be discarded [0.65]
+# ngmlr_preset: pacbio # Preset for the sequencing technology, one of pacbio or ont. Leave commented to use the sequencing_technology preset (hifi -> pacbio, ont -> ont)
+min-identity: 0.65 # Alignments with an identity lower than this threshold will be discarded [0.65]. NGMLR's default for both presets
 # min-residues: 0.25 # Alignments containing less than <int> or (<float> * read length) residues will be discarded [0.25]
 # no-smallinv: 'false' # Don't detect small inversions [false]
 # no-lowqualitysplit: 'false' #Split alignments with poor quality [false]
@@ -57,10 +64,14 @@ svim_min_read_support: 10 # Minimum read support of 10 (similar to Sniffles) or 
 
 
 # CuteSV specific
-max_cluster_bias_INS: 1000
-diff_ratio_merging_INS: 0.3
-max_cluster_bias_DEL: 1000
-diff_ratio_merging_DEL: 0.5
+# The four clustering parameters below come from the sequencing_technology preset, which
+# uses cuteSV's own per-technology recommendations:
+#   hifi -> 1000 / 0.9 / 1000 / 0.5     ont -> 100 / 0.3 / 100 / 0.3
+# Uncomment any of them to override the preset.
+# max_cluster_bias_INS: 1000
+# diff_ratio_merging_INS: 0.9
+# max_cluster_bias_DEL: 1000
+# diff_ratio_merging_DEL: 0.5
 max_size: -1
 min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum length of SV signal to be extracted.[10]
 

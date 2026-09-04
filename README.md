@@ -4,7 +4,7 @@
 
 *Institutions: (1) UMR 6553 ECOBIO, University of Rennes (2) GenScale Team, IRISA-INRIA lab, University of Rennes*
 
-This pipeline performs ensemble calling of Structural Variants (SV) from PacBio HiFi long-read sequencing of a single individual. SV calling is performed by a combination of two aligners (minimap2 + ngmlr) and four different tools: SVIM, Sniffles2, CuteSV2 and Debreak ([poster](images/Poster_PopGroup58_BRAZIER.pdf)). The eight independent callsets are then merged with JasmineSV and SVs are genotyped with SVJediGraph.
+This pipeline performs ensemble calling of Structural Variants (SV) from PacBio HiFi or Oxford Nanopore (ONT) long-read sequencing of a single individual. SV calling is performed by a combination of two aligners (minimap2 + ngmlr) and four different tools: SVIM, Sniffles2, CuteSV2 and Debreak ([poster](images/Poster_PopGroup58_BRAZIER.pdf)). The eight independent callsets are then merged with JasmineSV and SVs are genotyped with SVJediGraph.
 
 ![The complete workflow of EvolSV.](images/workflow.png)
 
@@ -42,7 +42,6 @@ conda activate snakemake
 
 The current version is fully functional, yet I plan to implement in a near future new features to address more types of data (e.g., ONT) and improve computation times:
 * Running one or both aligners (minimap2 or ngmlr, optional), scalability.
-* Support ONT data.
 * Simplify the rule 'final_report' to generalize better to different options and datasets.
 * Support other cluster engines than SLURM.
 * Better cleanup and compression for temporary and output files (optimize storage).
@@ -92,6 +91,41 @@ snakemake -s workflow/Snakefile --configfile data/config/config_$species.yaml \
 ```
 
 
+### Sequencing technology
+
+The pipeline supports PacBio HiFi and Oxford Nanopore reads. A single key in `config/config.yaml` selects which:
+
+```yaml
+sequencing_technology: hifi # hifi (PacBio HiFi/CCS) | ont (Oxford Nanopore)
+```
+
+Any other value is rejected before the run starts. The key fills in the technology-dependent parameters of every tool that has them (`TECH_PRESETS` in `workflow/rules/common.smk`):
+
+| Parameter | `hifi` | `ont` |
+| --- | --- | --- |
+| `minimap_ax` (minimap2 `-x`) | `map-hifi` | `map-ont` |
+| `ngmlr_preset` (NGMLR `--presets`) | `pacbio` | `ont` |
+| `read_group_platform` (`@RG PL`) | `PACBIO` | `ONT` |
+| `max_cluster_bias_INS` (cuteSV) | 1000 | 100 |
+| `diff_ratio_merging_INS` (cuteSV) | 0.9 | 0.3 |
+| `max_cluster_bias_DEL` (cuteSV) | 1000 | 100 |
+| `diff_ratio_merging_DEL` (cuteSV) | 0.5 | 0.3 |
+
+The cuteSV values are the ones [recommended by its authors](https://github.com/tjiangHIT/cuteSV#recommendation-parameters) for each technology.
+
+These are defaults, not overrides: setting any of those keys explicitly in your config file wins over the preset. They are shipped commented out in `config/config.yaml` so the preset applies by default. For instance, to run ONT with a non-default minimap2 preset:
+
+```yaml
+sequencing_technology: ont
+minimap_ax: lr:hq # overrides the map-ont from the preset; everything else stays ONT
+```
+
+Two things worth knowing:
+
+* **Read filtering is not technology-dependent.** `chopper_quality: 10` is used for both, and suits HiFi as well as modern ONT chemistries (R10.4+). On R9-era ONT data a threshold of 10 discards a large fraction of the reads; consider `chopper_quality: 7`. Read length thresholds (`chopper_minlength`, `chopper_maxlength`) are likewise unchanged by the technology.
+* **Only the aligners and cuteSV have technology presets.** Sniffles2, SVIM, DeBreak and SVJedi-graph publish none upstream — Sniffles2 derives its thresholds from coverage, DeBreak accepts HiFi/CLR/ONT/mixed BAMs without a flag, and SVJedi-graph maps onto its variation graph with minigraph, which has no per-technology presets. An ONT run therefore uses the same settings as a HiFi run in those four tools. `min_sv_size`, `mapq` and `min_mapq` may deserve a second look on noisier data.
+
+
 ### Starting from pre-aligned BAM files
 
 If your reads are already aligned — for instance because you mapped them to call SNPs — you can skip the SRA download, the read QC and both alignments, which are by far the most expensive stages of the workflow. Set in `config/config.yaml`:
@@ -122,6 +156,7 @@ Caveats to be aware of when interpreting the results:
 
 * **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour.
 * **Read-level QC (FastQC, NanoPlot) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
+* **`sequencing_technology` still matters.** The aligner presets and the `@RG PL` tag are unused in this mode, since the alignments are supplied, but the key still drives the cuteSV clustering parameters. Set it to the technology the BAM files were produced from.
 * **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
 
 The BAM files are symlinked, not copied, so no extra storage is used.

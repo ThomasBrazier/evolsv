@@ -114,6 +114,7 @@ POSITIVE_CASES = [
     ("no-scaffold-exclusion", ".test/config_no_scaffold_exclusion.yaml"),
     ("bigtmp", ".test/config_bigtmp.yaml"),
     ("config-test", "config/config_test.yaml"),
+    ("ont", ".test/config_ont.yaml"),
 ]
 
 
@@ -174,6 +175,48 @@ def test_local_reference_reaches_the_shell_command():
     )
 
 
+def test_default_technology_is_hifi():
+    """The shipped default stays PacBio HiFi, so the preset table cannot flip it silently."""
+    result = run_dryrun()
+    assert_succeeded(result)
+    for flag in ("-ax map-hifi", "--presets pacbio", "PL:PACBIO"):
+        assert flag in result.stdout, "{!r} missing from the default shell commands".format(flag)
+
+
+def test_ont_presets_reach_the_shell_commands():
+    """sequencing_technology: ont leaves the DAG untouched, so assert on the commands.
+
+    One flag per tool the preset owns: minimap2, ngmlr and cuteSV. cuteSV is the one
+    that would otherwise silently keep HiFi clustering on an ONT run.
+    """
+    result = run_dryrun(".test/config_ont.yaml")
+    assert_succeeded(result)
+
+    for flag in ("-ax map-ont", "--presets ont", "PL:ONT", "--max_cluster_bias_INS 100"):
+        assert flag in result.stdout, "{!r} missing from the ONT shell commands".format(flag)
+
+    # The HiFi values must be gone, not merely joined by the ONT ones.
+    for flag in ("-ax map-hifi", "--presets pacbio", "--max_cluster_bias_INS 1000"):
+        assert flag not in result.stdout, "{!r} still present in an ONT run".format(flag)
+
+
+def test_explicit_config_key_overrides_the_preset():
+    """A key set by hand wins over the technology preset (config.setdefault, not assignment)."""
+    result = subprocess.run(
+        [
+            "snakemake", "-s", "workflow/Snakefile", "-n", "-p",
+            "--profile", "profiles/ci",
+            "--configfile", ".test/config_ont.yaml",
+            "--config", "minimap_ax=asm20",
+        ],
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    )
+    assert_succeeded(result)
+    assert "-ax asm20" in result.stdout, "the explicit minimap_ax did not override the ont preset"
+    # ngmlr is not overridden, so the rest of the preset must still apply.
+    assert "--presets ont" in result.stdout
+
+
 @pytest.mark.parametrize("configfile", [None, ".test/config_bam.yaml"], ids=["default", "bam-mode"])
 def test_rule_all_targets_are_reachable(configfile):
     """Every group of `rule all` inputs has its terminal rule scheduled, in both modes."""
@@ -196,6 +239,7 @@ NEGATIVE_CASES = [
     ("no-index", ".test/config_bad_no_index.yaml", "No BAI index found"),
     ("no-fastq", ".test/config_bad_no_fastq.yaml", "Reads are required to genotype the SVs"),
     ("no-ngmlr", ".test/config_bad_no_ngmlr.yaml", "no bam_ngmlr file was declared"),
+    ("bad-technology", ".test/config_bad_tech.yaml", "Unknown sequencing_technology"),
 ]
 
 
@@ -203,7 +247,7 @@ NEGATIVE_CASES = [
     "name,configfile,message", NEGATIVE_CASES, ids=[c[0] for c in NEGATIVE_CASES]
 )
 def test_bad_input_is_rejected(name, configfile, message):
-    """Malformed start_from_bam input fails the dry run with an actionable message."""
+    """Malformed input fails the dry run with an actionable message."""
     result = run_dryrun(configfile)
 
     assert result.returncode != 0, (

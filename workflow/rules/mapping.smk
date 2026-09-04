@@ -20,7 +20,7 @@ rule minimap2:
         minimap2 -ax {config[minimap_ax]} --MD -2 \
         --seed {config[minimap_seed]} --eqx \
         -t {resources.cpus_per_task} \
-        -R "@RG\\tID:{sample_id}\\tSM:{sample_id}" \
+        -R "@RG\\tID:{sample_id}\\tSM:{sample_id}\\tPL:{config[read_group_platform]}" \
         --sam-hit-only {input.fasta} {input.fastq} > {output.sam}
         """
 
@@ -33,10 +33,14 @@ rule ngmlr:
         Adds RG:Z:<string> to all alignments in SAM/BAM [none]
     --rg-sm <string>
         RG header: Sample [none]
+    --rg-pl <string>
+        RG header: Platform [none]
     -t <int>,  --threads <int>
         Number of threads [1]
     -x <pacbio, ont>,  --presets <pacbio, ont>
         Parameter presets for different sequencing technologies [pacbio]
+        Set from config[ngmlr_preset], which the sequencing_technology preset in
+        rules/common.smk fills in (hifi -> pacbio, ont -> ont).
     -i <0-1>,  --min-identity <0-1>
         Alignments with an identity lower than this threshold will be discarded [0.65]
     -R <int/float>,  --min-residues <int/float>
@@ -63,9 +67,10 @@ rule ngmlr:
         """
         ngmlr -t {resources.cpus_per_task} \
         -r {input.fasta} -q {input.fastq} \
-        --presets pacbio \
+        --presets {config[ngmlr_preset]} \
         --min-identity {config[min-identity]} \
         --rg-id {sample_id} --rg-sm {sample_id} \
+        --rg-pl {config[read_group_platform]} \
         -o {output.sam}
         """
 

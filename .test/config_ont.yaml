@@ -1,0 +1,8 @@
+# CI dry-run config: Oxford Nanopore presets on the FASTQ entry point.
+#
+# This does not change the DAG — sequencing_technology only fills in config defaults
+# (TECH_PRESETS in workflow/rules/common.smk) — so the tests assert on the printed
+# shell commands rather than on the Job stats table.
+sequencing_technology: ont
+datadir: .test/fixtures/data/
+bigtmp: ""

@@ -14,8 +14,10 @@ reference_fasta: "" # Optional path to a local reference FASTA. Leave empty to d
 scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
 
+# SEQUENCING TECHNOLOGY
+sequencing_technology: hifi # hifi (PacBio HiFi/CCS) | ont (Oxford Nanopore). Sets the minimap2/NGMLR presets, the @RG PL tag and the cuteSV clustering parameters
+
 # Mapping on the reference genome
-minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual)
 minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # SV calling
@@ -42,10 +44,7 @@ svim_min_read_support: 10 # Minimum read support of 10 (similar to Sniffles) or 
 
 
 # CuteSV specific
-max_cluster_bias_INS: 1000
-diff_ratio_merging_INS: 0.9
-max_cluster_bias_DEL: 1000
-diff_ratio_merging_DEL: 0.5
+# The four clustering parameters come from the sequencing_technology preset above
 max_size: -1
 min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum length of SV signal to be extracted.[10]
 

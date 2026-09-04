@@ -1,0 +1,8 @@
+# CI dry-run config: an unsupported sequencing_technology value.
+#
+# 'nanopore' is a plausible thing for a user to write, but the accepted values are
+# 'hifi' and 'ont'. The guard in workflow/rules/common.smk must reject it at
+# DAG-construction time rather than passing it through to minimap2 -x.
+sequencing_technology: nanopore
+datadir: .test/fixtures/data/
+bigtmp: ""

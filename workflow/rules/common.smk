@@ -14,6 +14,47 @@ samplelist = [wdir + "/fastq/" + s + "_sra.fastq.gz" for s in samples["sra"] if 
 fqlist = ",".join(samplelist)
 
 
+# Sequencing-technology presets. Each entry is an ordinary config key: the preset only
+# supplies a default (config.setdefault below), so a value set explicitly in the config
+# file still wins.
+#
+# cuteSV clustering values are the author's per-technology recommendations,
+# https://github.com/tjiangHIT/cuteSV#recommendation-parameters
+# Sniffles2, SVIM, DeBreak and SVJedi-graph publish no technology presets, so nothing
+# else in the workflow is technology-dependent. chopper is deliberately absent too:
+# chopper_quality: 10 suits HiFi and modern ONT alike (see README).
+TECH_PRESETS = {
+    "hifi": {
+        "minimap_ax": "map-hifi",
+        "ngmlr_preset": "pacbio",
+        "read_group_platform": "PACBIO",  # a SAM specification @RG PL value
+        "max_cluster_bias_INS": 1000,
+        "diff_ratio_merging_INS": 0.9,
+        "max_cluster_bias_DEL": 1000,
+        "diff_ratio_merging_DEL": 0.5,
+    },
+    "ont": {
+        "minimap_ax": "map-ont",
+        "ngmlr_preset": "ont",
+        "read_group_platform": "ONT",
+        "max_cluster_bias_INS": 100,
+        "diff_ratio_merging_INS": 0.3,
+        "max_cluster_bias_DEL": 100,
+        "diff_ratio_merging_DEL": 0.3,
+    },
+}
+
+sequencing_technology = str(config.get("sequencing_technology", "hifi")).strip().lower()
+if sequencing_technology not in TECH_PRESETS:
+    raise WorkflowError(
+        "Unknown sequencing_technology '{}'. Supported values are: {}.".format(
+            config.get("sequencing_technology"), ", ".join(sorted(TECH_PRESETS))
+        )
+    )
+for preset_key, preset_value in TECH_PRESETS[sequencing_technology].items():
+    config.setdefault(preset_key, preset_value)
+
+
 def check_readable_file(path, description):
     """Fail at DAG construction time rather than deep into an expensive run."""
     if not path:
