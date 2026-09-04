@@ -2,8 +2,13 @@
 #
 # No executor and no resource sizing: the only thing needed is cpus_per_task, which
 # 14 rules interpolate into shell: as {resources.cpus_per_task}. In real runs that
-# value comes from default-resources in profiles/slurm/config.yaml; without it,
-# a dry run with --printshellcmds fails to format those rules.
+# value comes from default-resources in profiles/{slurm,pbs,sge}/config.yaml; without
+# it, a dry run with --printshellcmds fails to format those rules.
+#
+# `cpus_per_task: threads` is the same expression the cluster profiles use, so the
+# invariant checked by .test/test_profiles.py is uniform. With `cores: 1` it still
+# evaluates to 1, so dry-run output is unchanged. This profile deliberately carries no
+# set-threads block: it is not a sizing profile and is skipped by the coverage test.
 cores: 1
 default-resources:
-  cpus_per_task: 1
+  cpus_per_task: threads

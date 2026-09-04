@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# No --cores: it comes from the profile. Passing it here clamps every rule's
+# threads to that value, even in cluster mode.
 #SBATCH --mail-user=mail@mail.com
 #SBATCH --mail-type=all
 #SBATCH --cpus-per-task=8
@@ -8,4 +11,4 @@
 
 source activate snakemake
 
-snakemake -s workflow/Snakefile --configfile config/config_test.yaml --use-conda --profile ./profiles/slurm --cores 8
+snakemake -s workflow/Snakefile --configfile config/config_test.yaml --use-conda --profile ./profiles/slurm

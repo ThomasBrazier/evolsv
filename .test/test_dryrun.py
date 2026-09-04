@@ -5,6 +5,10 @@ bad input is still rejected at DAG-construction time. They never execute a rule,
 green run means "the workflow parses and the guards fire", not "the results are correct".
 
 Run from the repo root with `pytest .test/`. CI runs exactly the same command.
+
+Sibling suite: .test/test_profiles.py checks that the scheduler profiles under profiles/
+and the rules defined in workflow/ agree about which rules exist. That one never invokes
+snakemake; this one always does.
 """
 
 import re

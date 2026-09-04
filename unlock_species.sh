@@ -21,5 +21,5 @@ git status
 echo "Unlocking Snakemake pipeline for species $species..."
 
 snakemake -s workflow/Snakefile --configfile config/config.yaml \
---use-conda --conda-frontend conda --unlock --profile ./profiles/slurm --cores 1 --rerun-incomplete \
+--use-conda --conda-frontend conda --unlock --profile ./profiles/slurm --rerun-incomplete \
 --config samples="data/config/samples_$species.tsv"

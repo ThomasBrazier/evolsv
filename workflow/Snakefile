@@ -37,6 +37,13 @@ wildcard_constraints:
     sample_id = sample_id,
     aligner = "|".join(aligners)
 
+# `all` is a pure aggregation target with no shell command; it must never be submitted
+# to a scheduler. Declaring it local is also what lets .test/test_profiles.py exclude it
+# from the per-rule resource coverage check on a principled basis.
+localrules:
+    all,
+
+
 include: "common.smk"
 include: "rules/common.smk"
 include: "rules/data_download.smk"

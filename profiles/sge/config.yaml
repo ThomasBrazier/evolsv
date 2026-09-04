@@ -1,0 +1,197 @@
+# Profile for SGE / Son of Grid Engine / Univa Grid Engine.
+#
+# Submission goes through snakemake-executor-plugin-cluster-generic
+# (workflow/envs/snakemake_sge.yaml), NOT through snakemake-executor-plugin-sge.
+# That dedicated plugin was evaluated and rejected: it is PyPI-only (absent from
+# bioconda and conda-forge), and in 0.6.24 it reads the CPU count from a resource
+# named "threads" rather than from the job's threads -- so every job is submitted as
+# `-pe <pe> 1` -- and it appends `-l tmem=` unconditionally, which is a site-specific
+# complex that makes qsub reject every job on clusters that do not define it.
+#
+# Site setup before the first run:
+#   * set sge_queue and sge_pe below. sge_pe must name a parallel environment that
+#     exists on your cluster -- check with `qconf -spl`. A wrong or missing PE makes
+#     multi-threaded jobs fail at submission on strict clusters.
+#   * mkdir -p logs/sge
+#   * chmod +x profiles/sge/sge-submit.sh profiles/sge/sge-status.py
+#
+# Do not put $VAR in the submit command: profile scalars go through
+# os.path.expandvars() at parse time, on the submitting host.
+executor: cluster-generic
+use-conda: True
+jobs: 25 # Have up to N jobs submitted at any given time
+latency-wait: 100 # Wait N seconds for output files due to latency
+retries: 6 # Retry jobs N times.
+
+# Upper bound on the threads any single rule may claim; must be >= the largest value
+# in set-threads. `--cores N` clamps every rule's threads to N even in cluster mode.
+cores: 64
+
+# Submission goes via a wrapper rather than a bare qsub line for two reasons:
+#   * SGE's h_vmem is enforced PER SLOT, so the request must be mem_mb / threads.
+#     Resource expressions cannot reference other resources, so the division has to
+#     happen outside the profile -- otherwise every memory figure would have to be
+#     duplicated in per-slot form and re-derived by hand whenever set-threads changes.
+#   * `qsub -terse` is mandatory here: cluster-generic takes the first line of stdout
+#     verbatim as the job id, and a plain qsub prints
+#     "Your job 123 (...) has been submitted".
+# A bare filename that exists in the profile directory is rewritten to its full path
+# by the profile parser, so these resolve wherever snakemake is invoked from.
+cluster-generic-submit-cmd: >-
+  sge-submit.sh
+  {rule}.{jobid}
+  {threads}
+  {resources.mem_mb}
+  {resources.runtime}
+  {resources.sge_queue}
+  {resources.sge_pe}
+cluster-generic-status-cmd: sge-status.py
+cluster-generic-cancel-cmd: qdel
+cluster-generic-cancel-nargs: 50
+
+default-resources:
+  # 14 rules interpolate {resources.cpus_per_task} into shell:. cluster-generic does
+  # not use this key itself -- the wrapper is passed {threads} -- but the shell
+  # commands fail to format without it. Deriving it from `threads` keeps the tool's
+  # -t flag and the slot request in lockstep.
+  cpus_per_task: threads
+  mem_mb: attempt * 20000 # TOTAL for the job; sge-submit.sh divides by threads
+  runtime: 2880 # In minutes
+  sge_queue: "'all.q'"
+  sge_pe: "'smp'" # must exist on the cluster; see `qconf -spl`
+
+# Control number of threads each rule will use.
+#
+# svim, cutesv, jasmine and merging_qc pass no thread flag to their tool, so their
+# values here are pure allocation reservations rather than parallelism. Note that on
+# SGE they also divide the per-slot memory request, so lowering them raises h_vmem.
+set-threads:
+  # Data acquisition. Single-threaded: network- and I/O-bound.
+  download_sra: 1
+  download_genome: 1
+  sample_ids: 1
+  merge_fastq: 1
+  # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
+  stage_bam: 1
+  stage_fastq: 1
+  # Fastq processing. Can use more than 1 thread.
+  fastqc: 16
+  nanoplot: 1
+  filter_reads_chopper: 16
+  nanoplot_after_filtering: 1
+  # Alignment. Can use more than 1 thread, except samtools_sort.
+  minimap2: 16
+  ngmlr: 16
+  samtools_view: 1
+  samtools_sort: 1 # Does NOT use more than 1 thread.
+  samtools_index: 1
+  samtools_stats: 1
+  samtools_coverage: 1
+  # Ensemble calling
+  svim: 8
+  sniffles: 8
+  cutesv: 8
+  debreak: 8
+  removeBND: 1
+  vcf_sv_specification: 1
+  sniffles2plot: 1
+  genotype_svim: 8
+  genotype_cutesv: 8
+  genotype_sniffles: 8
+  genotype_debreak: 8
+  basic_filter: 1
+  # Merging
+  jasmine: 16
+  merging_qc: 1
+  # Genotyping
+  svjedigraph: 16
+  autosomes_sexchromosomes: 1
+  all_samples_vcf: 1
+  final_vcf: 1
+  # Report
+  samplot_subset_DUP: 1
+  samplot_subset_INV: 1
+  samplot_subset_DEL: 1
+  samplot_plot: 1
+  vcf_to_tsv: 1
+  vcf_to_tsv_tools: 1
+  final_report: 1
+  light_vcf: 1
+  gzvcf: 1
+  # Mappability and annotation
+  mosdepth_summary: 1
+  mosdepth_quantize: 1
+  callable_bed: 1
+  genmap: 1
+  mappability_bed: 1
+  add_mappability: 1
+  truvari_grm: 8
+
+# Control other resources used by each rule. Rules absent from this block take the
+# default-resources values above. cpus_per_task is deliberately never set here: it is
+# derived from set-threads. mem_mb is always the TOTAL for the job.
+set-resources:
+  download_sra:
+    mem_mb: attempt * 2000
+  download_genome:
+    mem_mb: attempt * 2000
+  stage_bam:
+    mem_mb: attempt * 2000
+  stage_fastq:
+    mem_mb: attempt * 2000
+  fastqc:
+    # fastqc allocates 250Mb of RAM per thread, so mem_mb must scale with threads.
+    mem_mb: attempt * threads * 1000
+  minimap2:
+    mem_mb: attempt * 20000
+    runtime: 2880 * 4
+  ngmlr:
+    mem_mb: attempt * 20000
+    runtime: 2880 * 12
+  samtools_view:
+    mem_mb: attempt * 2000
+  samtools_index:
+    mem_mb: attempt * 40000
+  samtools_stats:
+    mem_mb: attempt * 2000
+  samtools_coverage:
+    mem_mb: attempt * 2000
+  svim:
+    mem_mb: attempt * 50000
+  sniffles:
+    mem_mb: attempt * 50000
+  cutesv:
+    mem_mb: attempt * 50000
+  debreak:
+    mem_mb: attempt * 50000
+  vcf_sv_specification:
+    mem_mb: attempt * 200000
+    sge_queue: "'bigmem.q'"
+  sniffles2plot:
+    mem_mb: attempt * 60000
+  genotype_svim:
+    mem_mb: attempt * 20000
+    sge_queue: "'bigmem.q'"
+  genotype_cutesv:
+    mem_mb: attempt * 20000
+    sge_queue: "'bigmem.q'"
+  genotype_sniffles:
+    mem_mb: attempt * 20000
+    sge_queue: "'bigmem.q'"
+  genotype_debreak:
+    mem_mb: attempt * 40000
+    sge_queue: "'bigmem.q'"
+  basic_filter:
+    mem_mb: attempt * 2000
+  jasmine:
+    mem_mb: attempt * 200000
+    sge_queue: "'bigmem.q'"
+  merging_qc:
+    mem_mb: attempt * 20000
+  svjedigraph:
+    mem_mb: attempt * 20000
+    sge_queue: "'bigmem.q'"
+  autosomes_sexchromosomes:
+    mem_mb: attempt * 2000
+  truvari_grm:
+    mem_mb: attempt * 20000

@@ -43,7 +43,6 @@ conda activate snakemake
 The current version is fully functional, yet I plan to implement in a near future new features to address more types of data (e.g., ONT) and improve computation times:
 * Running one or both aligners (minimap2 or ngmlr, optional), scalability.
 * Simplify the rule 'final_report' to generalize better to different options and datasets.
-* Support other cluster engines than SLURM.
 * Better cleanup and compression for temporary and output files (optimize storage).
 * Improved documentation and tests.
 * CI/CD.
@@ -58,15 +57,26 @@ All these changes are being implemented in the `caterpillar` branch.
 There are three config files to set up your analysis:
 * `config/config.yaml`, where you specify the working directory and all the settings for the different tools.
 * `config/samples.tsv`, a three columsn data frame to specify the sample name, the SRA accessions and the reference genome accession. Currently, the pipeline accepts multiple samples but only a single genome accession.
-* `profiles/slurm/config.yaml`, a profile for the SLURM job scheduler, specifying resources for each rule (number of cpus, memory, runtime).
+* a profile under `profiles/`, specifying resources for each rule (number of cpus, memory, runtime) and how jobs reach your job scheduler. One is shipped per scheduler:
+
+| Profile | Scheduler | Executor |
+| --- | --- | --- |
+| `profiles/slurm/` | SLURM | `slurm` |
+| `profiles/pbs/` | PBS Pro / OpenPBS (and Torque, with one line swapped) | `cluster-generic` |
+| `profiles/sge/` | SGE / SoGE / UGE | `cluster-generic` |
+| `profiles/ci/` | none -- dry runs and DAG checks only | -- |
+
+Edit the queue/account settings at the top of the profile you use before the first run. Thread counts live in that profile's `set-threads` block, which lists every rule in the workflow; `.test/test_profiles.py` fails the build if a rule is missing from it or if it names a rule that no longer exists.
 
 
 
 After setting up the required config files, you can launch the pipeline in two ways: either by running the `launcher.sh` script (where you can configure your settings if you are using a SLURM job scheduler), or simply by executing the following command in the terminal:
 
 ```
-snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml --profile ./profiles/slurm --use-conda --cores 1
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml --profile ./profiles/slurm --use-conda
 ```
+
+Do not add `--cores N` to that command. It caps the threads of *every* rule at N even when jobs run on a cluster, so a `--cores 1` silently overrides the whole `set-threads` block. The profile sets `cores:` to a sensible upper bound instead.
 
 Before running the analysis, you can build Conda environments:
 
@@ -77,7 +87,7 @@ snakemake --snakefile ./workflow/Snakefile --cores 1 --use-conda --conda-fronten
 An example dataset with a single sample of the `Vanessa cardui` species can be run with the command:
 
 ```
-snakemake --snakefile ./workflow/Snakefile --configfile ./config/config_test.yaml --profile ./profiles/slurm --use-conda --cores 1
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config_test.yaml --profile ./profiles/slurm --use-conda
 ```
 
 Alternatively, if you wish to run a custom analysis, with config files in a subdirectory:
@@ -86,10 +96,46 @@ Alternatively, if you wish to run a custom analysis, with config files in a subd
 species=Vanessa_cardui
 
 snakemake -s workflow/Snakefile --configfile data/config/config_$species.yaml \
---use-conda --conda-frontend conda --profile ./profiles/slurm --cores 1 \
+--use-conda --conda-frontend conda --profile ./profiles/slurm \
 --config samples="data/config/samples_$species.tsv"
 ```
 
+
+### Running on another job scheduler
+
+The pipeline ships a profile per scheduler. Pick one, edit the site-specific settings at the top of its `config.yaml`, and point `--profile` at it.
+
+**SLURM.** Set `slurm_partition` and `slurm_account` in `profiles/slurm/config.yaml`. The executor plugin is in `workflow/envs/snakemake_v2.yaml`.
+
+**PBS Pro / OpenPBS.** Snakemake has no dedicated PBS executor plugin, so `profiles/pbs/` submits through `cluster-generic`: the `qsub` line in the profile is the only place resources are translated, and a resource not named there is not requested.
+
+```
+conda env create -f workflow/envs/snakemake_pbs.yaml
+mkdir -p logs/pbs                       # qsub fails if -o/-e do not exist
+chmod +x profiles/pbs/pbs-status.py
+
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml \
+--profile ./profiles/pbs --use-conda
+```
+
+Set `pbs_queue` in the profile, and add `-A <project>` to `cluster-generic-submit-cmd` if your site bills projects. On **Torque**, swap the two `-l` lines for the commented alternative in the same file: Torque spells the request `-l nodes=1:ppn=N,mem=Nmb` where PBS Pro uses `-l select=1:ncpus=N:mem=Nmb`.
+
+**SGE / SoGE / UGE.** Same mechanism, via `profiles/sge/`.
+
+```
+conda env create -f workflow/envs/snakemake_sge.yaml
+mkdir -p logs/sge
+chmod +x profiles/sge/sge-submit.sh profiles/sge/sge-status.py
+
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml \
+--profile ./profiles/sge --use-conda
+```
+
+Set `sge_queue`, and set `sge_pe` to a parallel environment that exists on your cluster (`qconf -spl`) -- a missing or wrong PE makes multi-threaded jobs fail at submission on strict clusters. Submission goes through `profiles/sge/sge-submit.sh` rather than a bare `qsub` line for two reasons: SGE enforces `h_vmem` per *slot*, so the wrapper divides the profile's total `mem_mb` by the thread count, and `qsub -terse` is required because `cluster-generic` reads the job id from the first line of stdout.
+
+`profiles/sge/` deliberately does not use `snakemake-executor-plugin-sge`. That plugin is PyPI-only (absent from bioconda and conda-forge), and in 0.6.24 it reads the CPU count from a resource named `threads` rather than from the job's threads -- so every job is submitted single-slot -- and appends `-l tmem=`, a site-specific complex, to every submission.
+
+> **Not yet run against real PBS or SGE hardware.** Both profiles build the DAG correctly and are derived from the executor plugin's own source, but no job has been submitted to a live PBS or SGE cluster. Run the `config_test.yaml` dataset end to end before trusting them for a real analysis, and expect the status scripts (`pbs-status.py`, `sge-status.py`) to be the parts most likely to need tuning against your site's job-retention settings.
 
 ### Sequencing technology
 
@@ -175,6 +221,15 @@ Project data can be stored in the current `evolsv` git directory. The place wher
 │   ├── data/
 ├   ├── profiles/
 ├   ├   ├── slurm/
+│   ├   │   ├── config.yaml
+├   ├   ├── pbs/
+│   ├   │   ├── config.yaml
+│   ├   │   ├── pbs-status.py
+├   ├   ├── sge/
+│   ├   │   ├── config.yaml
+│   ├   │   ├── sge-submit.sh
+│   ├   │   ├── sge-status.py
+├   ├   ├── ci/
 │   ├   │   ├── config.yaml
 │   ├── workflow/
 ```

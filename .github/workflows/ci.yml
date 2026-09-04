@@ -62,7 +62,9 @@ jobs:
           args: "--lint"
 
   DryRun:
-    name: Dry run tests
+    # Also runs .test/test_profiles.py, which checks the scheduler profiles against the
+    # rules without invoking snakemake.
+    name: Dry run and profile tests
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -1,33 +1,62 @@
-# Profile for the SLURM job scheduler.
+# Profile for PBS Pro / OpenPBS.
 #
-# Site setup before the first run: set slurm_partition and slurm_account below.
-# Note the double-quoted "'name'" form -- profile scalars are eval()'d before being
-# accepted as strings, so a bare partition named `all`, `input` or `max` would
-# resolve to a Python builtin and abort the run.
-executor: slurm
+# There is no dedicated PBS executor plugin in the Snakemake catalog, so submission
+# goes through snakemake-executor-plugin-cluster-generic (workflow/envs/snakemake_pbs.yaml).
+# cluster-generic does NOT translate resources: every qsub flag below is interpolated
+# by hand, and a resource that is not named here is simply not requested.
+#
+# Site setup before the first run:
+#   * set pbs_queue below (and add `-A <project>` to the submit command if your site
+#     bills projects)
+#   * mkdir -p logs/pbs -- qsub fails if the -o/-e directory does not exist
+#   * chmod +x profiles/pbs/pbs-status.py
+#
+# Torque users: swap the -l line for the commented alternative. Torque and PBS Pro
+# diverge here and there is no portable spelling.
+#
+# Do not put $VAR in the submit command: profile scalars go through
+# os.path.expandvars() at parse time, on the submitting host, not on the compute node.
+executor: cluster-generic
 use-conda: True
 jobs: 25 # Have up to N jobs submitted at any given time
 latency-wait: 100 # Wait N seconds for output files due to latency
 retries: 6 # Retry jobs N times.
 
-# Upper bound on the threads any single rule may claim. This is NOT a limit on
-# concurrency (that is `jobs:`), and it must be >= the largest value in set-threads:
-# `--cores N` clamps every rule's threads to N even in cluster mode, so a stray
-# `--cores 1` on the command line silently drops all of set-threads to 1.
+# Upper bound on the threads any single rule may claim; must be >= the largest value
+# in set-threads. `--cores N` clamps every rule's threads to N even in cluster mode.
 cores: 64
 
-# These resources will be applied to all rules. Can be overriden on a per-rule basis below.
+# {threads} is the authoritative CPU count -- it is the value after set-threads and
+# after the --cores clamp. PBS -l walltime takes [[hours:]minutes:]seconds and accepts
+# a minutes field above 59, so "{resources.runtime}:00" passes runtime through in
+# minutes, the same unit the SLURM profile uses.
+cluster-generic-submit-cmd: >-
+  qsub
+  -N {rule}.{jobid}
+  -o logs/pbs/ -e logs/pbs/
+  -q {resources.pbs_queue}
+  -l select=1:ncpus={threads}:mem={resources.mem_mb}mb
+  -l walltime={resources.runtime}:00
+  -V
+# Torque alternative for the two -l lines above:
+#   -l nodes=1:ppn={threads},mem={resources.mem_mb}mb
+#   -l walltime={resources.runtime}:00
+
+# A bare filename that exists in the profile directory is rewritten to its full path
+# by the profile parser, so this resolves wherever snakemake is invoked from.
+cluster-generic-status-cmd: pbs-status.py
+cluster-generic-cancel-cmd: qdel
+cluster-generic-cancel-nargs: 50
+
 default-resources:
-  # 14 rules interpolate {resources.cpus_per_task} into shell:. Deriving it from
-  # `threads` keeps the CPU request, the tool's -t flag and set-threads in lockstep,
-  # including after the --cores clamp, so thread counts are declared in exactly one
-  # place. The SLURM plugin already defaults --cpus-per-task to the job's threads,
-  # so this changes nothing about submission.
+  # 14 rules interpolate {resources.cpus_per_task} into shell:. cluster-generic does
+  # not use this key itself -- the qsub line above asks for {threads} -- but the shell
+  # commands fail to format without it. Deriving it from `threads` keeps the tool's
+  # -t flag and the CPU request in lockstep.
   cpus_per_task: threads
   mem_mb: attempt * 20000
   runtime: 2880 # In minutes
-  slurm_partition: "'partition_name'"
-  slurm_account: "'account_name'" # Same as sbatch -A. Not all clusters use this.
+  pbs_queue: "'batch'"
 
 # Control number of threads each rule will use.
 #
@@ -134,31 +163,31 @@ set-resources:
     mem_mb: attempt * 50000
   vcf_sv_specification:
     mem_mb: attempt * 200000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   sniffles2plot:
     mem_mb: attempt * 60000
   genotype_svim:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   genotype_cutesv:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   genotype_sniffles:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   genotype_debreak:
     mem_mb: attempt * 40000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   basic_filter:
     mem_mb: attempt * 2000
   jasmine:
     mem_mb: attempt * 200000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   merging_qc:
     mem_mb: attempt * 20000
   svjedigraph:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
+    pbs_queue: "'bigmem'"
   autosomes_sexchromosomes:
     mem_mb: attempt * 2000
   truvari_grm:

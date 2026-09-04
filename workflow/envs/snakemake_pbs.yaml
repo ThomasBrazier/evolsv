@@ -1,0 +1,11 @@
+name: snakemake_pbs
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Environment for running Snakemake itself against profiles/pbs, not an environment
+  # for any rule. It is therefore absent from the CI conda matrix by construction:
+  # .test/list_envs.py derives that matrix from the rules' conda: directives, and no
+  # rule references this file.
+  - snakemake=8.29.3
+  - snakemake-executor-plugin-cluster-generic=1.0.9
