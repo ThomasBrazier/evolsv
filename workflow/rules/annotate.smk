@@ -19,13 +19,18 @@ rule truvari_grm:
         sa=temp("{wdir}/genome/{genome}.fna.sa"),
     conda:
         "../envs/truvari.yaml"
+    params:
+        kmersize=config["grm_kmersize"],
+        min_sv_size=config["min_sv_size"],
+    log:
+        "{wdir}/logs/truvari_grm/{genome}.txt",
     shell:
         """
-        bwa index {input.fasta} # Reference must be indexed
-        tabix {input.vcf} # Tabix .ybi is required by truvari
+        bwa index {input.fasta} 2> {log}
+        tabix {input.vcf} 2>> {log}
         singularity exec workflow/containers/truvari.sif truvari anno grm \
         -i {input.vcf} -r {input.fasta} -o {output.grm_pandas} \
-        -k {config[grm_kmersize]} -m {config[min_sv_size]} -t {resources.cpus_per_task}
+        -k {params.kmersize} -m {params.min_sv_size} -t {resources.cpus_per_task} 2>> {log}
         """
 
 

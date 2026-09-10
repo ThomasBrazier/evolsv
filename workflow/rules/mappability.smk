@@ -108,10 +108,12 @@ rule mappability_bed:
     params:
         merge=config["mappability_merge"],
         mappability=config["mappability_min"],
+    log:
+        "{wdir}/logs/mappability_bed/{genome}.txt",
     shell:
         """
-        awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map}
-        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}
+        awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map} 2> {log}
+        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites} 2>> {log}
         """
 
 
@@ -127,12 +129,14 @@ rule add_mappability:
         callable_mappable_ngmlr="{wdir}/callability/{genome}_ngmlr_callable_mappable.bed",
     conda:
         "../envs/mosdepth.yaml"
+    log:
+        "{wdir}/logs/add_mappability/{genome}.txt",
     shell:
         """
-        bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_ngmlr} | bedtools sort | bedtools merge > {output.callable}
-        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable}
+        bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_ngmlr} | bedtools sort | bedtools merge > {output.callable} 2> {log}
+        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable} 2>> {log}
 
-        bedtools intersect -a {input.callable_bed_minimap2} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_minimap2}
+        bedtools intersect -a {input.callable_bed_minimap2} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_minimap2} 2>> {log}
 
-        bedtools intersect -a {input.callable_bed_ngmlr} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_ngmlr}
+        bedtools intersect -a {input.callable_bed_ngmlr} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_ngmlr} 2>> {log}
         """

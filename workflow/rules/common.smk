@@ -10,7 +10,7 @@ from snakemake.exceptions import WorkflowError
 
 # Empty cells are possible when starting from pre-aligned BAM files, where no SRA
 # accession is needed.
-samplelist = [wdir + "/fastq/" + s + "_sra.fastq.gz" for s in samples["sra"] if s]
+samplelist = [f"{wdir}/fastq/{s}_sra.fastq.gz" for s in samples["sra"] if s]
 fqlist = ",".join(samplelist)
 
 
@@ -85,7 +85,7 @@ def resolve_bam_index(bam):
     samtools writes it either as <bam>.bai or, with `samtools index -o`, as
     <bam without extension>.bai. Both layouts are accepted here.
     """
-    candidates = [bam + ".bai", str(Path(bam).with_suffix(".bai"))]
+    candidates = [f"{bam}.bai", str(Path(bam).with_suffix(".bai"))]
     for candidate in candidates:
         if Path(candidate).is_file():
             return candidate
@@ -103,7 +103,7 @@ if bam_mode:
     # count the same evidence twice (see rules/merging.smk).
     input_bams = {
         aligner: check_readable_file(
-            samples["bam_" + aligner].iloc[0], "bam_" + aligner + " file"
+            samples[f"bam_{aligner}"].iloc[0], f"bam_{aligner} file"
         )
         for aligner in aligners
     }

@@ -26,7 +26,7 @@ samples = samples.set_index("sample_name", drop=False).sort_index()
 genome = samples["genome"].iloc[0]
 sample_id = samples["sample_name"].iloc[0]
 
-wdir = config["datadir"] + genome
+wdir = f"{config['datadir']}{genome}"
 
 aligners = ["minimap2", "ngmlr"]
 

@@ -6,14 +6,18 @@ if not bam_mode:
         and the genome from the NCBI genome assembly database
         """
         output:
-            temp("{wdir}/fastq/{sample}_sra.fastq.gz"),
+            fastq=temp("{wdir}/fastq/{sample}_sra.fastq.gz"),
+        params:
+            outdir=lambda wildcards, output: os.path.dirname(output.fastq),
         conda:
             "../envs/download.yaml"
+        log:
+            "{wdir}/logs/download_sra/{sample}.log",
         shell:
             """
-            mkdir --parents {wdir}/fastq
-            fastq-dump -v --gzip --outdir {wdir}/fastq/ {wildcards.sample}
-            mv "{wdir}/fastq/{wildcards.sample}.fastq.gz" "{wdir}/fastq/{wildcards.sample}_sra.fastq.gz"
+            mkdir --parents {params.outdir}
+            fastq-dump -v --gzip --outdir {params.outdir}/ {wildcards.sample} &> {log}
+            mv "{params.outdir}/{wildcards.sample}.fastq.gz" "{output.fastq}" 2>> {log}
             """
 
 
