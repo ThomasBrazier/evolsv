@@ -22,8 +22,87 @@ require(kableExtra)
 require(ggplot2)
 require(ggpubr)
 require(stringr)
-require(eulerr)
 library(tidyverse)
+```
+
+
+```{r discovery, include=FALSE}
+# Resolve the report parameters. finalQC.R passes them via render(params = ...),
+# but historically the chunks relied on those names leaking in from the caller's
+# environment. Prefer params when set, fall back to the inherited globals, so the
+# document renders both from finalQC.R and standalone.
+if (!is.null(params$wdir) && nzchar(params$wdir)) wdir <- params$wdir
+if (!is.null(params$genome) && nzchar(params$genome)) genome <- params$genome
+
+# knitr sets the working directory to this file's location, hence the ../../ prefix.
+path_in <- function(...) paste0("../../", wdir, "/", ...)
+
+assembly_path  <- path_in("genome/", genome, "_assembly_data_report.jsonl")
+seqreport_path <- path_in("genome/", genome, "_sequence_report.jsonl")
+calls_path     <- path_in(genome, "_final.tsv")
+unmerged_path  <- path_in("merging_QC/", genome, "_unmerged_sv.tsv")
+
+have_assembly  <- file.exists(assembly_path)
+have_seqreport <- file.exists(seqreport_path)
+have_unmerged  <- file.exists(unmerged_path)
+
+# The merged callset is a declared input of rule final_report, so its absence is a
+# pipeline bug rather than a supported configuration: fail immediately and clearly.
+if (!file.exists(calls_path)) {
+  stop("Merged callset not found at ", calls_path,
+       ". rule final_report declares it as an input; check that rule vcf_to_tsv ran.")
+}
+
+# Report the shape of the run rather than assuming it: the set of aligner+caller
+# combinations is whatever workflow/scripts/vcf_to_tsv.sh wrote into the header of
+# <genome>_final.tsv. Its column layout is 6 fixed fields, FORMAT, one column per
+# aligner+caller, then the merged/genotyped sample last.
+FORMAT_COL <- 7
+
+merged <- read.table(calls_path, header = TRUE, sep = "\t", check.names = FALSE)
+
+tool_cols <- names(merged)[(FORMAT_COL + 1):(ncol(merged) - 1)]
+tools <- data.frame(
+  column = tool_cols,
+  # Tool columns are named <aligner>_<caller>; aligner names carry no underscore.
+  aligner = sub("_.*$", "", tool_cols),
+  caller = sub("^[^_]*_", "", tool_cols),
+  stringsAsFactors = FALSE
+)
+aligners <- unique(tools$aligner)
+callers <- unique(tools$caller)
+
+fix.merged <- merged[, 1:(FORMAT_COL - 1)]
+gt.merged <- merged[, FORMAT_COL:ncol(merged)]
+
+fix.merged$sv_type <- as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
+fix.merged$sv_length <- as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
+fix.merged$supp_vec <- as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
+fix.merged$n_supp <- as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-9]+"))))
+fix.merged$jasmine <- ifelse(!is.na(fix.merged$supp_vec), 1, 0)
+
+# Bit i of Jasmine's SUPP_VEC corresponds to tools$column[i]: both orders are set
+# by the order the VCFs are listed in workflow/rules/merging.smk. Decode into a
+# logical matrix once; every per-tool summary below is derived from it.
+supp_raw <- fix.merged$supp_vec
+supp_ok <- !is.na(supp_raw) & nchar(supp_raw) == nrow(tools)
+if (any(!is.na(supp_raw) & nchar(supp_raw) != nrow(tools))) {
+  warning(
+    "SUPP_VEC length does not match the ", nrow(tools),
+    " tool columns of ", basename(calls_path),
+    "; those calls are treated as unsupported."
+  )
+}
+supp_mat <- matrix(FALSE,
+  nrow = length(supp_raw), ncol = nrow(tools),
+  dimnames = list(NULL, tools$column)
+)
+if (any(supp_ok)) {
+  supp_mat[supp_ok, ] <- do.call(rbind, strsplit(supp_raw[supp_ok], "")) == "1"
+}
+
+# Facet layouts follow the number of callers instead of a fixed 4 columns.
+facet_ncol <- max(1, length(callers))
 ```
 
 
@@ -33,7 +112,10 @@ library(tidyverse)
 ## Assembly summary statistics
 
 ```{r assemblysummary, echo = F}
-json = jsonlite::read_json(paste0("../../", wdir, "/genome/", genome, "_assembly_data_report.jsonl"))
+if (!have_assembly) {
+  cat("No assembly report found at", assembly_path, "- section skipped.\n")
+} else {
+json = jsonlite::read_json(assembly_path)
 
 cat("Organism name:", json$organism$organismName, "\n")
 
@@ -54,13 +136,22 @@ cat("Number of scaffolds:", json$assemblyStats$numberOfScaffolds, "\n")
 cat("Scaffold N50 length (Mb):", json$assemblyStats$scaffoldN50/10^6, "\n")
 
 cat("GC percent:", json$assemblyStats$gcPercent, "\n")
+}
 ```
 
 ## Chromosomes
 
 
 ```{r chromosomes, echo = F}
-dat = tidyjson::read_json(paste0("../../", wdir, "/genome/", genome, "_sequence_report.jsonl"), format = "jsonl")
+# genome_size stays NA when the sequence report is absent; the plots below drop the
+# genome-relative axis rather than failing.
+genome_size = NA
+chr = NULL
+
+if (!have_seqreport) {
+  cat("No sequence report found at", seqreport_path, "- section skipped.\n")
+} else {
+dat = tidyjson::read_json(seqreport_path, format = "jsonl")
 chr = data.frame(idx = dat$document.id)
 
 chr$seqname = NA
@@ -78,49 +169,55 @@ for (i in 1:nrow(chr)) {
 }
 
 genome_size = sum(chr$length)
+}
 ```
 
 
 
 ```{r chromosometable, echo=FALSE, message=FALSE, warning=FALSE}
+if (!is.null(chr)) {
 kable(chr[,-1], digits = 2, align = "c", caption = "Summary of chromosome assembly.", col.names = c("Name", "Genbank Accession", "Type", "Length (Mb)", "GC percent"), format = "html", table.attr = "style='width:80%;'") %>% kableExtra::kable_styling()
+}
 ```
 
 
 # Mapping
 
 
-```{r mapping_minimap2, echo = F}
-mapping_minimap2 = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_minimap2_mapping.stats.tsv"))
+```{r mapping, echo = F}
+# One block per aligner actually present, so a run with a single aligner reports
+# that aligner instead of failing on the missing one.
+if (!length(aligners)) {
+  cat("No mapping statistics found in", path_in("mapping_QC"), "\n")
+}
 
-print("Mapping with minimap2")
-print(gsub("\t", " ", mapping_minimap2))
+for (aligner in aligners) {
+  stats_path = path_in("mapping_QC/", genome, "_", aligner, "_mapping.stats.tsv")
+
+  if (!file.exists(stats_path)) {
+    cat("No mapping statistics for", aligner, "- skipped.\n")
+    next
+  }
+
+  print(paste("Mapping with", aligner))
+  print(gsub("\t", " ", readLines(stats_path)))
+}
 ```
 
 
 
 
-```{r mapping_ngmlr, echo = F}
-mapping_ngmlr = readLines(paste0("../../", wdir, "/mapping_QC/", genome, "_ngmlr_mapping.stats.tsv"))
-
-print("Mapping with ngmlr")
-print(gsub("\t", " ", mapping_ngmlr))
-```
-
-
-
-
-The diagnostic plots for the mapping with minimap2 and ngmlr are in the `mapping_QC/` directory.
+The diagnostic plots for the mapping are in the `mapping_QC/` directory, one set per aligner.
 
 
 
 # SV calling
 
 
-The final VCF produced contains 9 samples:
+The final VCF produced contains one sample per aligner + SV caller pair, plus one more:
 
 
-* eight samples are individual callset from a pair of aligner + sv caller
+* each of those samples is the individual callset of a pair of aligner + SV caller
 * the last sample is the final genotype call after merging callsets with Jasmine
 
 
@@ -132,60 +229,21 @@ The callset of each individual tool has been filtered and genotyped with SVjedi-
 
 
 
-```{r loading_final_vcf, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
-# merged = read.vcfR(paste0("../../", wdir, "/", genome, "_filtered.vcf"))
-merged = read.table(paste0("../../", wdir, "/", genome, "_final.tsv"),
-                    header = TRUE, sep = "\t")
-
-# TESTING
-# merged = read.vcfR(paste0("../../", wdir, "/", "test_lightheader.vcf"), check_keys = FALSE,
-#                    verbose = TRUE)
-# merged = read.table(paste0("../../", wdir, "/", "test_lightheader.tsv"),
-#                     header = TRUE, sep = "\t", quote = '"')
-
-# merged = read.table("../../data/GCA_947369205.1/GCA_947369205.1_final.tsv",
-#                     header = TRUE, sep = "\t", quote = '"')
-
-# saveRDS(merged, "../../data/test.Rds")
-# merged = readRDS("../../data/test.Rds")
-# 
-# gt.merged = as.data.frame(merged@gt)
-# fix.merged = as.data.frame(merged@fix)
-fix.merged = merged[,1:6]
-gt.merged = merged[,7:16]
-
-fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
-fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
-
-fix.merged$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
-fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-9]+"))))
-fix.merged$jasmine = ifelse(!is.na(fix.merged$supp_vec), 1, 0)
-```
-
-```{r samplenames, echo = T}
-# sample_names = c("FORMAT", paste(c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
-#                                    "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
-#                                    "ngmlr_cutesv", "ngmlr_debreak"), genome, sep = "_"), genome)
-# names(gt.merged) = sample_names
-```
-
-
 ```{r get_tool_support, echo = FALSE}
-# Get aligner support
-fix.merged$minimap2 = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1", 1, 0)
-fix.merged$ngmlr = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 7) == "1" |
-                               lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
+# Per-aligner and per-caller support, collapsed from the SUPP_VEC matrix built in
+# the discovery chunk. A call counts as supported by an aligner (or a caller) when
+# any tool using it supports the call.
+for (aligner in aligners) {
+  fix.merged[[aligner]] <- as.integer(
+    rowSums(supp_mat[, tools$aligner == aligner, drop = FALSE]) > 0
+  )
+}
 
-# Get SV caller support
-fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1", 1, 0)
-fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1", 1, 0)
-fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 7) == "1", 1, 0)
-fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
+for (caller in callers) {
+  fix.merged[[caller]] <- as.integer(
+    rowSums(supp_mat[, tools$caller == caller, drop = FALSE]) > 0
+  )
+}
 ```
 
 
@@ -196,26 +254,22 @@ After merging, the merged callset is merged with all individual tools callset. T
 
 
 ```{r testMerging, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
-tmp = merged
-tmp$supp_vec = as.vector(gsub("SUPP_VEC=", "", str_match(fix.merged$INFO, "SUPP_VEC=[0-1]+")))
-
+# Rebuild the support vector from the genotype columns and compare it with the one
+# Jasmine recorded. Both are assembled in tools$column order, whatever that order is.
 pattern = "./.:NA:NA:NA:NA:.:.:."
 
-tmp$minimap2_sniffles = ifelse(grepl(pattern, tmp$minimap2_sniffles, fixed = TRUE), "0", "1")
-tmp$minimap2_svim = ifelse(grepl(pattern, tmp$minimap2_svim, fixed = TRUE), "0", "1")
-tmp$minimap2_cutesv = ifelse(grepl(pattern, tmp$minimap2_cutesv, fixed = TRUE), "0", "1")
-tmp$minimap2_debreak = ifelse(grepl(pattern, tmp$minimap2_debreak, fixed = TRUE), "0", "1")
+observed = vapply(
+  tools$column,
+  function(tool) ifelse(grepl(pattern, merged[[tool]], fixed = TRUE), "0", "1"),
+  character(nrow(merged))
+)
+observed = matrix(observed, nrow = nrow(merged), dimnames = list(NULL, tools$column))
 
-tmp$ngmlr_sniffles = ifelse(grepl(pattern, tmp$ngmlr_sniffles, fixed = TRUE), "0", "1")
-tmp$ngmlr_svim = ifelse(grepl(pattern, tmp$ngmlr_svim, fixed = TRUE), "0", "1")
-tmp$ngmlr_cutesv = ifelse(grepl(pattern, tmp$ngmlr_cutesv, fixed = TRUE), "0", "1")
-tmp$ngmlr_debreak = ifelse(grepl(pattern, tmp$ngmlr_debreak, fixed = TRUE), "0", "1")
-
-tmp$valid_supp_vec = unlist(lapply(1:nrow(tmp), function(x) {paste0(tmp[x,8:15], collapse = "")}))
+valid_supp_vec = apply(observed, 1, paste0, collapse = "")
 ```
 
 ```{r, echo = T}
-cat("The percentage of calls successfully merged:", sum(tmp$valid_supp_vec == tmp$supp_vec) / nrow(tmp) * 100, "%\n")
+cat("The percentage of calls successfully merged:", sum(valid_supp_vec == fix.merged$supp_vec, na.rm = TRUE) / nrow(fix.merged) * 100, "%\n")
 ```
 
 
@@ -223,49 +277,31 @@ cat("The percentage of calls successfully merged:", sum(tmp$valid_supp_vec == tm
 ### Parsing the merged callset
 
 ```{r parseSV, echo = F}
-fix.merged$sv_type = as.vector(gsub("OLDTYPE=", "", str_match(fix.merged$INFO, "OLDTYPE=[A-Z]+")))
+# Prefer OLDTYPE (the pre-merging type Jasmine preserves) but keep the SVTYPE parsed
+# in the discovery chunk where OLDTYPE is absent, rather than blanking every type.
+old_type = as.vector(gsub("OLDTYPE=", "", str_match(fix.merged$INFO, "OLDTYPE=[A-Z]+")))
+fix.merged$sv_type = ifelse(is.na(old_type), fix.merged$sv_type, old_type)
 fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[+-]*[0-9]+"))))
 ```
 
 
 ```{r, echo = F}
-# Tidy data frame
-fix.merged1 = fix.merged[fix.merged$minimap2 == 1 & fix.merged$sniffles == 1,]
-fix.merged1$aligner = "minimap2"
-fix.merged1$caller = "sniffles"
-
-fix.merged2 = fix.merged[fix.merged$minimap2 == 1 & fix.merged$svim == 1,]
-fix.merged2$aligner = "minimap2"
-fix.merged2$caller = "svim"
-
-fix.merged3 = fix.merged[fix.merged$minimap2 == 1 & fix.merged$cutesv == 1,]
-fix.merged3$aligner = "minimap2"
-fix.merged3$caller = "cutesv"
-
-fix.merged4 = fix.merged[fix.merged$minimap2 == 1 & fix.merged$debreak == 1,]
-fix.merged4$aligner = "minimap2"
-fix.merged4$caller = "debreak"
-
-fix.merged5 = fix.merged[fix.merged$ngmlr == 1 & fix.merged$sniffles == 1,]
-fix.merged5$aligner = "ngmlr"
-fix.merged5$caller = "sniffles"
-
-fix.merged6 = fix.merged[fix.merged$ngmlr == 1 & fix.merged$svim == 1,]
-fix.merged6$aligner = "ngmlr"
-fix.merged6$caller = "svim"
-
-fix.merged7 = fix.merged[fix.merged$ngmlr == 1 & fix.merged$cutesv == 1,]
-fix.merged7$aligner = "ngmlr"
-fix.merged7$caller = "cutesv"
-
-fix.merged8 = fix.merged[fix.merged$ngmlr == 1 & fix.merged$debreak == 1,]
-fix.merged8$aligner = "ngmlr"
-fix.merged8$caller = "debreak"
-
-tidy_fix = rbind(fix.merged1,fix.merged2,
-                 fix.merged3,fix.merged4,
-                 fix.merged5,fix.merged6,
-                 fix.merged7,fix.merged8)
+# One block per tool, selected on that tool's own SUPP_VEC bit.
+#
+# NOTE this is a deliberate change of behaviour. The previous version selected
+# `aligner == 1 & caller == 1`, i.e. "supported by some tool using this aligner AND
+# by some tool using this caller", which also picked up calls the specific pair never
+# made (e.g. a call from minimap2_svim and ngmlr_sniffles counted towards
+# minimap2_sniffles). Per-tool counts in the figures below therefore change.
+tidy_fix = do.call(rbind, lapply(seq_len(nrow(tools)), function(i) {
+  rows = fix.merged[supp_mat[, tools$column[i]], , drop = FALSE]
+  if (!nrow(rows)) {
+    return(NULL)
+  }
+  rows$aligner = tools$aligner[i]
+  rows$caller = tools$caller[i]
+  rows
+}))
 ```
 
 
@@ -307,7 +343,7 @@ ggplot(tidy_fix, aes(x = caller, y = as.numeric(QUAL), colour = caller, group = 
   geom_violin(width = 1.5, fill = NA, color = "black") +
   coord_trans(y = "log10") +
   xlab("SV caller") + ylab("Quality Score") +
-  facet_wrap(~ aligner, scales = "fixed", nrow = 2) +
+  facet_wrap(~ aligner, scales = "fixed", nrow = max(1, length(aligners))) +
   theme_bw()
 ```
 
@@ -317,7 +353,7 @@ ggplot(tidy_fix, aes(x = as.numeric(QUAL), colour = caller, group = caller)) +
   geom_density() +
   xlab("Quality Score") + ylab("Density") +
   coord_trans(x = "log10") +
-  facet_wrap(~ aligner + caller, scales = "free", ncol = 4) +
+  facet_wrap(~ aligner + caller, scales = "free", ncol = facet_ncol) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
@@ -336,7 +372,7 @@ table(tidy_fix$sv_type, tidy_fix$caller)
 ggplot(tidy_fix, aes(x = sv_type, fill = sv_type, colour = sv_type)) +
   geom_bar() +
   xlab("SV type") + ylab("Count") + labs(fill = "SV type", colour = "SV type") +
-  facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
+  facet_wrap(~ aligner + caller, scales = "fixed", ncol = facet_ncol) +
   theme_bw()
 ```
 
@@ -352,19 +388,25 @@ df$sample_size = df_sample_size$sv_length
   
 df$proportion_genome = df$sv_length/(genome_size * 10^6)
 
-ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type)) +
+p = ggplot(df, aes(x = sv_type, y = sv_length/10^6, fill = sv_type, colour = sv_type)) +
   geom_bar(stat = "identity") +
-  geom_hline(yintercept = genome_size) +
   xlab("SV type") + ylab("Total absolute length (Mb)") +
   labs(fill = "SV type", colour = "SV type") +
-  scale_y_continuous(
-    # Features of the first axis
-    name = "Total absolute length (Mb)",
-    # Add a second axis and specify its features
-    sec.axis = sec_axis(trans=~./genome_size, name="Proportion of the genome")
-  ) +
-  facet_wrap(~ aligner + caller, scales = "fixed", ncol = 4) +
+  facet_wrap(~ aligner + caller, scales = "fixed", ncol = facet_ncol) +
   theme_bw()
+
+# The genome-relative axis needs the sequence report; drop it when unavailable
+# rather than failing on a NA scale.
+if (!is.na(genome_size)) {
+  p = p +
+    geom_hline(yintercept = genome_size) +
+    scale_y_continuous(
+      name = "Total absolute length (Mb)",
+      sec.axis = sec_axis(trans = ~ . / genome_size, name = "Proportion of the genome")
+    )
+}
+
+p
 ```
 
 
@@ -391,75 +433,48 @@ We consider that variants overlapping with less than 25 bp of difference in star
 It can be variants of different types (e.g. DEL vs INS).
 
 ```{r, echo = TRUE}
-unmerged = read_tsv(paste0("../../", wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
+if (!have_unmerged) {
+  cat("No unmerged-SV report found at", unmerged_path, "- section skipped.\n")
+} else {
+unmerged = read_tsv(unmerged_path)
 
 cat("Absolute number of calls UNMERGED:", nrow(unmerged), "\n")
 
 cat("Proportion of calls UNMERGED:", nrow(unmerged) / nrow(fix.merged), "\n")
+}
 ```
 
 
 
-## Venn diagram - All SV types together
+## Agreement between tools
 
-```{r venndiag1, echo = F, fig.width= 12, fig.height=9}
-plot(euler(fix.merged[, colnames(fix.merged) %in% c("minimap2", "ngmlr")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
+
+How many tools support each call, and which combinations agree. This replaces the
+previous Euler diagrams, which could only be drawn for a fixed set of four callers.
+
+
+```{r cosupport, echo = F}
+cat("Number of calls by count of supporting tools:\n")
+print(table(n_tools = rowSums(supp_mat)))
 ```
 
 
-
-```{r venndiag2, echo = F, fig.width= 12, fig.height=9}
-plot(euler(fix.merged[, colnames(fix.merged) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
+```{r cosupport_by_type, echo = F}
+cat("\nCalls supported by each tool, per SV type:\n")
+# Share one level set across tools, so the result is a rectangular table even when
+# a tool never calls a given SV type.
+sv_levels = sort(unique(na.omit(fix.merged$sv_type)))
+print(
+  sapply(tools$column, function(tool) {
+    table(factor(fix.merged$sv_type[supp_mat[, tool]], levels = sv_levels))
+  })
+)
 ```
 
 
-
-## Venn diagram - DEL
-
-
-
-```{r venndiagdel, echo = F, fig.width= 12, fig.height=9}
-fix.merged.del = fix.merged[which(fix.merged$sv_type == "DEL"),]
-plot(euler(fix.merged.del[, colnames(fix.merged.del) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-
-## Venn diagram - INS
-
-
-
-```{r venndiagins, echo = F, fig.width= 12, fig.height=9}
-fix.merged.ins = fix.merged[which(fix.merged$sv_type == "INS"),]
-plot(euler(fix.merged.ins[, colnames(fix.merged.ins) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-## Venn diagram - DUP
-
-
-```{r venndiagdup, echo = F, fig.width= 12, fig.height=9}
-fix.merged.dup = fix.merged[which(fix.merged$sv_type == "DUP"),]
-plot(euler(fix.merged.dup[, colnames(fix.merged.dup) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3)))
-```
-
-
-## Venn diagram - INV
-
-
-```{r venndiaginv, echo = F, fig.width= 12, fig.height=9}
-fix.merged.inv = fix.merged[which(fix.merged$sv_type == "INV"),]
-try(plot(euler(fix.merged.inv[, colnames(fix.merged.inv) %in% c("svim", "cutesv", "sniffles", "debreak")], shape = "ellipse"),
-     quantities = TRUE,
-     fills = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3), alpha('#ff4500',0.3))))
+```{r cosupport_aligner_caller, echo = F}
+cat("\nCalls supported by each aligner and caller:\n")
+print(table(tidy_fix$aligner, tidy_fix$caller))
 ```
 
 
@@ -479,8 +494,9 @@ colnames(gt.merged)[-1]
 
 
 ```{r genotyping, echo = F}
-# Only the final callset, all tools merged
-gt.geno = gt.merged[,c(1, 10)]
+# Only the final callset, all tools merged: FORMAT plus the last sample, whatever
+# the number of tool columns in between.
+gt.geno = gt.merged[, c(1, ncol(gt.merged))]
 ```
 
 
@@ -550,15 +566,42 @@ ggarrange(p1, p2, nrow = 2)
 
 
 ```{r parsinggeno, echo=FALSE, message=FALSE, warning=FALSE}
-gt.geno$GT = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 1))
-gt.geno$AD = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 7))
-gt.geno$DP = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 6))
-gt.geno$AD_REF = as.numeric(unlist(lapply(strsplit(gt.geno$AD, ","), `[[`, 1)))
-gt.geno$AD_ALT = as.numeric(unlist(lapply(strsplit(gt.geno$AD, ","), `[[`, 2)))
-gt.geno$PL = unlist(lapply(strsplit(gt.geno[,2], ":"), `[[`, 8))
-gt.geno$PL_HOMREF = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 1)))
-gt.geno$PL_HET = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 2)))
-gt.geno$PL_HOMALT = as.numeric(unlist(lapply(strsplit(gt.geno$PL, ","), `[[`, 3)))
+# Look the subfields up by name in the FORMAT column rather than at fixed offsets,
+# so the report survives a genotyper emitting a different FORMAT layout.
+format_keys = strsplit(as.character(gt.geno[[1]][1]), ":")[[1]]
+
+get_field = function(values, key) {
+  i = match(key, format_keys)
+  if (is.na(i)) {
+    warning("FORMAT field '", key, "' is absent; related figures will be empty.")
+    return(rep(NA_character_, length(values)))
+  }
+  vapply(
+    strsplit(as.character(values), ":"),
+    function(v) if (length(v) >= i) v[i] else NA_character_,
+    character(1)
+  )
+}
+
+# Split a comma-separated subfield (AD, PL) into its nth value.
+get_part = function(values, n) {
+  as.numeric(vapply(
+    strsplit(values, ","),
+    function(v) if (length(v) >= n) v[n] else NA_character_,
+    character(1)
+  ))
+}
+
+gt.geno$GT = get_field(gt.geno[[2]], "GT")
+gt.geno$AD = get_field(gt.geno[[2]], "AD")
+gt.geno$DP = get_field(gt.geno[[2]], "DP")
+gt.geno$PL = get_field(gt.geno[[2]], "PL")
+
+gt.geno$AD_REF = get_part(gt.geno$AD, 1)
+gt.geno$AD_ALT = get_part(gt.geno$AD, 2)
+gt.geno$PL_HOMREF = get_part(gt.geno$PL, 1)
+gt.geno$PL_HET = get_part(gt.geno$PL, 2)
+gt.geno$PL_HOMALT = get_part(gt.geno$PL, 3)
 ```
 
 
@@ -730,62 +773,34 @@ They can be used downstream to weigth any measure of confidence you have in a ca
 
 
 ```{r, echo = T}
-# Build a matrix of calls per tool
-# "minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
-#                                    "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
-#                                    "ngmlr_cutesv", "ngmlr_debreak"
+# Build a matrix of calls per tool, one column per entry in `tools`.
 genotype = fix.merged[,c(1:3, 7)]
 
-gen = unlist(lapply(strsplit(gt.merged$minimap2_sniffles, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$minimap2_sniffles = gen
+call_class = function(values) {
+  gen = vapply(strsplit(as.character(values), ":"), `[`, character(1), 1)
+  ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM"))
+}
 
-gen = unlist(lapply(strsplit(gt.merged$minimap2_svim, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$minimap2_svim = gen
-
-gen = unlist(lapply(strsplit(gt.merged$minimap2_cutesv, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$minimap2_cutesv = gen
-
-gen = unlist(lapply(strsplit(gt.merged$minimap2_debreak, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$minimap2_debreak = gen
-
-
-
-gen = unlist(lapply(strsplit(gt.merged$ngmlr_sniffles, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$ngmlr_sniffles = gen
-
-gen = unlist(lapply(strsplit(gt.merged$ngmlr_svim, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$ngmlr_svim = gen
-
-gen = unlist(lapply(strsplit(gt.merged$ngmlr_cutesv, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$ngmlr_cutesv = gen
-
-gen = unlist(lapply(strsplit(gt.merged$ngmlr_debreak, ":"), `[[`, 1))
-gen = ifelse(gen == "0/1", "HET", ifelse(gen == "./.", "MISSING", "HOM") )
-genotype$ngmlr_debreak = gen
+for (tool in tools$column) {
+  genotype[[tool]] = call_class(gt.merged[[tool]])
+}
 
 # Estimate precision, recall and F1 score
-performance = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
-                                   "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
-                                   "ngmlr_cutesv", "ngmlr_debreak"),
+performance = data.frame(tool = tools$column,
                          n_calls = NA,
                          true_positive = NA,
                          false_positive = NA,
-                         false_negative = NA)
+                         false_negative = NA,
+                         stringsAsFactors = FALSE)
 
 n_calls = nrow(genotype)
+
+het_in_one_tool = apply(genotype[, tools$column, drop = FALSE], 1, function(x) {"HET" %in% x})
 
 for (i in 1:nrow(performance)) {
   performance$n_calls[i] = sum(genotype[,performance$tool[i]] != "MISSING")
   performance$true_positive[i] = sum(genotype[,performance$tool[i]] == "HET")
   performance$false_positive[i] = sum(genotype[,performance$tool[i]] == "HOM")
-  het_in_one_tool = apply(genotype, 1, function(x) {"HET" %in% x})
   performance$false_negative[i] = sum(genotype[,performance$tool[i]] == "MISSING" & het_in_one_tool)
 }
 
@@ -803,24 +818,26 @@ performance$f1 = 2 * ((performance$precision * performance$recall) / (performanc
 performance$sv_type = "all"
 
 
-for (type in c("DEL", "INS", "DUP", "INV")) {
+# SV types come from the data rather than a fixed list, so a callset without INV
+# (or with a type this pipeline has not seen before) is reported correctly.
+for (type in sort(unique(na.omit(genotype$sv_type)))) {
   # Estimate precision, recall and F1 score
-  performance_per_type = data.frame(tool = c("minimap2_sniffles", "minimap2_svim", "minimap2_cutesv",
-                                     "minimap2_debreak", "ngmlr_sniffles", "ngmlr_svim",
-                                     "ngmlr_cutesv", "ngmlr_debreak"),
+  performance_per_type = data.frame(tool = tools$column,
                            n_calls = NA,
                            true_positive = NA,
                            false_positive = NA,
-                           false_negative = NA)
-  
-  genotype_subset = genotype[genotype$sv_type == type,]
+                           false_negative = NA,
+                           stringsAsFactors = FALSE)
+
+  genotype_subset = genotype[which(genotype$sv_type == type),]
   # n_calls = nrow(genotype_subset)
-  
+
+  het_in_one_tool = apply(genotype_subset[, tools$column, drop = FALSE], 1, function(x) {"HET" %in% x})
+
   for (i in 1:nrow(performance_per_type)) {
     performance_per_type$n_calls[i] = sum(genotype_subset[,performance_per_type$tool[i]] != "MISSING")
     performance_per_type$true_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HET")
     performance_per_type$false_positive[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "HOM")
-    het_in_one_tool = apply(genotype_subset, 1, function(x) {"HET" %in% x})
     performance_per_type$false_negative[i] = sum(genotype_subset[,performance_per_type$tool[i]] == "MISSING" & het_in_one_tool)
   }
   
@@ -846,8 +863,13 @@ kable(performance, digits = 3, align = "c")
 
 
 ```{r, echo = F}
-# Save the performance output
-write.table(performance, paste0("../../", wdir, "/performance/", genome, "_performance.tsv"),
+# Save the performance output. This file is a declared output of rule final_report,
+# so it must be written even when the directory does not exist yet (standalone runs;
+# under Snakemake the parent directory is created for us).
+performance_path = path_in("performance/", genome, "_performance.tsv")
+dir.create(dirname(performance_path), showWarnings = FALSE, recursive = TRUE)
+
+write.table(performance, performance_path,
             quote = F, sep = "\t", row.names = F, col.names = T)
 ```
 
@@ -896,7 +918,7 @@ ggplot(fix.merged, aes(x = as.numeric(POS)/10^6, y = as.numeric(sv_support))) +
   geom_smooth(method = "gam", se = T) +
   xlab("Position (Mb)") + ylab("SV support for allele variant") +
   facet_wrap(~ CHROM, scales = "free_y", ncol = 3) +
-  scale_y_continuous(breaks = c(1:8), labels = as.character(1:8)) +
+  scale_y_continuous(breaks = seq_len(nrow(tools)), labels = as.character(seq_len(nrow(tools)))) +
   theme_bw()
 ```
 
