@@ -1,20 +1,18 @@
 name: nanoplot
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - nanoplot
- - openssl
- - htslib
- - pysam
- - conda-forge::plotly
- - python >=3.9
- - choreographer >=1.0.5
- - logistro >=1.0.8
- - orjson >=3.10.15
- - conda-forge::python-chromedriver-binary
- - pip
- - pip:
-    - kaleido>=1.0.0
-
-
+  - nanoplot
+  - openssl
+  - htslib
+  - pysam
+  - conda-forge::plotly
+  - python >=3.9
+  - choreographer >=1.0.5
+  - logistro >=1.0.8
+  - orjson >=3.10.15
+  - conda-forge::python-chromedriver-binary
+  - pip
+  - pip:
+      - kaleido>=1.0.0

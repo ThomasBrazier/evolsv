@@ -1,10 +1,10 @@
 # CONFIG
 # Directory setup
-datadir: 'data/' # The directory where data and results must be stored
+datadir: "data/" # The directory where data and results must be stored
 bigtmp: "tmp/" #Set to a path with lots of free space to use for commands that require large amounts of temp space; defaults to system tmpdir if empty
 
 # SAMPLE
-samples: 'config/samples_test.tsv' # The sample files with sample name and SRA number of the long-read SRA archive
+samples: "config/samples_test.tsv" # The sample files with sample name and SRA number of the long-read SRA archive
 # genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
 # INPUT MODE
@@ -32,7 +32,6 @@ minsvlen-screen-ratio: 0.9 # minsvlen-screen-ratio N Minimum length for SV candi
 mapq: 25 # mapq N Alignments with mapping quality lower than this value will be ignored (default: 25)
 cluster-binsize: 100 # cluster-binsize N Initial screening bin size in bp (default: 100)
 
-
 # SVIM specific
 min_mapq: 20 # min_mapq MIN_MAPQ   Minimum mapping quality of reads to consider (default: 20). Reads with a lower mapping quality are ignored.
 segment_gap_tolerance: 10 #  Maximum tolerated gap between adjacent alignment segments (default: 10)
@@ -42,13 +41,10 @@ minimum_depth: 10 # minimum_depth MINIMUM_DEPTH Minimum total read depth for gen
 svim_quality: 10 # Minimum SV quality score in SVIM for filtering out the callset
 svim_min_read_support: 10 # Minimum read support of 10 (similar to Sniffles) or 2 (sensitive filtering)
 
-
 # CuteSV specific
 # The four clustering parameters come from the sequencing_technology preset above
 max_size: -1
 min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum length of SV signal to be extracted.[10]
-
-
 
 # DeBreak specific
 # If you specify coverage of dataset with --depth, DeBreak will calculate min_support according to the table.
@@ -59,17 +55,13 @@ min_siglength: 10 # -sl MIN_SIGLENGTH, --min_siglength MIN_SIGLENGTH Minimum len
 # --rescue_large_ins    rescue large INS. wtdbg2,minimap2,ref required
 # --poa                 POA for accurate breakpoint. wtdbg2,minimap2,ref required.
 
-
-
 # Merging with Jasmine/IRIS
-
 
 # Samplot Diagnostic plot
 n_samplot: 100 # The number of SVs randomly sampled to plot with Samplot
 
 # Genotyping with SVJedi-graph
 svjedigraph_minsupport: 3 # Minimum number of alignments to genotype a SV (default: 3>=)
-
 
 # Mosdepth
 quantize_cov_threshold_lower: 10 # Must be integer

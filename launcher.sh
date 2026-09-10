@@ -25,7 +25,7 @@ species=$1
 # . /local/env/envconda.sh
 # source activate snakemake
 module load conda
-source activate snakemake_v2
+source activate snakemake
 
 
 echo "Snakemake version"

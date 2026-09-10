@@ -23,17 +23,17 @@ rule stage_bam:
     Validation runs first, so a rejected BAM never leaves a canonical path behind.
     """
     input:
-        bam = lambda wildcards: input_bams[wildcards.aligner],
-        bai = lambda wildcards: input_bais[wildcards.aligner],
-        fai = "{wdir}/genome/{genome}.fna.fai"
+        bam=lambda wildcards: input_bams[wildcards.aligner],
+        bai=lambda wildcards: input_bais[wildcards.aligner],
+        fai="{wdir}/genome/{genome}.fna.fai",
     output:
-        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
-        report = "{wdir}/bam/{genome}_{aligner}_bam_check.txt"
+        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
+        report="{wdir}/bam/{genome}_{aligner}_bam_check.txt",
     conda:
         "../envs/bamcheck.yaml"
     log:
-        "{wdir}/logs/{genome}_{aligner}_stage_bam.log"
+        "{wdir}/logs/{genome}_{aligner}_stage_bam.log",
     shell:
         """
         mkdir --parents {wdir}/bam
@@ -63,11 +63,11 @@ rule stage_fastq:
     matches what rule merge_fastq does in FASTQ mode.
     """
     input:
-        fastq = input_fastqs
+        fastq=input_fastqs,
     output:
-        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz"
+        merged_fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
     log:
-        "{wdir}/logs/{genome}_stage_fastq.log"
+        "{wdir}/logs/{genome}_stage_fastq.log",
     shell:
         """
         mkdir --parents {wdir}/fastq

@@ -3,20 +3,20 @@ rule svjedigraph:
     Use SVjedi-graph on the merged dataset to genotype SVs
     """
     input:
-        merged = "{wdir}/merging/{genome}_merged.vcf",
-        fasta = "{wdir}/genome/{genome}.fna",
-        merged_fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz",
-        sampleids = "{wdir}/{genome}.samples"
+        merged="{wdir}/merging/{genome}_merged.vcf",
+        fasta="{wdir}/genome/{genome}.fna",
+        merged_fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
+        sampleids="{wdir}/{genome}.samples",
     output:
-        vcf = temp("{wdir}/genotype/{genome}_merged_genotype_tmp.vcf"),
-        vcf_renamed = temp("{wdir}/genotype/{genome}_merged_genotype.vcf"),
-        gfa = temp("{wdir}/genotype/{genome}_merged.gfa"),
-        gaf = temp("{wdir}/genotype/{genome}_merged.gaf"),
-        aln = "{wdir}/genotype/{genome}_merged_informative_aln.json"
+        vcf=temp("{wdir}/genotype/{genome}_merged_genotype_tmp.vcf"),
+        vcf_renamed=temp("{wdir}/genotype/{genome}_merged_genotype.vcf"),
+        gfa=temp("{wdir}/genotype/{genome}_merged.gfa"),
+        gaf=temp("{wdir}/genotype/{genome}_merged.gaf"),
+        aln="{wdir}/genotype/{genome}_merged_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_svjedigraph.log"
+        "{wdir}/logs/{genome}_svjedigraph.log",
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
@@ -33,20 +33,20 @@ rule autosomes_sexchromosomes:
     Remove MT and Un chromosomes
     Get the names of sex chromosomes and autosomes to copy in separate vcf files
     """
-    input: 
-        seq = "{wdir}/genome/{genome}_sequence_report.jsonl"
-    output: 
-        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
-        autosomes = "{wdir}/genome/{genome}.autosomes",
-        chromosome_names = "{wdir}/genome/{genome}.chromosomes"
+    input:
+        seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+    output:
+        sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
+        autosomes="{wdir}/genome/{genome}.autosomes",
+        chromosome_names="{wdir}/genome/{genome}.chromosomes",
     conda:
         "../envs/Renv.yaml"
     params:
-        seq = "{wdir}/genome/{genome}_sequence_report.jsonl",
-        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
-        autosomes = "{wdir}/genome/{genome}.autosomes",
-        scaffolds_to_exclude = config["scaffolds_to_exclude"],
-        chromosome_names = "{wdir}/genome/{genome}.chromosomes"
+        seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
+        autosomes="{wdir}/genome/{genome}.autosomes",
+        scaffolds_to_exclude=config["scaffolds_to_exclude"],
+        chromosome_names="{wdir}/genome/{genome}.chromosomes",
     script:
         "../scripts/autosomes_sexchromosomes.R"
 
@@ -56,15 +56,17 @@ rule all_samples_vcf:
     Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
     """
     input:
-        jasmine = "{wdir}/merging/{genome}_merged.vcf",
-        svjedi = "{wdir}/genotype/{genome}_merged_genotype.vcf",
-        genome_index="{wdir}/genome/{genome}.fna.fai"
+        jasmine="{wdir}/merging/{genome}_merged.vcf",
+        svjedi="{wdir}/genotype/{genome}_merged_genotype.vcf",
+        genome_index="{wdir}/genome/{genome}.fna.fai",
     output:
-        allsamples = temp("{wdir}/{genome}_allsamples.vcf"),
-        jasmine_reheadered = temp("{wdir}/merging/{genome}_reheadered.vcf"),
-        jasmine_gz = temp("{wdir}/merging/{genome}_merged.vcf.gz"),
-        svjedi_reheadered = temp("{wdir}/genotype/{genome}_merged_genotype_reheadered.vcf"),
-        svjedi_gz = temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz")
+        allsamples=temp("{wdir}/{genome}_allsamples.vcf"),
+        jasmine_reheadered=temp("{wdir}/merging/{genome}_reheadered.vcf"),
+        jasmine_gz=temp("{wdir}/merging/{genome}_merged.vcf.gz"),
+        svjedi_reheadered=temp(
+            "{wdir}/genotype/{genome}_merged_genotype_reheadered.vcf"
+        ),
+        svjedi_gz=temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -95,18 +97,18 @@ rule final_vcf:
     Separate autosomes and sex chromosomes
     """
     input:
-        vcf = "{wdir}/{genome}_allsamples.vcf",
-        sexchromosomes = "{wdir}/genome/{genome}.sexchromosomes",
-        autosomes = "{wdir}/genome/{genome}.autosomes"
+        vcf="{wdir}/{genome}_allsamples.vcf",
+        sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
+        autosomes="{wdir}/genome/{genome}.autosomes",
     output:
-        final_tmp = temp("{wdir}/{genome}_final_tmp.vcf"),
-        final = "{wdir}/{genome}_final.vcf",
-        final_sexchr = "{wdir}/{genome}_final_sexchr.vcf"   
+        final_tmp=temp("{wdir}/{genome}_final_tmp.vcf"),
+        final="{wdir}/{genome}_final.vcf",
+        final_sexchr="{wdir}/{genome}_final_sexchr.vcf",
     threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"
     log:
-        "{wdir}/logs/{genome}_final_filtering.log"
+        "{wdir}/logs/{genome}_final_filtering.log",
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.final_tmp} {input.vcf}
@@ -121,6 +123,3 @@ rule final_vcf:
         bcftools view -T {input.sexchromosomes} -l 0 -o {output.final_sexchr} {input.vcf}
         fi
         """
-
-
-

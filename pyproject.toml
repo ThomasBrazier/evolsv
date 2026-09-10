@@ -21,3 +21,9 @@ testpaths = [".test"]
 # .test/ has no __init__.py, so importmode=prepend puts it on sys.path and lets the
 # tests import list_envs.py directly.
 addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.6",
+]

@@ -3,24 +3,24 @@ rule jasmine:
     Merge the VCF files obtained by the three SV callers
     """
     input:
-        sniffles_minimap2 = "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
-        svim_minimap2 = "{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf",
-        cutesv_minimap2 = "{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
-        debreak_minimap2 = "{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf",
-        sniffles_ngmlr = "{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
-        svim_ngmlr = "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
-        cutesv_ngmlr = "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
-        debreak_ngmlr = "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
-        fasta = "{wdir}/genome/{genome}.fna",
-        fasta_fai = "{wdir}/genome/{genome}.fna.fai"
+        sniffles_minimap2="{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
+        svim_minimap2="{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf",
+        cutesv_minimap2="{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
+        debreak_minimap2="{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf",
+        sniffles_ngmlr="{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
+        svim_ngmlr="{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
+        cutesv_ngmlr="{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
+        debreak_ngmlr="{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
+        fasta="{wdir}/genome/{genome}.fna",
+        fasta_fai="{wdir}/genome/{genome}.fna.fai",
     output:
-        tempvcf = temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
-        vcf = "{wdir}/merging/{genome}_merged.vcf",
-        vcf_annotated = temp("{wdir}/merging/{genome}_annotated.vcf"),
-        vcfgz = "{wdir}/merging/{genome}_merged.vcf.gz",
-        vcftabix = "{wdir}/merging/{genome}_merged.vcf.gz.tbi",
-        vcflist = "{wdir}/merging/{genome}_vcf_list.txt",
-        bamlist = "{wdir}/merging/{genome}_bam_list.txt"
+        tempvcf=temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
+        vcf="{wdir}/merging/{genome}_merged.vcf",
+        vcf_annotated=temp("{wdir}/merging/{genome}_annotated.vcf"),
+        vcfgz="{wdir}/merging/{genome}_merged.vcf.gz",
+        vcftabix="{wdir}/merging/{genome}_merged.vcf.gz.tbi",
+        vcflist="{wdir}/merging/{genome}_vcf_list.txt",
+        bamlist="{wdir}/merging/{genome}_bam_list.txt",
     conda:
         "../envs/jasminesv.yaml"
     shell:

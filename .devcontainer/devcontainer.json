@@ -5,5 +5,7 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/va-h/devcontainers-features/uv:1": {}
   },
-  "postCreateCommand": "uv sync --all-extras"
+  "postCreateCommand": "uv sync --all-extras",
+  "postCreateCommand": "uv add --dev pytest ruff",
+  "postCreateCommand": "curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash"
 }

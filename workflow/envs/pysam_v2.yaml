@@ -1,8 +1,8 @@
 name: pysam
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - python
- - pysam==0.10
- - vcftools
+  - python
+  - pysam==0.10
+  - vcftools

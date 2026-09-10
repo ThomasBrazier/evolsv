@@ -3,15 +3,19 @@ rule fastqc:
     Report data quality for long reads
     """
     input:
-        expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"]),
     output:
-        expand("{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]),
-        expand("{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"])
+        expand(
+            "{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]
+        ),
+        expand(
+            "{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]
+        ),
     threads: workflow.cores
     conda:
         "../envs/fastqc.yaml"
     log:
-        expand("{wdir}/{sample}.fastqc.log", wdir=wdir, sample=samples["sra"])
+        expand("{wdir}/{sample}.fastqc.log", wdir=wdir, sample=samples["sra"]),
     shell:
         """
         mkdir -p {wdir}/fastqc
@@ -24,9 +28,9 @@ rule nanoplot:
     Quality control of raw data
     """
     input:
-        fastq = "{wdir}/fastq/{sample}_sra.fastq.gz",
-        html = "{wdir}/fastqc/{sample}_sra_fastqc.html",
-        qczip = "{wdir}/fastqc/{sample}_sra_fastqc.zip",
+        fastq="{wdir}/fastq/{sample}_sra.fastq.gz",
+        html="{wdir}/fastqc/{sample}_sra_fastqc.html",
+        qczip="{wdir}/fastqc/{sample}_sra_fastqc.zip",
     output:
         "{wdir}/nanoplot/{sample}_NanoStats.txt",
         # "{wdir}/nanoplot/{sample}_LengthvsQualityScatterPlot_dot.html",
@@ -42,13 +46,13 @@ rule nanoplot:
         # "{wdir}/nanoplot/{sample}_WeightedHistogramReadlength.png",
         "{wdir}/nanoplot/{sample}_WeightedLogTransformed_HistogramReadlength.html",
         # "{wdir}/nanoplot/{sample}_WeightedLogTransformed_HistogramReadlength.png",
-        "{wdir}/nanoplot/{sample}_Yield_By_Length.html"
+        "{wdir}/nanoplot/{sample}_Yield_By_Length.html",
         # "{wdir}/nanoplot/{sample}_Yield_By_Length.png"
     threads: workflow.cores
     conda:
         "../envs/nanoplot.yaml"
     log:
-        "{wdir}/logs/{sample}_nanoplot.log"
+        "{wdir}/logs/{sample}_nanoplot.log",
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wdir}/nanoplot/ --prefix '{wildcards.sample}_' --N50 --no_static --verbose --title {wildcards.sample}
@@ -65,9 +69,9 @@ rule filter_reads_chopper:
     --tailcrop      Trim N nucleotides from the end of a read
     """
     input:
-        reads = "{wdir}/fastq/{genome}.fastq.gz"
+        reads="{wdir}/fastq/{genome}.fastq.gz",
     output:
-        filtered_reads = temp("{wdir}/fastq/{genome}_filtered.fastq.gz")
+        filtered_reads=temp("{wdir}/fastq/{genome}_filtered.fastq.gz"),
     conda:
         "../envs/chopper.yaml"
     shell:
@@ -87,7 +91,7 @@ rule nanoplot_after_filtering:
     Quality control after filtering long reads
     """
     input:
-        fastq = "{wdir}/fastq/{genome}_filtered.fastq.gz"
+        fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
     output:
         "{wdir}/nanoplot_filtered/{genome}_NanoStats.txt",
         "{wdir}/nanoplot_filtered/{genome}_LengthvsQualityScatterPlot_dot.html",
@@ -103,12 +107,12 @@ rule nanoplot_after_filtering:
         # "{wdir}/nanoplot_filtered/{genome}_WeightedHistogramReadlength.png",
         "{wdir}/nanoplot_filtered/{genome}_WeightedLogTransformed_HistogramReadlength.html",
         # "{wdir}/nanoplot_filtered/{genome}_WeightedLogTransformed_HistogramReadlength.png",
-        "{wdir}/nanoplot_filtered/{genome}_Yield_By_Length.html"
+        "{wdir}/nanoplot_filtered/{genome}_Yield_By_Length.html",
         # "{wdir}/nanoplot_filtered/{genome}_Yield_By_Length.png"
     conda:
         "../envs/nanoplot.yaml"
     log:
-        "{wdir}/logs/{genome}_nanoplot_filtered.log"
+        "{wdir}/logs/{genome}_nanoplot_filtered.log",
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wdir}/nanoplot_filtered/ --prefix '{wildcards.genome}_' --N50 --no_static --verbose --title {wildcards.genome}

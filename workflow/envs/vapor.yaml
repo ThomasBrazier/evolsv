@@ -1,16 +1,16 @@
 name: vapor
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - python=3.8
- - samtools
- - cython
- - setuptools
- - pip
- - r-base
- - pip:
-     - setuptools
-     - Cython
-     - rpy2
-     - "git+https://github.com/ThomasBrazier/vapor.git#egg=vapor"
+  - python=3.8
+  - samtools
+  - cython
+  - setuptools
+  - pip
+  - r-base
+  - pip:
+      - setuptools
+      - Cython
+      - rpy2
+      - "git+https://github.com/ThomasBrazier/vapor.git#egg=vapor"

@@ -7,16 +7,16 @@ rule truvari_grm:
     but instead will create a pandas DataFrame and save it to a joblib object.
     """
     input:
-        vcf = "{wdir}/{genome}_final.vcf.gz",
-        fasta = "{wdir}/genome/{genome}.fna"
+        vcf="{wdir}/{genome}_final.vcf.gz",
+        fasta="{wdir}/genome/{genome}.fna",
     output:
-        grm_pandas = "{wdir}/annotate_grm/{genome}_grm.jl",
-        tabix = "{wdir}/{genome}_final.vcf.gz.tbi",
-        amb = temp("{wdir}/genome/{genome}.fna.amb"),
-        ann = temp("{wdir}/genome/{genome}.fna.ann"),
-        bwt = temp("{wdir}/genome/{genome}.fna.bwt"),
-        pac = temp("{wdir}/genome/{genome}.fna.pac"),
-        sa = temp("{wdir}/genome/{genome}.fna.sa")
+        grm_pandas="{wdir}/annotate_grm/{genome}_grm.jl",
+        tabix="{wdir}/{genome}_final.vcf.gz.tbi",
+        amb=temp("{wdir}/genome/{genome}.fna.amb"),
+        ann=temp("{wdir}/genome/{genome}.fna.ann"),
+        bwt=temp("{wdir}/genome/{genome}.fna.bwt"),
+        pac=temp("{wdir}/genome/{genome}.fna.pac"),
+        sa=temp("{wdir}/genome/{genome}.fna.sa"),
     conda:
         "../envs/truvari.yaml"
     shell:

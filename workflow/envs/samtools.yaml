@@ -1,9 +1,9 @@
 name: samtools
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - samtools<1.10
- - bcftools
- - htslib
- - gnuplot==5.2.6
+  - samtools<1.10
+  - bcftools
+  - htslib
+  - gnuplot==5.2.6

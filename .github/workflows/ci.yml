@@ -31,12 +31,21 @@ jobs:
   Formatting:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    # super-linter reports one commit status per linter; without statuses: write those
+    # calls come back 403 and clutter the log.
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Formatting
-        uses: super-linter/super-linter@v7
+        # Pinned rather than @v7: the tag floats, and an upstream bump of snakefmt or
+        # prettier would turn this job red with no change on our side. The pin also has
+        # to match the versions documented in CLAUDE.md section 4 — v7.4.0 ships
+        # snakefmt 0.10.3 and prettier 3.5.3.
+        uses: super-linter/super-linter@v7.4.0
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main

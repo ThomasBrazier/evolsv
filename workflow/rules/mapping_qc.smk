@@ -13,12 +13,12 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
+        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
     output:
-        stats = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats",
-        stattsv = "{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
-        plot = "{wdir}/mapping_QC/{genome}_{aligner}_mapping_plot.html"
+        stats="{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats",
+        stattsv="{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
+        plot="{wdir}/mapping_QC/{genome}_{aligner}_mapping_plot.html",
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -36,12 +36,12 @@ rule samtools_coverage:
     Mapping coverage along the genome
     """
     input:
-        bam = "{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai = "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai"
+        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
     output:
-        coverage = "{wdir}/mapping_QC/{genome}_{aligner}_coverage.tsv",
-        coverage_hist = "{wdir}/mapping_QC/{genome}_{aligner}_coverage_hist.txt",
-        coverage_depth = "{wdir}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt"
+        coverage="{wdir}/mapping_QC/{genome}_{aligner}_coverage.tsv",
+        coverage_hist="{wdir}/mapping_QC/{genome}_{aligner}_coverage_hist.txt",
+        coverage_depth="{wdir}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt",
     conda:
         "../envs/samtools_coverage.yaml"
     shell:

@@ -1,8 +1,8 @@
 name: svjedi-graph
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - svjedi-graph
- - minigraph
- - bcftools
+  - svjedi-graph
+  - minigraph
+  - bcftools

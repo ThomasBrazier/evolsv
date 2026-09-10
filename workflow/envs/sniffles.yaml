@@ -1,15 +1,15 @@
 name: sniffles
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - python=3.11
- - sniffles
- - bcftools
- - gcc
- - pip
- - pandas
- - openssl
- - pysam
- - pip:
-   - sniffles2-plot
+  - python=3.11
+  - sniffles
+  - bcftools
+  - gcc
+  - pip
+  - pandas
+  - openssl
+  - pysam
+  - pip:
+      - sniffles2-plot

@@ -73,6 +73,28 @@ Rscript -e 'styler::style_pkg()'
 ruff check .
 ```
 
+### Formatting (Snakemake + YAML)
+
+The `Formatting` job in `.github/workflows/ci.yml` runs these two formatters through
+super-linter, so run them before pushing or CI goes red:
+
+```bash
+# Snakemake. Use --python 3.12: the project venv is 3.14 and its stdlib is missing
+# `gettext`, which snakefmt's dependency on click needs to import.
+uvx --python 3.12 --from 'snakefmt==0.10.3' snakefmt \
+  workflow/Snakefile workflow/common.smk workflow/rules/*.smk
+
+# YAML
+git ls-files '*.yaml' '*.yml' | xargs npx --yes prettier@3.5.3 --write
+```
+
+Swap `snakefmt <files>` for `snakefmt --check <files>` and `--write` for `--check` to
+check without rewriting, which is what CI does.
+
+Both versions are pinned to match `super-linter/super-linter@v7.4.0`; if that pin moves,
+move these too. Do **not** use snakefmt 2.x — it also rewrites shell redirections
+(`… > {output}` → `… >{output}`), producing a diff the pinned CI version rejects.
+
 ---
 
 ## 5. Code style

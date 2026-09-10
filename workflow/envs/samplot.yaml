@@ -1,6 +1,6 @@
 name: samplot
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - samplot
+  - samplot

@@ -112,9 +112,7 @@ if bam_mode:
     }
     # Reads are still needed: SVJedi-graph genotypes by mapping reads onto a
     # variation graph, which a linear BAM cannot substitute for.
-    input_fastqs = [
-        check_readable_file(f, "fastq file") for f in samples["fastq"] if f
-    ]
+    input_fastqs = [check_readable_file(f, "fastq file") for f in samples["fastq"] if f]
     if not input_fastqs:
         raise WorkflowError(
             "start_from_bam is set but no 'fastq' file was declared in {}. "

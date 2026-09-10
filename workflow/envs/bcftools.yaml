@@ -1,9 +1,8 @@
 name: bcftools
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - bcftools
- - vcftools
- - htslib
-
+  - bcftools
+  - vcftools
+  - htslib

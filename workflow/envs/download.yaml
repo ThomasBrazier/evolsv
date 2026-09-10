@@ -1,8 +1,8 @@
 name: download
 channels:
- - bioconda
- - conda-forge
+  - bioconda
+  - conda-forge
 dependencies:
- - sra-tools==3.1.1
- - ncbi-datasets-cli
- - samtools
+  - sra-tools==3.1.1
+  - ncbi-datasets-cli
+  - samtools

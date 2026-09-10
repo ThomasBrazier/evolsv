@@ -1,10 +1,10 @@
 name: jasminesv
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - python>3.6
- - jasminesv
- - bcftools
- - pysam
- - minimap2
+  - python>3.6
+  - jasminesv
+  - bcftools
+  - pysam
+  - minimap2

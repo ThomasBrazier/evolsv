@@ -1,8 +1,8 @@
 name: svim
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - svim
- - bcftools
- - matplotlib<3.9
+  - svim
+  - bcftools
+  - matplotlib<3.9

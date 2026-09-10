@@ -1,13 +1,12 @@
 name: truvari
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - truvari
- - bwa
- - repeatmasker
- - bcftools
- - vcftools
- - htslib
- - bwapy
-
+  - truvari
+  - bwa
+  - repeatmasker
+  - bcftools
+  - vcftools
+  - htslib
+  - bwapy

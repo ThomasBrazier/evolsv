@@ -1,8 +1,8 @@
 name: cutesv
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - cutesv
- - gzip>=1.10
- - bcftools
+  - cutesv
+  - gzip>=1.10
+  - bcftools

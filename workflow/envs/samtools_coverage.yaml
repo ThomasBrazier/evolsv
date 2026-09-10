@@ -1,8 +1,8 @@
 name: samtools
 channels:
- - conda-forge
- - bioconda
+  - conda-forge
+  - bioconda
 dependencies:
- - samtools==1.23
- - bcftools
- - htslib
+  - samtools==1.23
+  - bcftools
+  - htslib

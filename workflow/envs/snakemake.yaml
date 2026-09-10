@@ -1,10 +1,10 @@
 name: snakemake
 channels:
- - bioconda
- - conda-forge
+  - bioconda
+  - conda-forge
 dependencies:
- - python<3.11
- - snakemake>8.9
- - conda
- - mamba
- - pandas
+  - python<3.11
+  - snakemake>8.9
+  - conda
+  - mamba
+  - pandas

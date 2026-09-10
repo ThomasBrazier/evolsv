@@ -105,7 +105,7 @@ snakemake -s workflow/Snakefile --configfile data/config/config_$species.yaml \
 
 The pipeline ships a profile per scheduler. Pick one, edit the site-specific settings at the top of its `config.yaml`, and point `--profile` at it.
 
-**SLURM.** Set `slurm_partition` and `slurm_account` in `profiles/slurm/config.yaml`. The executor plugin is in `workflow/envs/snakemake_v2.yaml`.
+**SLURM.** Set `slurm_partition` and `slurm_account` in `profiles/slurm/config.yaml`. The executor plugin is in `workflow/envs/snakemake.yaml`.
 
 **PBS Pro / OpenPBS.** Snakemake has no dedicated PBS executor plugin, so `profiles/pbs/` submits through `cluster-generic`: the `qsub` line in the profile is the only place resources are translated, and a resource not named there is not requested.
 
@@ -168,7 +168,7 @@ minimap_ax: lr:hq # overrides the map-ont from the preset; everything else stays
 
 Two things worth knowing:
 
-* **Read filtering is not technology-dependent.** `chopper_quality: 10` is used for both, and suits HiFi as well as modern ONT chemistries (R10.4+). On R9-era ONT data a threshold of 10 discards a large fraction of the reads; consider `chopper_quality: 7`. Read length thresholds (`chopper_minlength`, `chopper_maxlength`) are likewise unchanged by the technology.
+* **Read filtering is not technology-dependent.** `chopper_quality: 10` is used for both, and suits HiFi as well as modern ONT chemistries (R10.4+). Read length thresholds (`chopper_minlength`, `chopper_maxlength`) are likewise unchanged by the technology.
 * **Only the aligners and cuteSV have technology presets.** Sniffles2, SVIM, DeBreak and SVJedi-graph publish none upstream — Sniffles2 derives its thresholds from coverage, DeBreak accepts HiFi/CLR/ONT/mixed BAMs without a flag, and SVJedi-graph maps onto its variation graph with minigraph, which has no per-technology presets. An ONT run therefore uses the same settings as a HiFi run in those four tools. `min_sv_size`, `mapq` and `min_mapq` may deserve a second look on noisier data.
 
 
