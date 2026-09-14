@@ -66,9 +66,15 @@ def resource_keys(profile):
     return keys
 
 
-def rules_interpolating_cpus_per_task():
+# Rules that pass their thread count to the tool, through either spelling.
+THREAD_INTERPOLATION = re.compile(r"\{threads\}|\{resources\.cpus_per_task\}")
+WORKFLOW_CORES_DIRECTIVE = re.compile(r"^[ \t]*threads:\s*workflow\.cores\b", re.MULTILINE)
+
+
+def rule_bodies():
+    """{rule name: source text of the rule}, from the definition up to the next rule."""
     sources = sorted(REPO_ROOT.glob("workflow/**/*.smk")) + [REPO_ROOT / "workflow" / "Snakefile"]
-    hits = set()
+    bodies = {}
     for source in sources:
         if not source.is_file():
             continue
@@ -77,9 +83,20 @@ def rules_interpolating_cpus_per_task():
             match = re.match(r"^[ \t]*(?:rule|checkpoint)\s+(\w+)\s*:", line)
             if match:
                 current = match.group(1)
-            elif current and CPUS_PER_TASK_INTERPOLATION.search(line):
-                hits.add(current)
-    return hits
+                bodies[current] = []
+            elif current:
+                bodies[current].append(line)
+    return {rule: "\n".join(lines) for rule, lines in bodies.items()}
+
+
+def rules_interpolating_cpus_per_task():
+    return {
+        rule for rule, body in rule_bodies().items() if CPUS_PER_TASK_INTERPOLATION.search(body)
+    }
+
+
+def rules_using_threads():
+    return {rule for rule, body in rule_bodies().items() if THREAD_INTERPOLATION.search(body)}
 
 
 def test_rule_discovery_is_not_empty():
@@ -105,6 +122,36 @@ def test_thread_map_covers_every_rule(path):
         f"{profile_id(path)}: set-threads names rules that do not exist (silently "
         f"ignored): {stale}"
     )
+
+
+@pytest.mark.parametrize("path", SIZING_PROFILES, ids=profile_id)
+def test_rules_that_pass_threads_get_more_than_one(path):
+    """A rule that hands {threads} to its tool must not be sized to a single thread.
+
+    Otherwise the thread flag is dead: nanoplot, mosdepth, genmap and samplot all ran
+    single-threaded this way while passing -t {threads}.
+    """
+    threads = load(path).get("set-threads") or {}
+    single = sorted(rule for rule in rules_using_threads() if threads.get(rule) == 1)
+    assert not single, (
+        f"{profile_id(path)}: these rules pass their thread count to the tool but get "
+        f"set-threads: 1: {single}"
+    )
+
+
+def test_workflow_cores_only_on_rules_that_use_threads():
+    """`threads: workflow.cores` on a rule that ignores its threads blocks a local run.
+
+    With `snakemake --cores N` and no profile, such a rule claims every core while
+    running a single-threaded tool, so no other job can start next to it.
+    """
+    bodies = rule_bodies()
+    idle = sorted(
+        rule
+        for rule, body in bodies.items()
+        if WORKFLOW_CORES_DIRECTIVE.search(body) and not THREAD_INTERPOLATION.search(body)
+    )
+    assert not idle, f"threads: workflow.cores on rules that use no threads: {idle}"
 
 
 @pytest.mark.parametrize("path", ALL_PROFILES, ids=profile_id)

@@ -110,6 +110,7 @@ rule cutesv:
         --min_support {config[min_coverage]} \
         --min_size {config[min_sv_size]} \
         --min_siglength {config[min_siglength]} \
+        --threads {threads} \
         {input.bam} {input.fasta} {output.vcf} {wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}/
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
@@ -386,7 +387,6 @@ rule basic_filter:
         vcf="{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf",
     output:
         vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf",
-    threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"
     shell:

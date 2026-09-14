@@ -31,7 +31,7 @@ default-resources:
 
 # Control number of threads each rule will use.
 #
-# svim, cutesv, jasmine and merging_qc pass no thread flag to their tool, so their
+# svim and merging_qc pass no thread flag to their tool, so their
 # values here are pure allocation reservations rather than parallelism.
 set-threads:
   # Data acquisition. Single-threaded: network- and I/O-bound.
@@ -46,9 +46,9 @@ set-threads:
   fastqc: 16
   hifiadapterfilt: 16 # PacBio HiFi only
   porechop_abi: 16 # ONT only
-  nanoplot: 1
+  nanoplot: 4
   filter_reads_chopper: 16
-  nanoplot_after_filtering: 1
+  nanoplot_after_filtering: 4
   # Alignment. Can use more than 1 thread, except samtools_sort.
   minimap2: 16
   ngmlr: 16
@@ -82,17 +82,17 @@ set-threads:
   samplot_subset_DUP: 1
   samplot_subset_INV: 1
   samplot_subset_DEL: 1
-  samplot_plot: 1
+  samplot_plot: 4
   vcf_to_tsv: 1
   vcf_to_tsv_tools: 1
   final_report: 1
   light_vcf: 1
   gzvcf: 1
   # Mappability and annotation
-  mosdepth_summary: 1
-  mosdepth_quantize: 1
+  mosdepth_summary: 4 # mosdepth: no gain beyond 4 BAM decompression threads
+  mosdepth_quantize: 4
   callable_bed: 1
-  genmap: 1
+  genmap: 8
   mappability_bed: 1
   add_mappability: 1
   bwa_index: 1
@@ -101,6 +101,10 @@ set-threads:
 # Control other resources used by each rule. Rules absent from this block take the
 # default-resources values above. cpus_per_task is deliberately never set here: it is
 # derived from set-threads.
+#
+# Not yet measured: hifiadapterfilt, porechop_abi, genmap and bwa_index use the
+# default mem_mb and runtime. Each writes a benchmark: file (max_rss, s); set their
+# values here from a real run.
 set-resources:
   download_sra:
     mem_mb: attempt * 2000

@@ -104,7 +104,6 @@ rule final_vcf:
         final_tmp=temp("{wdir}/{sample}/{genome}_final_tmp.vcf"),
         final="{wdir}/{sample}/{genome}_final.vcf",
         final_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
-    threads: workflow.cores
     conda:
         "../envs/bcftools.yaml"
     log:

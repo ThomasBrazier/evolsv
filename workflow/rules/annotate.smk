@@ -15,6 +15,8 @@ rule bwa_index:
         "../envs/truvari.yaml"
     log:
         "{wdir}/logs/bwa_index/{genome}.txt",
+    benchmark:
+        "{wdir}/genome/benchmarks/{genome}.bwa_index.tsv"
     shell:
         """
         bwa index {input.fasta} 2> {log}

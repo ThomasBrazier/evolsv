@@ -86,6 +86,8 @@ rule genmap:
         kmer=config["mappability_k"],
     log:
         "{wdir}/logs/genmap/{genome}.txt",
+    benchmark:
+        "{wdir}/genome/benchmarks/{genome}.genmap.tsv"
     conda:
         "../envs/genmap.yaml"
     shell:

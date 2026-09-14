@@ -58,6 +58,7 @@ rule jasmine:
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
         out_dir={wdir}/{wildcards.sample}/jasmine bam_list={output.bamlist} \
+        threads={threads} \
         --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --output_genotypes
 

@@ -49,6 +49,8 @@ rule hifiadapterfilt:
         "../envs/hifiadapterfilt.yaml"
     log:
         "{wdir}/{sample}/logs/{run}.hifiadapterfilt.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{run}.hifiadapterfilt.tsv"
     params:
         workdir=lambda wildcards, output: os.path.join(
             os.path.dirname(output.stats), f"{wildcards.run}_work"
@@ -102,6 +104,8 @@ rule porechop_abi:
         "../envs/porechop_abi.yaml"
     log:
         "{wdir}/{sample}/logs/{run}.porechop_abi.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{run}.porechop_abi.tsv"
     params:
         ab_initio="--ab_initio" if config_flag("porechop_ab_initio") else "",
         tmpdir="{wdir}/{sample}/porechop_abi/{run}_tmp",
