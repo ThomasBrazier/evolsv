@@ -45,6 +45,7 @@ set-threads:
   # Fastq processing. Can use more than 1 thread.
   fastqc: 16
   hifiadapterfilt: 16 # PacBio HiFi only
+  porechop_abi: 16 # ONT only
   nanoplot: 1
   filter_reads_chopper: 16
   nanoplot_after_filtering: 1

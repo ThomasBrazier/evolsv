@@ -189,18 +189,54 @@ def test_default_technology_is_hifi():
         assert flag in result.stdout, "{!r} missing from the default shell commands".format(flag)
 
 
-def test_hifiadapterfilt_runs_only_for_hifi():
-    """HiFi runs are adapter-filtered one run at a time, and merged after filtering."""
+def test_adapter_filtering_matches_the_technology():
+    """Each run goes through the adapter tool of its technology, then runs are merged."""
+    # config/samples.tsv declares two SRA runs for the one individual.
     result = run_dryrun()
     assert_succeeded(result)
-    # config/samples.tsv declares two SRA runs for the one individual.
-    assert parse_job_stats(result.stdout)["hifiadapterfilt"] == 2
+    counts = parse_job_stats(result.stdout)
+    assert counts["hifiadapterfilt"] == 2
+    assert "porechop_abi" not in counts
     assert "_sra.filt.fastq.gz" in result.stdout
+    assert "_sra.porechop.fastq.gz" not in result.stdout
 
     result = run_dryrun(".test/config_ont.yaml")
     assert_succeeded(result)
-    assert "hifiadapterfilt" not in parse_job_stats(result.stdout)
+    counts = parse_job_stats(result.stdout)
+    assert counts["porechop_abi"] == 2
+    assert "hifiadapterfilt" not in counts
+    assert "_sra.porechop.fastq.gz" in result.stdout
     assert "_sra.filt.fastq.gz" not in result.stdout
+    assert "--ab_initio" in result.stdout
+
+
+def test_porechop_ab_initio_can_be_disabled():
+    """porechop_ab_initio: false keeps Porechop_ABI on its adapter database only.
+
+    `--config key=false` passes the string "false", which is truthy in Python, so both
+    spellings are checked. Any other value must stop the run.
+    """
+
+    def run_with(value):
+        return subprocess.run(
+            [
+                "snakemake", "-s", "workflow/Snakefile", "-n", "-p",
+                "--profile", "profiles/ci",
+                "--configfile", ".test/config_ont.yaml",
+                "--config", f"porechop_ab_initio={value}",
+            ],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+        )
+
+    for value in ("false", "False"):
+        result = run_with(value)
+        assert_succeeded(result)
+        assert "porechop_abi -i" in result.stdout
+        assert "--ab_initio" not in result.stdout, f"--ab_initio still set with {value!r}"
+
+    result = run_with("maybe")
+    assert result.returncode != 0
+    assert "must be true or false" in result.stdout + result.stderr
 
 
 def test_ont_presets_reach_the_shell_commands():

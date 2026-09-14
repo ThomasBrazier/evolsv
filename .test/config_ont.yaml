@@ -1,6 +1,6 @@
 # CI dry-run config: Oxford Nanopore presets on the FASTQ entry point.
 #
-# The only DAG change is that rule hifiadapterfilt does not run. Otherwise
+# The only DAG change is that rule porechop_abi runs instead of hifiadapterfilt. Otherwise
 # sequencing_technology only fills in config defaults (TECH_PRESETS in
 # workflow/rules/common.smk), so the tests assert on the printed shell commands.
 sequencing_technology: ont

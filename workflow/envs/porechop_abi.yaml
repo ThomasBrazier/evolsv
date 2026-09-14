@@ -1,0 +1,6 @@
+name: porechop_abi
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - porechop_abi

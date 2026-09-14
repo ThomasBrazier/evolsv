@@ -75,6 +75,51 @@ rule hifiadapterfilt:
         """
 
 
+rule porechop_abi:
+    """
+    Trim adapters from Oxford Nanopore reads, one SRA run at a time.
+    Only used when sequencing_technology is ont (see rule merge_fastq).
+
+    Porechop_ABI: "Porechop_ABI: discovering unknown adapters in Oxford Nanopore
+    Technology sequencing reads for downstream trimming", Bioinformatics Advances,
+    https://doi.org/10.1093/bioadv/vbac085
+    Adapters are trimmed from the read ends. A read with an adapter in its middle
+    (a probable chimera) is split at the adapter (default, --discard_middle not used).
+    --ab_initio     Infer the adapters from the reads, in addition to the Porechop
+                    adapter database (config key porechop_ab_initio)
+    -tmp            Temporary directory, one per run (the default ./tmp is shared)
+    -t              Number of threads
+
+    --ab_initio samples reads at random and has no seed option, so the inferred
+    adapters can differ between two runs. The log records the inferred adapters.
+    """
+    input:
+        "{wdir}/{sample}/fastq/{run}_sra.fastq.gz",
+    output:
+        trimmed_fastq=temp("{wdir}/{sample}/fastq/{run}_sra.porechop.fastq.gz"),
+    threads: workflow.cores
+    conda:
+        "../envs/porechop_abi.yaml"
+    log:
+        "{wdir}/{sample}/logs/{run}.porechop_abi.log",
+    params:
+        ab_initio="--ab_initio" if config_flag("porechop_ab_initio") else "",
+        tmpdir="{wdir}/{sample}/porechop_abi/{run}_tmp",
+    shell:
+        """
+        rm -rf {params.tmpdir}
+        mkdir -p {params.tmpdir}
+        porechop_abi -i {input} \
+        -o {output.trimmed_fastq} \
+        {params.ab_initio} \
+        -tmp {params.tmpdir} \
+        -t {resources.cpus_per_task} \
+        --format fastq.gz \
+        -v 1 &> {log}
+        rm -rf {params.tmpdir}
+        """
+
+
 rule nanoplot:
     """
     Quality control of raw data

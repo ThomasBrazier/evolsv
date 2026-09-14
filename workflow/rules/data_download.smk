@@ -97,16 +97,15 @@ if not bam_mode:
         """
         Merge the fastq files of one individual for mapping
 
-        For sequencing_technology hifi, the runs are merged after adapter filtering
-        with rule hifiadapterfilt. For ont, the raw runs are merged.
+        The runs are merged after adapter removal: rule hifiadapterfilt for
+        sequencing_technology hifi, rule porechop_abi for ont.
         """
         input:
             fastq=lambda wildcards: expand(
-                (
-                    "{wdir}/{sample}/fastq/{run}_sra.filt.fastq.gz"
-                    if sequencing_technology == "hifi"
-                    else "{wdir}/{sample}/fastq/{run}_sra.fastq.gz"
-                ),
+                {
+                    "hifi": "{wdir}/{sample}/fastq/{run}_sra.filt.fastq.gz",
+                    "ont": "{wdir}/{sample}/fastq/{run}_sra.porechop.fastq.gz",
+                }[sequencing_technology],
                 wdir=wildcards.wdir,
                 sample=wildcards.sample,
                 run=runs_of(wildcards.sample),

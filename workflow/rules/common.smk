@@ -78,6 +78,22 @@ for preset_key, preset_value in TECH_PRESETS[sequencing_technology].items():
     config.setdefault(preset_key, preset_value)
 
 
+def config_flag(key):
+    """Read a boolean config key.
+
+    `--config key=false` gives the string "false", which Python treats as true, so
+    strings are parsed explicitly and any other value is rejected.
+    """
+    value = config[key]
+    if isinstance(value, bool):
+        return value
+    if str(value).strip().lower() in ("true", "false"):
+        return str(value).strip().lower() == "true"
+    raise WorkflowError(
+        "Config key '{}' must be true or false. Found: '{}'.".format(key, value)
+    )
+
+
 def check_readable_file(path, description):
     """Fail at DAG construction time rather than deep into an expensive run."""
     if not path:
