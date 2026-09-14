@@ -62,7 +62,7 @@ rule all_samples_vcf:
     output:
         allsamples=temp("{wdir}/{genome}_allsamples.vcf"),
         jasmine_reheadered=temp("{wdir}/merging/{genome}_reheadered.vcf"),
-        jasmine_gz=temp("{wdir}/merging/{genome}_merged.vcf.gz"),
+        jasmine_gz=temp("{wdir}/merging/{genome}_merged_sorted.vcf.gz"),
         svjedi_reheadered=temp(
             "{wdir}/genotype/{genome}_merged_genotype_reheadered.vcf"
         ),
