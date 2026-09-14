@@ -3,24 +3,24 @@ rule jasmine:
     Merge the VCF files obtained by the three SV callers
     """
     input:
-        sniffles_minimap2="{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
-        svim_minimap2="{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf",
-        cutesv_minimap2="{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
-        debreak_minimap2="{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf",
-        sniffles_ngmlr="{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
-        svim_ngmlr="{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf",
-        cutesv_ngmlr="{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
-        debreak_ngmlr="{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
+        sniffles_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
+        svim_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_svim_filtered.vcf",
+        cutesv_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
+        debreak_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_debreak_filtered.vcf",
+        sniffles_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
+        svim_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_svim_filtered.vcf",
+        cutesv_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
+        debreak_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
         fasta="{wdir}/genome/{genome}.fna",
         fasta_fai="{wdir}/genome/{genome}.fna.fai",
     output:
-        tempvcf=temp("{wdir}/jasmine/{genome}_merged_noGenotypes.vcf"),
-        vcf="{wdir}/merging/{genome}_merged.vcf",
-        vcf_annotated=temp("{wdir}/merging/{genome}_annotated.vcf"),
-        vcfgz="{wdir}/merging/{genome}_merged.vcf.gz",
-        vcftabix="{wdir}/merging/{genome}_merged.vcf.gz.tbi",
-        vcflist="{wdir}/merging/{genome}_vcf_list.txt",
-        bamlist="{wdir}/merging/{genome}_bam_list.txt",
+        tempvcf=temp("{wdir}/{sample}/jasmine/{genome}_merged_noGenotypes.vcf"),
+        vcf="{wdir}/{sample}/merging/{genome}_merged.vcf",
+        vcf_annotated=temp("{wdir}/{sample}/merging/{genome}_annotated.vcf"),
+        vcfgz="{wdir}/{sample}/merging/{genome}_merged.vcf.gz",
+        vcftabix="{wdir}/{sample}/merging/{genome}_merged.vcf.gz.tbi",
+        vcflist="{wdir}/{sample}/merging/{genome}_vcf_list.txt",
+        bamlist="{wdir}/{sample}/merging/{genome}_bam_list.txt",
     conda:
         "../envs/jasminesv.yaml"
     shell:
@@ -34,30 +34,30 @@ rule jasmine:
         LANG=en_US
         export LANG
 
-        echo "{wdir}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
-        echo "{wdir}/filtered/{genome}_minimap2_svim_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_minimap2_cutesv_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_minimap2_debreak_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_ngmlr_sniffles_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_ngmlr_svim_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_ngmlr_cutesv_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/filtered/{genome}_ngmlr_debreak_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_svim_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_cutesv_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_debreak_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_sniffles_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_svim_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_cutesv_filtered.vcf" >> {output.vcflist}
+        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_debreak_filtered.vcf" >> {output.vcflist}
 
-        echo "{wdir}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
-        echo "{wdir}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
+        echo "{wdir}/{wildcards.sample}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
+        echo "{wdir}/{wildcards.sample}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
 
         # Modify header to prevent missing contig
         for aligner in minimap2 ngmlr; do
         for tool in sniffles svim cutesv debreak; do
-        bcftools reheader --fai {wdir}/genome/{genome}.fna.fai -o {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
-        rm {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
-        mv {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        bcftools reheader --fai {wdir}/genome/{genome}.fna.fai -o {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        rm {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        mv {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
         done 
         done 
 
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
-        out_dir={wdir}/jasmine bam_list={output.bamlist} \
+        out_dir={wdir}/{wildcards.sample}/jasmine bam_list={output.bamlist} \
         --ignore_strand --max_dist {config[jasmine_max_dist]} \
         --output_genotypes
 

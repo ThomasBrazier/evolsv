@@ -37,6 +37,8 @@ CASES=(
   "no-scaffold-exclusion:.test/config_no_scaffold_exclusion.yaml"
   "bigtmp:.test/config_bigtmp.yaml"
   "ont:.test/config_ont.yaml"
+  "multi-individual:.test/config_multi.yaml"
+  "bam-mode-multi-individual:.test/config_bam_multi.yaml"
 )
 
 failed=()

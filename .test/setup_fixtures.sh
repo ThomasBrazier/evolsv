@@ -92,4 +92,57 @@ write_bam_sheet "$bad/samples_no_fastq.tsv" "$good_minimap2" "$good_ngmlr" ""
 # The bam_ngmlr column is blank: the ensemble needs one BAM per aligner.
 write_bam_sheet "$bad/samples_no_ngmlr.tsv" "$good_minimap2" "" "$good_fastq"
 
+# ---------------------------------------------------------------------------
+# Several individuals in one sample sheet
+# ---------------------------------------------------------------------------
+
+# A second individual with one SRA run. The accession is a placeholder: a dry run never
+# downloads it. The first individual keeps its two runs from config/samples.tsv, so the
+# tests can check that runs are merged per individual and never across individuals.
+sample2="SAMEA0000002"
+sra2="ERR00000001"
+
+{
+    printf 'sample_name\tsra\tgenome\n'
+    printf '%s\t%s\t%s\n' "$sample" "ERR10287556" "$genome"
+    printf '%s\t%s\t%s\n' "$sample" "ERR10287555" "$genome"
+    printf '%s\t%s\t%s\n' "$sample2" "$sra2" "$genome"
+} > "$fixtures/samples_multi.tsv"
+
+for aligner in minimap2 ngmlr; do
+    printf 'placeholder\n' > "$fixtures/${sample2}_${aligner}.bam"
+    printf 'placeholder\n' > "$fixtures/${sample2}_${aligner}.bam.bai"
+done
+printf 'placeholder\n' > "$fixtures/${sample2}_reads.fastq.gz"
+
+{
+    printf 'sample_name\tsra\tgenome\tbam_minimap2\tbam_ngmlr\tfastq\n'
+    printf '%s\t\t%s\t%s\t%s\t%s\n' "$sample" "$genome" "$good_minimap2" "$good_ngmlr" "$good_fastq"
+    printf '%s\t\t%s\t%s\t%s\t%s\n' "$sample2" "$genome" \
+        "$fixtures/${sample2}_minimap2.bam" "$fixtures/${sample2}_ngmlr.bam" \
+        "$fixtures/${sample2}_reads.fastq.gz"
+} > "$fixtures/samples_bam_multi.tsv"
+
+# --- failure modes -----------------------------------------------------------
+
+# Two individuals on two different reference genomes.
+{
+    printf 'sample_name\tsra\tgenome\n'
+    printf '%s\t%s\t%s\n' "$sample" "$sra" "$genome"
+    printf '%s\t%s\t%s\n' "$sample2" "$sra2" "GCA_000000001.1"
+} > "$bad/samples_two_genomes.tsv"
+
+# One individual declares two bam_minimap2 files on two rows.
+{
+    printf 'sample_name\tsra\tgenome\tbam_minimap2\tbam_ngmlr\tfastq\n'
+    printf '%s\t\t%s\t%s\t%s\t%s\n' "$sample" "$genome" "$good_minimap2" "$good_ngmlr" "$good_fastq"
+    printf '%s\t\t%s\t%s\t\t\n' "$sample" "$genome" "$fixtures/${sample2}_minimap2.bam"
+} > "$bad/samples_duplicate_bam.tsv"
+
+# A sample_name that cannot be a directory name.
+{
+    printf 'sample_name\tsra\tgenome\n'
+    printf '%s\t%s\t%s\n' "bad/name" "$sra" "$genome"
+} > "$bad/samples_bad_name.tsv"
+
 echo "Wrote fixtures to $fixtures"

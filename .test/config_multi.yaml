@@ -1,0 +1,7 @@
+# CI dry-run config: several individuals on the FASTQ entry point.
+#
+# Two individuals share one reference. The first has two SRA runs, the second has one,
+# so the tests can check that reads are merged per individual and never across them.
+samples: .test/fixtures/samples_multi.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

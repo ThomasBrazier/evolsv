@@ -1,0 +1,5 @@
+# CI dry-run config: several individuals on the pre-aligned BAM entry point.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_multi.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

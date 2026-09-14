@@ -4,7 +4,7 @@
 
 *Institutions: (1) UMR 6553 ECOBIO, University of Rennes (2) GenScale Team, IRISA-INRIA lab, University of Rennes*
 
-This pipeline performs ensemble calling of Structural Variants (SV) from PacBio HiFi or Oxford Nanopore (ONT) long-read sequencing of a single individual. SV calling is performed by a combination of two aligners (minimap2 + ngmlr) and four different tools: SVIM, Sniffles2, CuteSV2 and Debreak ([poster](images/Poster_PopGroup58_BRAZIER.pdf)). The eight independent callsets are then merged with JasmineSV and SVs are genotyped with SVJediGraph.
+This pipeline performs ensemble calling of Structural Variants (SV) from PacBio HiFi or Oxford Nanopore (ONT) long-read sequencing of one or more individuals. Each individual is processed on its own. SV calling is performed by a combination of two aligners (minimap2 + ngmlr) and four different tools: SVIM, Sniffles2, CuteSV2 and Debreak ([poster](images/Poster_PopGroup58_BRAZIER.pdf)). The eight independent callsets are then merged with JasmineSV and SVs are genotyped with SVJediGraph.
 
 ![The complete workflow of EvolSV.](images/workflow.png)
 
@@ -56,7 +56,7 @@ All these changes are being implemented in the `caterpillar` branch.
 
 There are three config files to set up your analysis:
 * `config/config.yaml`, where you specify the working directory and all the settings for the different tools.
-* `config/samples.tsv`, a three columsn data frame to specify the sample name, the SRA accessions and the reference genome accession. Currently, the pipeline accepts multiple samples but only a single genome accession.
+* `config/samples.tsv`, a three columns data frame to specify the sample name, the SRA accessions and the reference genome accession. Use one row per SRA run. The `sample_name` column identifies the individual: rows with the same `sample_name` are the runs of one individual, and their reads are merged. The sheet can contain many individuals, but all rows must use the same genome accession. A `sample_name` can contain only letters, digits, `.`, `_` and `-`, because it becomes a directory name.
 * a profile under `profiles/`, specifying resources for each rule (number of cpus, memory, runtime) and how jobs reach your job scheduler. One is shipped per scheduler:
 
 | Profile | Scheduler | Executor |
@@ -190,9 +190,9 @@ SAMEA8724893		GCA_947247005.1	/path/mm2.bam	/path/ngmlr.bam	/path/reads.fastq.gz
 
 **One BAM per aligner is required.** The ensemble method relies on eight independent callsets produced by four callers on two different alignments, and the merging step (JasmineSV/IRIS) is given both BAM files. Supplying the same alignment twice would make the same evidence count as two independent observations and would inflate both the consensus and the per-tool performance scores.
 
-**The reads are still required.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column; several rows are concatenated, as in the SRA mode.
+**The reads are still required.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column; several rows of the same individual are concatenated, as in the SRA mode. Declare exactly one `bam_minimap2` and one `bam_ngmlr` file per individual.
 
-Requirements on the BAM files, all checked before the run proceeds (see `workflow/scripts/check_bam_reference.py`, which writes a report to `{wdir}/bam/{genome}_{aligner}_bam_check.txt`):
+Requirements on the BAM files, all checked before the run proceeds (see `workflow/scripts/check_bam_reference.py`, which writes a report to `{wdir}/{sample}/bam/{genome}_{aligner}_bam_check.txt`):
 
 * coordinate-sorted, with a `.bai` index next to the BAM (a `.csi` index is not accepted);
 * an `@RG` line whose `SM` tag equals `sample_name` in the sample sheet, because Samplot selects reads by sample id;
@@ -238,28 +238,24 @@ Project data can be stored in the current `evolsv` git directory. The place wher
 
 ## Output files
 
-The main output file is a VCF file containing the list of SVs, named `{wdir}/{genome}_final.vcf.gz`. It is the result of merging the eigth SV catalogues generated. Additionnally, a `{wdir}/{genome}_final.tsv` and a `{wdir}/{genome}_final_light.vcf.gz` files are produced. They contain the same set of SV calls, but they are designed to be processed more easily than the full vcf. `{wdir}/{genome}_final.tsv` is a data frame without sequences for an easy import in R for data analysis. `{wdir}/{genome}_final_light.vcf.gz` is a lighter vcf without DNA sequences in REF/ALT and INFO fields (DNA sequences can be very large with structural variation).
+Results are written to one directory per individual, `{wdir}/{sample}/`, where `{wdir}` is `datadir` followed by the genome accession and `{sample}` is the `sample_name` of the individual. The reference genome and the files computed from it (`genome/`, `genmap/`, `mappability/`) are shared by all individuals and computed once:
+
+```
+{wdir}/
+├── genome/            shared reference
+├── genmap/            shared mappability
+├── mappability/       shared mappability
+├── SAMEA8724893/      one individual
+│   ├── bam/ calling/ genotype/ ...
+│   ├── {genome}_final.vcf.gz
+│   └── {genome}_finalQC.html
+└── SAMEA0000002/      another individual
+    └── ...
+```
+
+The main output file is a VCF file containing the list of SVs of one individual, named `{wdir}/{sample}/{genome}_final.vcf.gz`. It is the result of merging the eigth SV catalogues generated for that individual. Additionnally, a `{wdir}/{sample}/{genome}_final.tsv` and a `{wdir}/{sample}/{genome}_final_light.vcf.gz` files are produced. They contain the same set of SV calls, but they are designed to be processed more easily than the full vcf. `{wdir}/{sample}/{genome}_final.tsv` is a data frame without sequences for an easy import in R for data analysis. `{wdir}/{sample}/{genome}_final_light.vcf.gz` is a lighter vcf without DNA sequences in REF/ALT and INFO fields (DNA sequences can be very large with structural variation).
 
 
-We also produce an automatic report to assess the quality and empirical performance of the workflow for the given dataset. Please check `{wdir}/{genome}_finalQC.html` for details. 
+We also produce an automatic report to assess the quality and empirical performance of the workflow for each individual. Please check `{wdir}/{sample}/{genome}_finalQC.html` for details.
 
-
-## References
-
-Chen, Yu, Amy Y. Wang, Courtney A. Barkley, Yixin Zhang, Xinyang Zhao, Min Gao, Mick D. Edmonds, et Zechen Chong. « Deciphering the Exact Breakpoints of Structural Variations Using Long Sequencing Reads with DeBreak ». Nature Communications 14, nᵒ 1 (17 janvier 2023): 283. https://doi.org/10.1038/s41467-023-35996-1.
-
-Danecek, Petr, et al. « Twelve Years of SAMtools and BCFtools ». GigaScience, vol. 10, nᵒ 2, janvier 2021, p. giab008. DOI.org (Crossref), https://doi.org/10.1093/gigascience/giab008.
-
-Heller, David, et Martin Vingron. « SVIM: Structural Variant Identification Using Mapped Long Reads ». Bioinformatics, vol. 35, nᵒ 17, septembre 2019, p. 2907‑15. DOI.org (Crossref), https://doi.org/10.1093/bioinformatics/btz041.
-
-Jiang, Tao, et al. « Long-Read-Based Human Genomic Structural Variation Detection with cuteSV ». Genome Biology, vol. 21, nᵒ 1, décembre 2020, p. 189. DOI.org (Crossref), https://doi.org/10.1186/s13059-020-02107-y.
-
-Kirsche, Melanie, et al. « Jasmine and Iris: Population-Scale Structural Variant Comparison and Analysis ». Nature Methods, vol. 20, nᵒ 3, mars 2023, p. 408‑17. DOI.org (Crossref), https://doi.org/10.1038/s41592-022-01753-3.
-
-Li, Heng. « Minimap2: Pairwise Alignment for Nucleotide Sequences ». Bioinformatics, édité par Inanc Birol, vol. 34, nᵒ 18, septembre 2018, p. 3094‑100. DOI.org (Crossref), https://doi.org/10.1093/bioinformatics/bty191.
-
-Romain, Sandra, et Claire Lemaitre. « SVJedi-Graph: Improving the Genotyping of Close and Overlapping Structural Variants with Long Reads Using a Variation Graph ». Bioinformatics 39, nᵒ Supplement_1 (30 juin 2023): i270‑78. https://doi.org/10.1093/bioinformatics/btad237.
-
-Sedlazeck, Fritz J., et al. « Accurate Detection of Complex Structural Variations Using Single-Molecule Sequencing ». Nature Methods, vol. 15, nᵒ 6, juin 2018, p. 461‑68. DOI.org (Crossref), https://doi.org/10.1038/s41592-018-0001-7.
-
-
+**The results of different individuals are not merged.** Each individual is called, merged and genotyped alone. SV IDs, breakpoints and alleles are therefore not harmonised across individuals: the same SV can have different IDs and slightly different positions in two individuals. A population-level analysis needs a separate step that merges the per-individual VCFs (for example with JasmineSV) and genotypes all individuals at the same sites.

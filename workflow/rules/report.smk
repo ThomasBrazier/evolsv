@@ -4,10 +4,10 @@ rule samplot_subset_DUP:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final="{wdir}/genotype/{genome}_merged_genotype.vcf.gz",
+        final="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz",
     output:
-        subset_dup_tmp=temp("{wdir}/samplot/{genome}_samplot_DUP_tmp.vcf"),
-        subset_dup=temp("{wdir}/samplot/{genome}_samplot_DUP.vcf"),
+        subset_dup_tmp=temp("{wdir}/{sample}/samplot/{genome}_samplot_DUP_tmp.vcf"),
+        subset_dup=temp("{wdir}/{sample}/samplot/{genome}_samplot_DUP.vcf"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -26,10 +26,10 @@ rule samplot_subset_INV:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final="{wdir}/genotype/{genome}_merged_genotype.vcf.gz",
+        final="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz",
     output:
-        subset_inv_tmp=temp("{wdir}/samplot/{genome}_samplot_INV_tmp.vcf"),
-        subset_inv=temp("{wdir}/samplot/{genome}_samplot_INV.vcf"),
+        subset_inv_tmp=temp("{wdir}/{sample}/samplot/{genome}_samplot_INV_tmp.vcf"),
+        subset_inv=temp("{wdir}/{sample}/samplot/{genome}_samplot_INV.vcf"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -48,10 +48,10 @@ rule samplot_subset_INV:
 #     Subset N variants of each type DEL/DUP/INS/INV
 #     """
 #     input:
-#         final = "{wdir}/{genome}_final.vcf.gz"
+#         final = "{wdir}/{sample}/{genome}_final.vcf.gz"
 #     output:
-#         subset_ins_tmp = temp("{wdir}/samplot/{genome}_samplot_INS_tmp.vcf"),
-#         subset_ins = temp("{wdir}/samplot/{genome}_samplot_INS.vcf")
+#         subset_ins_tmp = temp("{wdir}/{sample}/samplot/{genome}_samplot_INS_tmp.vcf"),
+#         subset_ins = temp("{wdir}/{sample}/samplot/{genome}_samplot_INS.vcf")
 #     conda:
 #         "../envs/bcftools.yaml"
 #     shell:
@@ -70,10 +70,10 @@ rule samplot_subset_DEL:
     Subset N variants of each type DEL/DUP/INS/INV
     """
     input:
-        final="{wdir}/genotype/{genome}_merged_genotype.vcf.gz",
+        final="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz",
     output:
-        subset_del_tmp=temp("{wdir}/samplot/{genome}_samplot_DEL_tmp.vcf"),
-        subset_del=temp("{wdir}/samplot/{genome}_samplot_DEL.vcf"),
+        subset_del_tmp=temp("{wdir}/{sample}/samplot/{genome}_samplot_DEL_tmp.vcf"),
+        subset_del=temp("{wdir}/{sample}/samplot/{genome}_samplot_DEL.vcf"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -92,37 +92,31 @@ rule samplot_plot:
     For diagnostic purpose
     """
     input:
-        subset_DUP=expand(
-            "{wdir}/samplot/{genome}_samplot_DUP.vcf", wdir=wdir, genome=genome
-        ),
-        subset_INV=expand(
-            "{wdir}/samplot/{genome}_samplot_INV.vcf", wdir=wdir, genome=genome
-        ),
-        subset_DEL=expand(
-            "{wdir}/samplot/{genome}_samplot_DEL.vcf", wdir=wdir, genome=genome
-        ),
-        fasta=expand("{wdir}/genome/{genome}.fna", wdir=wdir, genome=genome),
-        bam_minimap2="{wdir}/bam/{genome}_minimap2_sorted.bam",
-        bam_index_minimap2="{wdir}/bam/{genome}_minimap2_sorted.bam.bai",
-        bam_ngmlr="{wdir}/bam/{genome}_ngmlr_sorted.bam",
-        bam_index_ngmlr="{wdir}/bam/{genome}_ngmlr_sorted.bam.bai",
+        subset_DUP="{wdir}/{sample}/samplot/{genome}_samplot_DUP.vcf",
+        subset_INV="{wdir}/{sample}/samplot/{genome}_samplot_INV.vcf",
+        subset_DEL="{wdir}/{sample}/samplot/{genome}_samplot_DEL.vcf",
+        fasta="{wdir}/genome/{genome}.fna",
+        bam_minimap2="{wdir}/{sample}/bam/{genome}_minimap2_sorted.bam",
+        bam_index_minimap2="{wdir}/{sample}/bam/{genome}_minimap2_sorted.bam.bai",
+        bam_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr_sorted.bam",
+        bam_index_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr_sorted.bam.bai",
     output:
-        "{wdir}/samplot/minimap2_{genome}/DUP/index.html",
-        "{wdir}/samplot/minimap2_{genome}/INV/index.html",
-        "{wdir}/samplot/minimap2_{genome}/DEL/index.html",
-        "{wdir}/samplot/ngmlr_{genome}/DUP/index.html",
-        "{wdir}/samplot/ngmlr_{genome}/INV/index.html",
-        "{wdir}/samplot/ngmlr_{genome}/DEL/index.html",
+        "{wdir}/{sample}/samplot/minimap2_{genome}/DUP/index.html",
+        "{wdir}/{sample}/samplot/minimap2_{genome}/INV/index.html",
+        "{wdir}/{sample}/samplot/minimap2_{genome}/DEL/index.html",
+        "{wdir}/{sample}/samplot/ngmlr_{genome}/DUP/index.html",
+        "{wdir}/{sample}/samplot/ngmlr_{genome}/INV/index.html",
+        "{wdir}/{sample}/samplot/ngmlr_{genome}/DEL/index.html",
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir_minimap2="{wdir}/samplot/minimap2_{genome}",
-        outdir_ngmlr="{wdir}/samplot/ngmlr_{genome}",
+        outdir_minimap2="{wdir}/{sample}/samplot/minimap2_{genome}",
+        outdir_ngmlr="{wdir}/{sample}/samplot/ngmlr_{genome}",
     shell:
         """
         if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
             echo "No duplication found."
-            touch {wdir}/samplot/minimap2_{genome}/DUP/index.html
+            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/DUP/index.html
         else
             samplot vcf \
             --vcf {input.subset_DUP} \
@@ -132,13 +126,13 @@ rule samplot_plot:
             -O jpg \
             --format GT,DP,AD,PL \
             -b {input.bam_minimap2} \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             --debug
         fi
 
         if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
             echo "No inversion found."
-            touch {wdir}/samplot/minimap2_{genome}/INV/index.html
+            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/INV/index.html
         else
             samplot vcf \
             --vcf {input.subset_INV} \
@@ -147,7 +141,7 @@ rule samplot_plot:
             -d {params.outdir_minimap2}/INV \
             -O jpg \
             --format GT,DP,AD,PL \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             -b {input.bam_minimap2} \
             --debug
         fi
@@ -159,13 +153,13 @@ rule samplot_plot:
             -d {params.outdir_minimap2}/DEL \
             -O jpg \
             --format GT,DP,AD,PL \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             -b {input.bam_minimap2} \
             --debug
 
         if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
             echo "No duplication found."
-            touch {wdir}/samplot/ngmlr_{genome}/DUP/index.html
+            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/DUP/index.html
         else
             samplot vcf \
             --vcf {input.subset_DUP} \
@@ -175,13 +169,13 @@ rule samplot_plot:
             -O jpg \
             --format GT,DP,AD,PL \
             -b {input.bam_ngmlr} \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             --debug
         fi
 
         if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
             echo "No inversion found."
-            touch {wdir}/samplot/ngmlr_{genome}/INV/index.html
+            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/INV/index.html
         else
             samplot vcf \
             --vcf {input.subset_INV} \
@@ -190,7 +184,7 @@ rule samplot_plot:
             -d {params.outdir_ngmlr}/INV \
             -O jpg \
             --format GT,DP,AD,PL \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             -b {input.bam_ngmlr} \
             --debug
         fi
@@ -202,7 +196,7 @@ rule samplot_plot:
             -d {params.outdir_ngmlr}/DEL \
             -O jpg \
             --format GT,DP,AD,PL \
-            --sample_ids {sample_id} \
+            --sample_ids {wildcards.sample} \
             -b {input.bam_ngmlr} \
             --debug
         """
@@ -213,9 +207,9 @@ rule vcf_to_tsv:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        vcf="{wdir}/{genome}_final.vcf",
+        vcf="{wdir}/{sample}/{genome}_final.vcf",
     output:
-        tsv="{wdir}/{genome}_final.tsv",
+        tsv="{wdir}/{sample}/{genome}_final.tsv",
     shell:
         """
         # All samples
@@ -229,17 +223,17 @@ rule merging_qc:
     Or inconsistencies between callers
     """
     input:
-        tsv="{wdir}/{genome}_final.tsv",
+        tsv="{wdir}/{sample}/{genome}_final.tsv",
     output:
-        "{wdir}/merging_QC/{genome}_svlen_equal_zero.tsv",
-        "{wdir}/merging_QC/{genome}_avglen_equal_zero.tsv",
-        "{wdir}/merging_QC/{genome}_no_avgend_field.tsv",
-        "{wdir}/merging_QC/{genome}_unmerged_sv.tsv",
+        "{wdir}/{sample}/merging_QC/{genome}_svlen_equal_zero.tsv",
+        "{wdir}/{sample}/merging_QC/{genome}_avglen_equal_zero.tsv",
+        "{wdir}/{sample}/merging_QC/{genome}_no_avgend_field.tsv",
+        "{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv",
     conda:
         "../envs/Renv.yaml"
     shell:
         """
-        Rscript workflow/scripts/merging_qc.R {wdir} {genome}
+        Rscript workflow/scripts/merging_qc.R {wdir}/{wildcards.sample} {genome}
         """
 
 
@@ -248,23 +242,23 @@ rule vcf_to_tsv_tools:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        minimap2_cutesv_vcf="{wdir}/calling/{genome}_minimap2_cutesv.vcf",
-        minimap2_svim_vcf="{wdir}/calling/{genome}_minimap2_svim.vcf",
-        minimap2_sniffles_vcf="{wdir}/calling/{genome}_minimap2_sniffles.vcf",
-        minimap2_debreak_vcf="{wdir}/calling/{genome}_minimap2_debreak.vcf",
-        ngmlr_cutesv_vcf="{wdir}/calling/{genome}_ngmlr_cutesv.vcf",
-        ngmlr_svim_vcf="{wdir}/calling/{genome}_ngmlr_svim.vcf",
-        ngmlr_sniffles_vcf="{wdir}/calling/{genome}_ngmlr_sniffles.vcf",
-        ngmlr_debreak_vcf="{wdir}/calling/{genome}_ngmlr_debreak.vcf",
+        minimap2_cutesv_vcf="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.vcf",
+        minimap2_svim_vcf="{wdir}/{sample}/calling/{genome}_minimap2_svim.vcf",
+        minimap2_sniffles_vcf="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.vcf",
+        minimap2_debreak_vcf="{wdir}/{sample}/calling/{genome}_minimap2_debreak.vcf",
+        ngmlr_cutesv_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.vcf",
+        ngmlr_svim_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_svim.vcf",
+        ngmlr_sniffles_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.vcf",
+        ngmlr_debreak_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.vcf",
     output:
-        minimap2_cutesv_tsv="{wdir}/calling/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv="{wdir}/calling/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv="{wdir}/calling/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv="{wdir}/calling/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv="{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv="{wdir}/calling/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv="{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv="{wdir}/calling/{genome}_ngmlr_debreak.tsv",
+        minimap2_cutesv_tsv="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv="{wdir}/{sample}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv="{wdir}/{sample}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
     shell:
         """
         # Tool specific output
@@ -285,32 +279,32 @@ rule final_report:
     Compute and print a summary report for assembly, mapping, SV calling, merging and genotyping
     """
     input:
-        vcf="{wdir}/{genome}_final.vcf",
-        merged="{wdir}/genotype/{genome}_merged_genotype.vcf",
-        tsv="{wdir}/{genome}_final.tsv",
-        svlen_equal_zero="{wdir}/merging_QC/{genome}_svlen_equal_zero.tsv",
-        avglen_equal_zero="{wdir}/merging_QC/{genome}_avglen_equal_zero.tsv",
-        no_avgend_field="{wdir}/merging_QC/{genome}_no_avgend_field.tsv",
-        unmerged_sv="{wdir}/merging_QC/{genome}_unmerged_sv.tsv",
-        minimap2_cutesv_tsv="{wdir}/calling/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv="{wdir}/calling/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv="{wdir}/calling/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv="{wdir}/calling/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv="{wdir}/calling/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv="{wdir}/calling/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv="{wdir}/calling/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv="{wdir}/calling/{genome}_ngmlr_debreak.tsv",
-        mapping_minimap2="{wdir}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
-        mapping_ngmlr="{wdir}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv",
+        vcf="{wdir}/{sample}/{genome}_final.vcf",
+        merged="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf",
+        tsv="{wdir}/{sample}/{genome}_final.tsv",
+        svlen_equal_zero="{wdir}/{sample}/merging_QC/{genome}_svlen_equal_zero.tsv",
+        avglen_equal_zero="{wdir}/{sample}/merging_QC/{genome}_avglen_equal_zero.tsv",
+        no_avgend_field="{wdir}/{sample}/merging_QC/{genome}_no_avgend_field.tsv",
+        unmerged_sv="{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv",
+        minimap2_cutesv_tsv="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.tsv",
+        minimap2_svim_tsv="{wdir}/{sample}/calling/{genome}_minimap2_svim.tsv",
+        minimap2_sniffles_tsv="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.tsv",
+        minimap2_debreak_tsv="{wdir}/{sample}/calling/{genome}_minimap2_debreak.tsv",
+        ngmlr_cutesv_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.tsv",
+        ngmlr_svim_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_svim.tsv",
+        ngmlr_sniffles_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.tsv",
+        ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
+        mapping_minimap2="{wdir}/{sample}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
+        mapping_ngmlr="{wdir}/{sample}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv",
     output:
-        "{wdir}/{genome}_finalQC.html",
-        # "{wdir}/{genome}_finalQC.pdf",
-        "{wdir}/performance/{genome}_performance.tsv",
+        "{wdir}/{sample}/{genome}_finalQC.html",
+        # "{wdir}/{sample}/{genome}_finalQC.pdf",
+        "{wdir}/{sample}/performance/{genome}_performance.tsv",
     conda:
         "../envs/Renv.yaml"
     shell:
         """
-        Rscript workflow/scripts/finalQC.R {wdir} {genome}
+        Rscript workflow/scripts/finalQC.R {wdir} {genome} {wildcards.sample}
         """
 
 
@@ -320,11 +314,11 @@ rule light_vcf:
     No sequences
     """
     input:
-        vcf="{wdir}/{genome}_final.vcf",
-        vcf_sexchr="{wdir}/{genome}_final_sexchr.vcf",
-        html="{wdir}/{genome}_finalQC.html",
+        vcf="{wdir}/{sample}/{genome}_final.vcf",
+        vcf_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
+        html="{wdir}/{sample}/{genome}_finalQC.html",
     output:
-        light_vcf="{wdir}/{genome}_final_light.vcf",
+        light_vcf="{wdir}/{sample}/{genome}_final_light.vcf",
     conda:
         "../envs/pysam_v2.yaml"
     shell:
@@ -340,20 +334,20 @@ rule gzvcf:
     BGzip final VCF
     """
     input:
-        vcf="{wdir}/{genome}_final.vcf",
-        light_vcf="{wdir}/{genome}_final_light.vcf",
-        vcf_sexchr="{wdir}/{genome}_final_sexchr.vcf",
-        html="{wdir}/{genome}_finalQC.html",
+        vcf="{wdir}/{sample}/{genome}_final.vcf",
+        light_vcf="{wdir}/{sample}/{genome}_final_light.vcf",
+        vcf_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
+        html="{wdir}/{sample}/{genome}_finalQC.html",
     output:
-        tmp_vcf=temp("{wdir}/{genome}_final_newheader.vcf"),
-        tmp_vcf_sexchr=temp("{wdir}/{genome}_final_sexchr_newheader.vcf"),
-        vcf="{wdir}/{genome}_final.vcf.gz",
-        vcf_sexchr="{wdir}/{genome}_final_sexchr.vcf.gz",
-        vcf_idx="{wdir}/{genome}_final.vcf.gz.csi",
-        vcf_sexchr_idx="{wdir}/{genome}_final_sexchr.vcf.gz.csi",
-        light_tmp_vcf=temp("{wdir}/{genome}_final_newheader_light.vcf"),
-        light_vcf="{wdir}/{genome}_final_light.vcf.gz",
-        light_vcf_idx="{wdir}/{genome}_final_light.vcf.gz.csi",
+        tmp_vcf=temp("{wdir}/{sample}/{genome}_final_newheader.vcf"),
+        tmp_vcf_sexchr=temp("{wdir}/{sample}/{genome}_final_sexchr_newheader.vcf"),
+        vcf="{wdir}/{sample}/{genome}_final.vcf.gz",
+        vcf_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf.gz",
+        vcf_idx="{wdir}/{sample}/{genome}_final.vcf.gz.csi",
+        vcf_sexchr_idx="{wdir}/{sample}/{genome}_final_sexchr.vcf.gz.csi",
+        light_tmp_vcf=temp("{wdir}/{sample}/{genome}_final_newheader_light.vcf"),
+        light_vcf="{wdir}/{sample}/{genome}_final_light.vcf.gz",
+        light_vcf_idx="{wdir}/{sample}/{genome}_final_light.vcf.gz.csi",
     conda:
         "../envs/samtools.yaml"
     shell:

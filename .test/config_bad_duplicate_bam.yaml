@@ -1,0 +1,5 @@
+# CI dry-run config (negative): one individual declares two bam_minimap2 files.
+start_from_bam: true
+samples: .test/fixtures/bad/samples_duplicate_bam.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

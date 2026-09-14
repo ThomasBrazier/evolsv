@@ -119,6 +119,8 @@ POSITIVE_CASES = [
     ("bigtmp", ".test/config_bigtmp.yaml"),
     ("config-test", "config/config_test.yaml"),
     ("ont", ".test/config_ont.yaml"),
+    ("multi-individual", ".test/config_multi.yaml"),
+    ("bam-mode-multi-individual", ".test/config_bam_multi.yaml"),
 ]
 
 
@@ -221,6 +223,78 @@ def test_explicit_config_key_overrides_the_preset():
     assert "--presets ont" in result.stdout
 
 
+# Rules that run once per individual, and rules that run once for the shared reference.
+PER_INDIVIDUAL_RULES = ("sample_ids", "jasmine", "svjedigraph", "final_vcf", "final_report", "truvari_grm")
+SHARED_REFERENCE_RULES = (
+    "download_genome",
+    "genmap",
+    "mappability_bed",
+    "autosomes_sexchromosomes",
+    "bwa_index",
+)
+MULTI_WDIR = ".test/fixtures/data/GCA_947247005.1"
+INDIVIDUALS = ("SAMEA8724893", "SAMEA0000002")
+
+
+def test_multi_individual_fastq_mode_runs_each_individual_once():
+    """Two individuals: one result set each, one copy of the shared reference work."""
+    counts = parse_job_stats(run_dryrun(".test/config_multi.yaml").stdout)
+
+    for rule in PER_INDIVIDUAL_RULES + ("merge_fastq", "minimap2", "ngmlr"):
+        assert counts.get(rule) == 2, f"{rule} should run once per individual"
+    for rule in SHARED_REFERENCE_RULES:
+        assert counts.get(rule) == 1, f"{rule} should run once for all individuals"
+    # Three SRA runs in total: two for the first individual, one for the second.
+    assert counts["download_sra"] == 3
+    assert counts["fastqc"] == 3
+
+
+def test_multi_individual_bam_mode_runs_each_individual_once():
+    """BAM mode stages one BAM per aligner per individual."""
+    counts = parse_job_stats(run_dryrun(".test/config_bam_multi.yaml").stdout)
+
+    assert counts["stage_bam"] == 4
+    assert counts["stage_fastq"] == 2
+    for rule in PER_INDIVIDUAL_RULES:
+        assert counts.get(rule) == 2, f"{rule} should run once per individual"
+    for rule in SHARED_REFERENCE_RULES:
+        assert counts.get(rule) == 1, f"{rule} should run once for all individuals"
+
+
+def test_reads_are_never_merged_across_individuals():
+    """Each individual's merged FASTQ is built from its own SRA runs only."""
+    result = run_dryrun(".test/config_multi.yaml")
+    assert_succeeded(result)
+
+    merges = [
+        line.strip()
+        for line in result.stdout.splitlines()
+        if line.strip().startswith("cat ") and line.strip().endswith("/GCA_947247005.1.fastq.gz")
+    ]
+    first_dir = f"{MULTI_WDIR}/{INDIVIDUALS[0]}/fastq"
+    second_dir = f"{MULTI_WDIR}/{INDIVIDUALS[1]}/fastq"
+    # Runs are concatenated in sample-sheet order.
+    first = (
+        f"cat {first_dir}/ERR10287556_sra.fastq.gz {first_dir}/ERR10287555_sra.fastq.gz"
+        f" > {first_dir}/GCA_947247005.1.fastq.gz"
+    )
+    second = f"cat {second_dir}/ERR00000001_sra.fastq.gz > {second_dir}/GCA_947247005.1.fastq.gz"
+    assert first in merges, f"first individual's merge_fastq command not found in:\n{merges}"
+    assert second in merges, f"second individual's merge_fastq command not found in:\n{merges}"
+
+
+def test_each_individual_gets_its_own_read_group_and_final_vcf():
+    """Read groups and final outputs are named after the individual, not the first row."""
+    result = run_dryrun(".test/config_multi.yaml")
+    assert_succeeded(result)
+
+    for individual in INDIVIDUALS:
+        assert f"SM:{individual}" in result.stdout, f"minimap2 read group missing for {individual}"
+        assert f"--rg-sm {individual}" in result.stdout, f"ngmlr read group missing for {individual}"
+        final = f"{MULTI_WDIR}/{individual}/GCA_947247005.1_final.vcf.gz"
+        assert final in result.stdout, f"{final} is not scheduled"
+
+
 @pytest.mark.parametrize("configfile", [None, ".test/config_bam.yaml"], ids=["default", "bam-mode"])
 def test_rule_all_targets_are_reachable(configfile):
     """Every group of `rule all` inputs has its terminal rule scheduled, in both modes."""
@@ -242,8 +316,19 @@ NEGATIVE_CASES = [
     ("empty-bam", ".test/config_bad_empty_bam.yaml", "is empty"),
     ("no-index", ".test/config_bad_no_index.yaml", "No BAI index found"),
     ("no-fastq", ".test/config_bad_no_fastq.yaml", "Reads are required to genotype the SVs"),
-    ("no-ngmlr", ".test/config_bad_no_ngmlr.yaml", "no bam_ngmlr file was declared"),
+    (
+        "no-ngmlr",
+        ".test/config_bad_no_ngmlr.yaml",
+        "no bam_ngmlr file for individual 'SAMEA8724893' was declared",
+    ),
     ("bad-technology", ".test/config_bad_tech.yaml", "Unknown sequencing_technology"),
+    ("two-genomes", ".test/config_bad_two_genomes.yaml", "must use the same reference genome"),
+    (
+        "duplicate-bam",
+        ".test/config_bad_duplicate_bam.yaml",
+        "Individual 'SAMEA8724893' declares 2 bam_minimap2 files",
+    ),
+    ("bad-sample-name", ".test/config_bad_sample_name.yaml", "Invalid sample_name 'bad/name'"),
 ]
 
 

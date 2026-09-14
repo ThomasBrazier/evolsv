@@ -1,0 +1,4 @@
+# CI dry-run config (negative): individuals on two different reference genomes.
+samples: .test/fixtures/bad/samples_two_genomes.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

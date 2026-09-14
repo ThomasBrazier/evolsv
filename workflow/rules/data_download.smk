@@ -6,18 +6,18 @@ if not bam_mode:
         and the genome from the NCBI genome assembly database
         """
         output:
-            fastq=temp("{wdir}/fastq/{sample}_sra.fastq.gz"),
+            fastq=temp("{wdir}/{sample}/fastq/{run}_sra.fastq.gz"),
         params:
             outdir=lambda wildcards, output: os.path.dirname(output.fastq),
         conda:
             "../envs/download.yaml"
         log:
-            "{wdir}/logs/download_sra/{sample}.log",
+            "{wdir}/{sample}/logs/download_sra/{run}.log",
         shell:
             """
             mkdir --parents {params.outdir}
-            fastq-dump -v --gzip --outdir {params.outdir}/ {wildcards.sample} &> {log}
-            mv "{params.outdir}/{wildcards.sample}.fastq.gz" "{output.fastq}" 2>> {log}
+            fastq-dump -v --gzip --outdir {params.outdir}/ {wildcards.run} &> {log}
+            mv "{params.outdir}/{wildcards.run}.fastq.gz" "{output.fastq}" 2>> {log}
             """
 
 
@@ -78,16 +78,16 @@ rule sample_ids:
     pre-aligned BAM files.
     """
     output:
-        sampleids="{wdir}/{genome}.samples",
+        sampleids="{wdir}/{sample}/{genome}.samples",
+        sheet="{wdir}/{sample}/{genome}_samples.tsv",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "{wdir}/logs/{genome}_sample_ids.log",
+        "{wdir}/{sample}/logs/{genome}_sample_ids.log",
     shell:
         """
-        mkdir --parents {wdir}
-        echo {sample_id} > {output.sampleids}
-        cp {config[samples]} {wdir}/{genome}_samples.tsv
+        echo {wildcards.sample} > {output.sampleids}
+        cp {config[samples]} {output.sheet}
         """
 
 
@@ -95,21 +95,20 @@ if not bam_mode:
 
     rule merge_fastq:
         """
-        Merge fastq files for mapping
+        Merge the fastq files of one individual for mapping
         """
         input:
-            fastq=expand(
-                "{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"]
+            fastq=lambda wildcards: expand(
+                "{wdir}/{sample}/fastq/{run}_sra.fastq.gz",
+                wdir=wildcards.wdir,
+                sample=wildcards.sample,
+                run=runs_of(wildcards.sample),
             ),
         output:
-            merged_fastq=temp(
-                expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome)
-            ),
+            merged_fastq=temp("{wdir}/{sample}/fastq/{genome}.fastq.gz"),
         conda:
             "../envs/samtools.yaml"
-        params:
-            fastqlist=" ".join(samplelist),
         shell:
             """
-            cat {params.fastqlist} > {output.merged_fastq}
+            cat {input.fastq} > {output.merged_fastq}
             """

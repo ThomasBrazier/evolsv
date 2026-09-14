@@ -4,7 +4,7 @@ datadir: data/ # The directory where data and results must be stored
 bigtmp: "./tmp/" #Set to a path with lots of free space to use for commands that require large amounts of temp space; defaults to system tmpdir if empty
 
 # SAMPLE
-samples: config/samples.tsv # The sample files with sample name and SRA number of the long-read SRA archive
+samples: config/samples.tsv # The sample sheet: one row per SRA run, with sample name (the individual), SRA number of the long-read SRA archive and genome. Several individuals are processed separately, one output directory each
 # genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
 # INPUT MODE
