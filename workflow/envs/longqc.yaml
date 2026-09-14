@@ -1,0 +1,6 @@
+name: longqc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - longqc=1.2.0c

@@ -34,6 +34,8 @@ hifiadapterfilt_min_length: 44 # Minimum adapter match length to remove a read [
 hifiadapterfilt_min_match: 97 # Minimum adapter match percentage to remove a read [default: 97]
 # Trim adapters with Porechop_ABI (sequencing_technology: ont only)
 porechop_ab_initio: true # Infer adapters from the reads (-abi) in addition to the Porechop adapter database. No seed: inferred adapters can differ between runs
+# Long-read QC with LongQC
+# longqc_preset: pb-hifi # LongQC -x preset (pb-rs2, pb-sequel, pb-hifi, ont-ligation, ont-rapid, ont-1dsq). Leave commented to use the sequencing_technology preset (hifi -> pb-hifi, ont -> ont-ligation)
 
 # MAPPING
 # Mapping on the reference genome with Minimap2

@@ -1,0 +1,5 @@
+# CI dry-run config (negative case): a LongQC preset that does not exist.
+# Expected to fail in rules/common.smk with "Unknown longqc_preset".
+longqc_preset: pb-hifii
+datadir: .test/fixtures/data/
+bigtmp: ""

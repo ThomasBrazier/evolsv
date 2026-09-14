@@ -21,6 +21,48 @@ rule fastqc:
         """
 
 
+rule longqc:
+    """
+    Long-read quality control with LongQC, one SRA run at a time.
+
+    LongQC: Fukasawa et al. (2020) G3: Genes, Genomes, Genetics 10(4):1193-1196.
+    sampleqc gives read length, quality, GC content, low-complexity masking, coverage
+    from read overlaps and adapter analysis at the read ends.
+    -x      Platform preset (config key longqc_preset; from sequencing_technology:
+            hifi -> pb-hifi, ont -> ont-ligation)
+    -p      Number of CPUs. LongQC exits below 4, so it is raised to 4
+    -o      Output folder. LongQC exits if it exists, so it is removed first
+
+    LongQC analyses a sample of 5000 reads (-n default), drawn with a fixed seed (7),
+    so the result is reproducible. Adapter trimming (-c) is not used: rules
+    hifiadapterfilt and porechop_abi remove adapters.
+
+    The output is the whole folder: web_summary.html loads its figures from figs/.
+    The bioconda package installs longQC.py without a shebang, so it runs with python.
+    """
+    input:
+        "{wdir}/{sample}/fastq/{run}_sra.fastq.gz",
+    output:
+        directory("{wdir}/{sample}/longqc/{run}"),
+    threads: workflow.cores
+    conda:
+        "../envs/longqc.yaml"
+    log:
+        "{wdir}/{sample}/logs/{run}.longqc.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{run}.longqc.tsv"
+    shell:
+        """
+        rm -rf {output}
+        python "$(command -v longQC.py)" sampleqc \
+        -x {config[longqc_preset]} \
+        -p $(( {threads} < 4 ? 4 : {threads} )) \
+        -o {output} \
+        {input} &> {log}
+        test -s {output}/QC_vals_longQC_sampleqc.json
+        """
+
+
 rule hifiadapterfilt:
     """
     Remove PacBio HiFi reads that contain adapter sequences, one SRA run at a time.

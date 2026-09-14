@@ -22,7 +22,14 @@ REPO_ROOT = TEST_DIR.parent
 
 # Rules that only exist on the FASTQ entry point (rules/data_qc.smk + rules/mapping.smk).
 # `filter_reads_chopper` is the real rule name; there is no rule called `chopper`.
-FASTQ_ENTRY_RULES = ("download_sra", "merge_fastq", "filter_reads_chopper", "minimap2", "ngmlr")
+FASTQ_ENTRY_RULES = (
+    "download_sra",
+    "longqc",
+    "merge_fastq",
+    "filter_reads_chopper",
+    "minimap2",
+    "ngmlr",
+)
 
 # One terminal rule behind each group of `rule all` inputs in workflow/Snakefile.
 # If any of these disappears from the DAG, a target has silently stopped being built.
@@ -245,6 +252,35 @@ def test_adapter_filtering_matches_the_technology():
     assert "--ab_initio" in result.stdout
 
 
+def test_longqc_preset_follows_the_technology():
+    """LongQC runs once per SRA run, with the -x preset of the sequencing technology."""
+    result = run_dryrun()
+    assert_succeeded(result)
+    # config/samples.tsv declares two SRA runs for the one individual.
+    assert parse_job_stats(result.stdout)["longqc"] == 2
+    assert "-x pb-hifi" in result.stdout
+    # profiles/ci has 1 core; LongQC exits below 4 CPUs, so -p must be raised to 4.
+    assert "-p $(( 1 < 4 ? 4 : 1 ))" in result.stdout
+
+    result = run_dryrun(".test/config_ont.yaml")
+    assert_succeeded(result)
+    assert "-x ont-ligation" in result.stdout
+    assert "-x pb-hifi" not in result.stdout
+
+    result = subprocess.run(
+        [
+            "snakemake", "-s", "workflow/Snakefile", "-n", "-p",
+            "--profile", "profiles/ci",
+            "--configfile", ".test/config_ont.yaml",
+            "--config", "longqc_preset=ont-rapid",
+        ],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+    )
+    assert_succeeded(result)
+    assert "-x ont-rapid" in result.stdout
+    assert "-x ont-ligation" not in result.stdout
+
+
 def test_porechop_ab_initio_can_be_disabled():
     """porechop_ab_initio: false keeps Porechop_ABI on its adapter database only.
 
@@ -412,6 +448,7 @@ NEGATIVE_CASES = [
         "no bam_ngmlr file for individual 'SAMEA8724893' was declared",
     ),
     ("bad-technology", ".test/config_bad_tech.yaml", "Unknown sequencing_technology"),
+    ("bad-longqc-preset", ".test/config_bad_longqc_preset.yaml", "Unknown longqc_preset 'pb-hifii'"),
     ("two-genomes", ".test/config_bad_two_genomes.yaml", "must use the same reference genome"),
     (
         "duplicate-bam",

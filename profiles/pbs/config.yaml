@@ -76,6 +76,7 @@ set-threads:
   stage_fastq: 1
   # Fastq processing. Can use more than 1 thread.
   fastqc: 16
+  longqc: 8 # LongQC needs at least 4
   hifiadapterfilt: 16 # PacBio HiFi only
   porechop_abi: 16 # ONT only
   nanoplot: 4
@@ -134,7 +135,7 @@ set-threads:
 # default-resources values above. cpus_per_task is deliberately never set here: it is
 # derived from set-threads.
 #
-# Not yet measured: hifiadapterfilt, porechop_abi, genmap and bwa_index use the
+# Not yet measured: longqc, hifiadapterfilt, porechop_abi, genmap and bwa_index use the
 # default mem_mb and runtime. Each writes a benchmark: file (max_rss, s); set their
 # values here from a real run.
 set-resources:

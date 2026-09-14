@@ -156,6 +156,7 @@ Any other value is rejected before the run starts. The key fills in the technolo
 | `diff_ratio_merging_INS` (cuteSV) | 0.9 | 0.3 |
 | `max_cluster_bias_DEL` (cuteSV) | 1000 | 100 |
 | `diff_ratio_merging_DEL` (cuteSV) | 0.5 | 0.3 |
+| `longqc_preset` ([LongQC](https://github.com/yfukasawa/LongQC) `-x`) | `pb-hifi` | `ont-ligation` |
 
 The cuteSV values are the ones [recommended by its authors](https://github.com/tjiangHIT/cuteSV#recommendation-parameters) for each technology.
 
@@ -204,7 +205,7 @@ Requirements on the BAM files, all checked before the run proceeds (see `workflo
 Caveats to be aware of when interpreting the results:
 
 * **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour. HiFiAdapterFilt and Porechop_ABI are not applied either.
-* **Read-level QC (FastQC, NanoPlot) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
+* **Read-level QC (FastQC, NanoPlot, LongQC) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
 * **`sequencing_technology` still matters.** The aligner presets and the `@RG PL` tag are unused in this mode, since the alignments are supplied, but the key still drives the cuteSV clustering parameters. Set it to the technology the BAM files were produced from.
 * **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
 

@@ -46,6 +46,8 @@ def per_individual(pattern, **wildcards):
 # Sniffles2, SVIM, DeBreak and SVJedi-graph publish no technology presets, so nothing
 # else in the workflow is technology-dependent. chopper is deliberately absent too:
 # chopper_quality: 10 suits HiFi and modern ONT alike (see README).
+# longqc_preset is the LongQC -x preset. For ONT it assumes a ligation kit (SQK-LSK);
+# set longqc_preset: ont-rapid for rapid kits.
 TECH_PRESETS = {
     "hifi": {
         "minimap_ax": "map-hifi",
@@ -55,6 +57,7 @@ TECH_PRESETS = {
         "diff_ratio_merging_INS": 0.9,
         "max_cluster_bias_DEL": 1000,
         "diff_ratio_merging_DEL": 0.5,
+        "longqc_preset": "pb-hifi",
     },
     "ont": {
         "minimap_ax": "map-ont",
@@ -64,8 +67,13 @@ TECH_PRESETS = {
         "diff_ratio_merging_INS": 0.3,
         "max_cluster_bias_DEL": 100,
         "diff_ratio_merging_DEL": 0.3,
+        "longqc_preset": "ont-ligation",
     },
 }
+
+# The -x choices of LongQC 1.2.0c (longQC.py). Checked here, so a typo stops the run
+# before the DAG is built rather than when the first LongQC job starts.
+LONGQC_PRESETS = ("pb-rs2", "pb-sequel", "pb-hifi", "ont-ligation", "ont-rapid", "ont-1dsq")
 
 sequencing_technology = str(config.get("sequencing_technology", "hifi")).strip().lower()
 if sequencing_technology not in TECH_PRESETS:
@@ -76,6 +84,13 @@ if sequencing_technology not in TECH_PRESETS:
     )
 for preset_key, preset_value in TECH_PRESETS[sequencing_technology].items():
     config.setdefault(preset_key, preset_value)
+
+if config["longqc_preset"] not in LONGQC_PRESETS:
+    raise WorkflowError(
+        "Unknown longqc_preset '{}'. Supported values are: {}.".format(
+            config["longqc_preset"], ", ".join(LONGQC_PRESETS)
+        )
+    )
 
 
 def config_flag(key):
