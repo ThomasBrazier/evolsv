@@ -24,7 +24,7 @@ rule minimap2:
     shell:
         """
         minimap2 -ax {config[minimap_ax]} --MD -2 \
-        --seed {config[minimap_seed]} --eqx \
+        --seed {config[seed]} --eqx \
         -t {resources.cpus_per_task} \
         -R "@RG\\tID:{sample_id}\\tSM:{sample_id}\\tPL:{config[read_group_platform]}" \
         --sam-hit-only {input.fasta} {input.fastq} > {output.sam}

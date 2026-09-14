@@ -18,7 +18,7 @@ filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file wit
 sequencing_technology: hifi # hifi (PacBio HiFi/CCS) | ont (Oxford Nanopore). Sets the minimap2/NGMLR presets, the @RG PL tag and the cuteSV clustering parameters
 
 # Mapping on the reference genome
-minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
+seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # SV calling
 # Common settings

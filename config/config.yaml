@@ -31,7 +31,7 @@ chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
 # MAPPING
 # Mapping on the reference genome with Minimap2
 # minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual). Leave commented to use the sequencing_technology preset (hifi -> map-hifi, ont -> map-ont)
-minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
+seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # Mapping on the reference genome with NGMLR
 # ngmlr_preset: pacbio # Preset for the sequencing technology, one of pacbio or ont. Leave commented to use the sequencing_technology preset (hifi -> pacbio, ont -> ont)
