@@ -27,6 +27,9 @@ chopper_maxlength: 20000000 # Sets a maximum read length [default: 20 Mb]
 chopper_minlength: 500 # Sets a minimum read length [default: 500 bp]
 chopper_quality: 10 # Sets a minimum Phred average quality score [default: 10]
 chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
+# Remove reads with adapter matches with HiFiAdapterFilt (sequencing_technology: hifi only)
+hifiadapterfilt_min_length: 44 # Minimum adapter match length to remove a read [default: 44]
+hifiadapterfilt_min_match: 97 # Minimum adapter match percentage to remove a read [default: 97]
 
 # MAPPING
 # Mapping on the reference genome with Minimap2

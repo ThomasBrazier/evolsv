@@ -189,8 +189,24 @@ def test_default_technology_is_hifi():
         assert flag in result.stdout, "{!r} missing from the default shell commands".format(flag)
 
 
+def test_hifiadapterfilt_runs_only_for_hifi():
+    """HiFi runs are adapter-filtered one run at a time, and merged after filtering."""
+    result = run_dryrun()
+    assert_succeeded(result)
+    # config/samples.tsv declares two SRA runs for the one individual.
+    assert parse_job_stats(result.stdout)["hifiadapterfilt"] == 2
+    assert "_sra.filt.fastq.gz" in result.stdout
+
+    result = run_dryrun(".test/config_ont.yaml")
+    assert_succeeded(result)
+    assert "hifiadapterfilt" not in parse_job_stats(result.stdout)
+    assert "_sra.filt.fastq.gz" not in result.stdout
+
+
 def test_ont_presets_reach_the_shell_commands():
-    """sequencing_technology: ont leaves the DAG untouched, so assert on the commands.
+    """Besides hifiadapterfilt, sequencing_technology only sets config defaults.
+
+    So assert on the commands.
 
     One flag per tool the preset owns: minimap2, ngmlr and cuteSV. cuteSV is the one
     that would otherwise silently keep HiFi clustering on an ONT run.
@@ -273,12 +289,15 @@ def test_reads_are_never_merged_across_individuals():
     ]
     first_dir = f"{MULTI_WDIR}/{INDIVIDUALS[0]}/fastq"
     second_dir = f"{MULTI_WDIR}/{INDIVIDUALS[1]}/fastq"
-    # Runs are concatenated in sample-sheet order.
+    # Runs are concatenated in sample-sheet order, after HiFiAdapterFilt (default hifi).
     first = (
-        f"cat {first_dir}/ERR10287556_sra.fastq.gz {first_dir}/ERR10287555_sra.fastq.gz"
+        f"cat {first_dir}/ERR10287556_sra.filt.fastq.gz {first_dir}/ERR10287555_sra.filt.fastq.gz"
         f" > {first_dir}/GCA_947247005.1.fastq.gz"
     )
-    second = f"cat {second_dir}/ERR00000001_sra.fastq.gz > {second_dir}/GCA_947247005.1.fastq.gz"
+    second = (
+        f"cat {second_dir}/ERR00000001_sra.filt.fastq.gz"
+        f" > {second_dir}/GCA_947247005.1.fastq.gz"
+    )
     assert first in merges, f"first individual's merge_fastq command not found in:\n{merges}"
     assert second in merges, f"second individual's merge_fastq command not found in:\n{merges}"
 

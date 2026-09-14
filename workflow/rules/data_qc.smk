@@ -21,6 +21,60 @@ rule fastqc:
         """
 
 
+rule hifiadapterfilt:
+    """
+    Remove PacBio HiFi reads that contain adapter sequences, one SRA run at a time.
+    Only used when sequencing_technology is hifi (see rule merge_fastq).
+
+    HiFiAdapterFilt: Sim et al. (2022) BMC Genomics 23:157,
+    https://doi.org/10.1186/s12864-022-08375-1
+    Reads with a BLAST match to the PacBio adapter or primer sequences are removed
+    as whole reads; no bases are trimmed from the remaining reads.
+    -l      Minimum adapter match length to remove a read [default: 44]
+    -m      Minimum adapter match percentage to remove a read [default: 97]
+    -t      Number of threads for blastn
+
+    hifiadapterfilt.sh looks for its input as ${{prefix}}*.f*q* in the current
+    directory. It runs in a private work directory, so that no other file can match.
+    """
+    input:
+        "{wdir}/{sample}/fastq/{run}_sra.fastq.gz",
+    output:
+        filt_fastq=temp("{wdir}/{sample}/fastq/{run}_sra.filt.fastq.gz"),
+        stats="{wdir}/{sample}/hifiadapterfilt/{run}.stats",
+        blocklist="{wdir}/{sample}/hifiadapterfilt/{run}.blocklist",
+        blastout="{wdir}/{sample}/hifiadapterfilt/{run}.contaminant.blastout",
+    threads: workflow.cores
+    conda:
+        "../envs/hifiadapterfilt.yaml"
+    log:
+        "{wdir}/{sample}/logs/{run}.hifiadapterfilt.log",
+    params:
+        workdir=lambda wildcards, output: os.path.join(
+            os.path.dirname(output.stats), f"{wildcards.run}_work"
+        ),
+    shell:
+        """
+        rm -rf {params.workdir}
+        mkdir -p {params.workdir}
+        ln -s "$(realpath {input})" {params.workdir}/{wildcards.run}.fastq.gz
+        log="$(realpath {log})"
+
+        ( cd {params.workdir} && hifiadapterfilt.sh \
+        -p {wildcards.run} \
+        -l {config[hifiadapterfilt_min_length]} \
+        -m {config[hifiadapterfilt_min_match]} \
+        -t {resources.cpus_per_task} \
+        -o . ) &> "$log"
+
+        mv {params.workdir}/{wildcards.run}.filt.fastq.gz {output.filt_fastq}
+        mv {params.workdir}/{wildcards.run}.stats {output.stats}
+        mv {params.workdir}/{wildcards.run}.blocklist {output.blocklist}
+        mv {params.workdir}/{wildcards.run}.contaminant.blastout {output.blastout}
+        rm -rf {params.workdir}
+        """
+
+
 rule nanoplot:
     """
     Quality control of raw data
