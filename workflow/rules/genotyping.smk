@@ -28,6 +28,30 @@ rule svjedigraph:
         """
 
 
+rule check_reference_names:
+    """
+    Check that the sequence report and the reference FASTA name the same contigs,
+    with the same lengths. Otherwise the autosome and sex-chromosome BED files select
+    nothing and the final VCF is empty, with no error.
+    See workflow/scripts/check_reference_names.py.
+    """
+    input:
+        seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        fai="{wdir}/genome/{genome}.fna.fai",
+    output:
+        "{wdir}/genome/{genome}_reference_names_check.txt",
+    conda:
+        "../envs/bamcheck.yaml"
+    log:
+        "{wdir}/logs/check_reference_names/{genome}.log",
+    shell:
+        """
+        python workflow/scripts/check_reference_names.py \
+        --sequence-report {input.seq} --fai {input.fai} \
+        --report {output} 2> {log}
+        """
+
+
 rule autosomes_sexchromosomes:
     """
     Remove MT and Un chromosomes
@@ -35,6 +59,7 @@ rule autosomes_sexchromosomes:
     """
     input:
         seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        names_check="{wdir}/genome/{genome}_reference_names_check.txt",
     output:
         sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
         autosomes="{wdir}/genome/{genome}.autosomes",

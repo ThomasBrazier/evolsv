@@ -296,6 +296,13 @@ rule final_report:
         ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
         mapping_minimap2="{wdir}/{sample}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
         mapping_ngmlr="{wdir}/{sample}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv",
+        # Read by finalQC.Rmd. Absent only with a local sequence_report and no local
+        # assembly_data_report; the report then skips its assembly section.
+        assembly_report=(
+            ["{wdir}/genome/{genome}_assembly_data_report.jsonl"]
+            if reference_source != "local" or assembly_data_report
+            else []
+        ),
     output:
         "{wdir}/{sample}/{genome}_finalQC.html",
         # "{wdir}/{sample}/{genome}_finalQC.pdf",

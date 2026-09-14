@@ -94,27 +94,65 @@ def config_flag(key):
     )
 
 
-def check_readable_file(path, description):
-    """Fail at DAG construction time rather than deep into an expensive run."""
+def check_readable_file(path, description, declared_in=None):
+    """Fail at DAG construction time rather than deep into an expensive run.
+
+    declared_in names where the path comes from; it defaults to the sample sheet.
+    """
+    declared_in = declared_in or config["samples"]
     if not path:
         raise WorkflowError(
             "start_from_bam is set but no {} was declared in {}.".format(
-                description, config["samples"]
+                description, declared_in
             )
         )
     if not Path(path).is_file():
         raise WorkflowError(
             "The {} '{}' declared in {} does not exist.".format(
-                description, path, config["samples"]
+                description, path, declared_in
             )
         )
     if Path(path).stat().st_size == 0:
         raise WorkflowError(
-            "The {} '{}' declared in {} is empty.".format(
-                description, path, config["samples"]
-            )
+            "The {} '{}' declared in {} is empty.".format(description, path, declared_in)
         )
     return path
+
+
+# Source of the reference genome and of its assembly metadata. Only three combinations
+# are valid, so the metadata always describes the FASTA it is used with:
+#   ncbi         nothing local: FASTA and metadata downloaded from NCBI
+#   local_fasta  reference_fasta only: local FASTA, metadata downloaded from NCBI
+#   local        reference_fasta + sequence_report (+ optional assembly_data_report):
+#                nothing is downloaded
+reference_fasta = str(config.get("reference_fasta") or "")
+sequence_report = str(config.get("sequence_report") or "")
+assembly_data_report = str(config.get("assembly_data_report") or "")
+
+if sequence_report and not reference_fasta:
+    raise WorkflowError(
+        "sequence_report is set but reference_fasta is not. A local sequence report "
+        "must describe a local FASTA: set reference_fasta too, or remove sequence_report."
+    )
+if assembly_data_report and not sequence_report:
+    raise WorkflowError(
+        "assembly_data_report is set but sequence_report is not. Local assembly "
+        "metadata needs both reference_fasta and sequence_report."
+    )
+for key, path in [
+    ("reference_fasta", reference_fasta),
+    ("sequence_report", sequence_report),
+    ("assembly_data_report", assembly_data_report),
+]:
+    if path:
+        check_readable_file(path, f"{key} file", declared_in="the config file")
+
+if sequence_report:
+    reference_source = "local"
+elif reference_fasta:
+    reference_source = "local_fasta"
+else:
+    reference_source = "ncbi"
 
 
 def resolve_bam_index(bam):

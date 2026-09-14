@@ -37,6 +37,9 @@ set-threads:
   # Data acquisition. Single-threaded: network- and I/O-bound.
   download_sra: 1
   download_genome: 1
+  stage_genome: 1 # local reference_fasta + sequence_report only
+  stage_assembly_data_report: 1
+  check_reference_names: 1
   sample_ids: 1
   merge_fastq: 1
   # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
@@ -109,6 +112,12 @@ set-resources:
   download_sra:
     mem_mb: attempt * 2000
   download_genome:
+    mem_mb: attempt * 2000
+  stage_genome:
+    mem_mb: attempt * 2000
+  stage_assembly_data_report:
+    mem_mb: attempt * 2000
+  check_reference_names:
     mem_mb: attempt * 2000
   stage_bam:
     mem_mb: attempt * 2000

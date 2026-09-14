@@ -115,6 +115,8 @@ POSITIVE_CASES = [
     ("single-run", ".test/config_single_run.yaml"),
     ("bam-mode", ".test/config_bam.yaml"),
     ("local-reference", ".test/config_local_ref.yaml"),
+    ("local-metadata", ".test/config_local_metadata.yaml"),
+    ("local-metadata-no-assembly-report", ".test/config_local_metadata_no_asm.yaml"),
     ("no-scaffold-exclusion", ".test/config_no_scaffold_exclusion.yaml"),
     ("bigtmp", ".test/config_bigtmp.yaml"),
     ("config-test", "config/config_test.yaml"),
@@ -179,6 +181,39 @@ def test_local_reference_reaches_the_shell_command():
     assert re.search(r"Using the local reference FASTA .*ref\.fna", result.stdout), (
         "the local reference FASTA never reached rule download_genome's shell command"
     )
+
+
+def test_reference_names_are_checked_before_the_autosome_split():
+    """The contig-name check runs in every reference mode, once for the shared genome."""
+    for configfile in (None, ".test/config_local_ref.yaml", ".test/config_local_metadata.yaml"):
+        result = run_dryrun(configfile)
+        assert_succeeded(result)
+        assert parse_job_stats(result.stdout)["check_reference_names"] == 1, configfile
+
+
+def test_local_metadata_downloads_nothing_from_ncbi():
+    """reference_fasta + sequence_report: rule stage_genome replaces download_genome."""
+    result = run_dryrun(".test/config_local_metadata.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+    assert "download_genome" not in counts
+    assert counts["stage_genome"] == 1
+    assert counts["stage_assembly_data_report"] == 1
+    assert "datasets download" not in result.stdout
+    assert re.search(r"Using the local reference FASTA .*ref\.fna", result.stdout)
+
+    # assembly_data_report is optional: no staging rule, and the report does not wait for it.
+    result = run_dryrun(".test/config_local_metadata_no_asm.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+    assert counts["stage_genome"] == 1
+    assert "stage_assembly_data_report" not in counts
+    assert "download_genome" not in counts
+
+    # A local FASTA alone still takes its metadata from NCBI.
+    counts = parse_job_stats(run_dryrun(".test/config_local_ref.yaml").stdout)
+    assert counts["download_genome"] == 1
+    assert "stage_genome" not in counts
 
 
 def test_default_technology_is_hifi():
@@ -384,6 +419,24 @@ NEGATIVE_CASES = [
         "Individual 'SAMEA8724893' declares 2 bam_minimap2 files",
     ),
     ("bad-sample-name", ".test/config_bad_sample_name.yaml", "Invalid sample_name 'bad/name'"),
+    (
+        "report-without-fasta",
+        ".test/config_bad_report_without_fasta.yaml",
+        "sequence_report is set but reference_fasta is not",
+    ),
+    (
+        "assembly-report-without-sequence-report",
+        ".test/config_bad_asm_without_report.yaml",
+        "assembly_data_report is set but sequence_report is not",
+    ),
+    (
+        "missing-sequence-report",
+        ".test/config_bad_missing_report.yaml",
+        (
+            "The sequence_report file '.test/fixtures/bad/does_not_exist_sequence_report.jsonl' "
+            "declared in the config file does not exist"
+        ),
+    ),
 ]
 
 

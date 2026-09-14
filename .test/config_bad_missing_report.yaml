@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): sequence_report points to a file that does not exist.
+# Expected to fail in check_readable_file with "does not exist".
+reference_fasta: .test/fixtures/ref.fna
+sequence_report: .test/fixtures/bad/does_not_exist_sequence_report.jsonl
+datadir: .test/fixtures/data/
+bigtmp: ""

@@ -199,7 +199,7 @@ Requirements on the BAM files, all checked before the run proceeds (see `workflo
 
 * coordinate-sorted, with a `.bai` index next to the BAM (a `.csi` index is not accepted);
 * an `@RG` line whose `SM` tag equals `sample_name` in the sample sheet, because Samplot selects reads by sample id;
-* contig names *and* lengths matching the reference. This is the check most likely to fire: the pipeline downloads the GenBank assembly from NCBI, so a BAM aligned against a RefSeq or UCSC copy of the same assembly will be rejected. Point `reference_fasta` at the exact FASTA you aligned to. Assembly metadata is still downloaded from NCBI in that case, since the final report and the sex-chromosome detection need it.
+* contig names *and* lengths matching the reference. This is the check most likely to fire: the pipeline downloads the GenBank assembly from NCBI, so a BAM aligned against a RefSeq or UCSC copy of the same assembly will be rejected. Point `reference_fasta` at the exact FASTA you aligned to. The assembly metadata is then still downloaded from NCBI, unless you also give it locally (see [Local reference genome and metadata](#local-reference-genome-and-metadata)).
 
 Caveats to be aware of when interpreting the results:
 
@@ -209,6 +209,41 @@ Caveats to be aware of when interpreting the results:
 * **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
 
 The BAM files are symlinked, not copied, so no extra storage is used.
+
+
+### Local reference genome and metadata
+
+By default the reference genome (the `genome` column of the sample sheet) is downloaded from NCBI with its metadata. Two metadata files are used:
+
+* `sequence_report.jsonl`: rule `autosomes_sexchromosomes` uses it to split autosomes and sex chromosomes in the final VCF files, and the final report shows it;
+* `assembly_data_report.jsonl`: only the final report reads it.
+
+Three config keys give local files instead. Only these combinations are accepted; any other stops the run before it starts:
+
+| `reference_fasta` | `sequence_report` | `assembly_data_report` | Downloaded from NCBI |
+| --- | --- | --- | --- |
+| – | – | – | FASTA and metadata |
+| set | – | – | metadata only |
+| set | set | optional | nothing |
+
+```yaml
+reference_fasta: "/path/to/assembly.fna"
+sequence_report: "/path/to/sequence_report.jsonl"
+assembly_data_report: "/path/to/assembly_data_report.jsonl" # optional
+```
+
+This lets you run offline, or on an assembly that is not in NCBI. Without `assembly_data_report`, the final report skips its assembly section.
+
+`sequence_report.jsonl` uses the NCBI JSON Lines format: one JSON object per sequence. The workflow reads these fields:
+
+* `assemblyAccession`: one value for the whole file;
+* `role`: only `assembled-molecule` sequences go into the final VCF files;
+* `chrName`: `X`, `Y`, `Z` and `W` are sex chromosomes; the names in `scaffolds_to_exclude` are removed;
+* `length`;
+* the contig name, as in the FASTA: `genbankAccession` if `assemblyAccession` contains `GCA_`, else `refseqAccession`;
+* `assignedMoleculeLocationType` (final report only).
+
+**The report must match the FASTA.** Rule `check_reference_names` compares the report with the FASTA index in every mode, before the autosome split. The run stops if a field is missing, if no assembled molecule is found in the FASTA, or if a contig length differs from the FASTA. Without this check, a name mismatch (e.g. a RefSeq FASTA with a GenBank report) gives empty final VCF files and no error. Assembled molecules partly missing from the FASTA, and assemblies with no assembled molecule (scaffold level), only give a warning in `{wdir}/genome/{genome}_reference_names_check.txt`.
 
 
 ## Data directory setup

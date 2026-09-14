@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): a local assembly report without a local sequence report.
+# Expected to fail in rules/common.smk with "assembly_data_report is set but sequence_report is not".
+reference_fasta: .test/fixtures/ref.fna
+assembly_data_report: .test/fixtures/assembly_data_report.jsonl
+datadir: .test/fixtures/data/
+bigtmp: ""

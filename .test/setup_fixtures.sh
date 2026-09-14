@@ -29,6 +29,14 @@ sra="ERR10287556"
 
 printf '>chr1\nACGTACGTACGT\n' > "$fixtures/ref.fna"
 
+# Local assembly metadata for ref.fna (config keys sequence_report, assembly_data_report).
+# NCBI JSON Lines format, reduced to the fields the workflow reads. The contig name and
+# length match ref.fna, so rule check_reference_names would accept it.
+printf '{"assemblyAccession": "%s", "chrName": "1", "role": "assembled-molecule", "length": 12, "genbankAccession": "chr1", "assignedMoleculeLocationType": "Chromosome"}\n' \
+    "$genome" > "$fixtures/sequence_report.jsonl"
+printf '{"accession": "%s", "organism": {"organismName": "Fixture"}}\n' \
+    "$genome" > "$fixtures/assembly_data_report.jsonl"
+
 for aligner in minimap2 ngmlr; do
     printf 'placeholder\n' > "$fixtures/${sample}_${aligner}.bam"
     printf 'placeholder\n' > "$fixtures/${sample}_${aligner}.bam.bai"
