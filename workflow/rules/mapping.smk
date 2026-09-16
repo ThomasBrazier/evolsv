@@ -7,7 +7,9 @@ rule minimap2:
         fasta="{wdir}/genome/{genome}.fna",
         html=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.html"),
         qczip=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.zip"),
-        nanoplot=lambda wildcards: run_qc_files(wildcards, "nanoplot/{run}_NanoStats.txt"),
+        nanoplot=lambda wildcards: run_qc_files(
+            wildcards, "nanoplot/{run}_NanoStats.txt"
+        ),
         longqc=lambda wildcards: run_qc_files(wildcards, "longqc/{run}"),
         nanoplot_filtered="{wdir}/{sample}/nanoplot_filtered/{genome}_NanoStats.txt",
     output:
@@ -55,7 +57,9 @@ rule ngmlr:
         fasta="{wdir}/genome/{genome}.fna",
         html=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.html"),
         qczip=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.zip"),
-        nanoplot=lambda wildcards: run_qc_files(wildcards, "nanoplot/{run}_NanoStats.txt"),
+        nanoplot=lambda wildcards: run_qc_files(
+            wildcards, "nanoplot/{run}_NanoStats.txt"
+        ),
         longqc=lambda wildcards: run_qc_files(wildcards, "longqc/{run}"),
         nanoplot_filtered="{wdir}/{sample}/nanoplot_filtered/{genome}_NanoStats.txt",
     output:

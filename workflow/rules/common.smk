@@ -8,6 +8,7 @@ from pathlib import Path
 
 from snakemake.exceptions import WorkflowError
 
+
 def rows_of(sample):
     """Sample-sheet rows of one individual, always as a DataFrame.
 
@@ -73,7 +74,14 @@ TECH_PRESETS = {
 
 # The -x choices of LongQC 1.2.0c (longQC.py). Checked here, so a typo stops the run
 # before the DAG is built rather than when the first LongQC job starts.
-LONGQC_PRESETS = ("pb-rs2", "pb-sequel", "pb-hifi", "ont-ligation", "ont-rapid", "ont-1dsq")
+LONGQC_PRESETS = (
+    "pb-rs2",
+    "pb-sequel",
+    "pb-hifi",
+    "ont-ligation",
+    "ont-rapid",
+    "ont-1dsq",
+)
 
 sequencing_technology = str(config.get("sequencing_technology", "hifi")).strip().lower()
 if sequencing_technology not in TECH_PRESETS:
@@ -129,7 +137,9 @@ def check_readable_file(path, description, declared_in=None):
         )
     if Path(path).stat().st_size == 0:
         raise WorkflowError(
-            "The {} '{}' declared in {} is empty.".format(description, path, declared_in)
+            "The {} '{}' declared in {} is empty.".format(
+                description, path, declared_in
+            )
         )
     return path
 
