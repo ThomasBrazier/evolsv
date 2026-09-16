@@ -13,21 +13,21 @@ rule samtools_stats:
     Mapping QC
     """
     input:
-        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
+        bam="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     output:
-        stats="{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats",
-        stattsv="{wdir}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
-        plot="{wdir}/mapping_QC/{genome}_{aligner}_mapping_plot.html",
+        stats="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_mapping.stats",
+        stattsv="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_mapping.stats.tsv",
+        plot="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_mapping_plot.html",
     conda:
         "../envs/samtools.yaml"
     shell:
         """
-        mkdir -p {wdir}/mapping_QC
+        mkdir -p {wdir}/{wildcards.sample}/mapping_QC
         samtools stats {input.bam} > {output.stats}
         cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
-        plot-bamstats -p {wdir}/mapping_QC/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
+        plot-bamstats -p {wdir}/{wildcards.sample}/mapping_QC/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
         """
 
 
@@ -36,12 +36,12 @@ rule samtools_coverage:
     Mapping coverage along the genome
     """
     input:
-        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
+        bam="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     output:
-        coverage="{wdir}/mapping_QC/{genome}_{aligner}_coverage.tsv",
-        coverage_hist="{wdir}/mapping_QC/{genome}_{aligner}_coverage_hist.txt",
-        coverage_depth="{wdir}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt",
+        coverage="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage.tsv",
+        coverage_hist="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage_hist.txt",
+        coverage_depth="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt",
     conda:
         "../envs/samtools_coverage.yaml"
     shell:

@@ -10,6 +10,8 @@ samples: "config/samples_test.tsv" # The sample files with sample name and SRA n
 # INPUT MODE
 start_from_bam: false # true: skip the SRA download, read QC and alignment stages and use the pre-aligned BAM files declared in samples.tsv (columns bam_minimap2, bam_ngmlr, fastq)
 reference_fasta: "" # Optional path to a local reference FASTA. Leave empty to download the assembly from NCBI
+sequence_report: "" # Optional sequence_report.jsonl for reference_fasta. With it, nothing is downloaded from NCBI
+assembly_data_report: "" # Optional assembly_data_report.jsonl (final report only). Needs sequence_report
 
 scaffolds_to_exclude: "MT,Mt,Un" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
@@ -18,7 +20,7 @@ filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file wit
 sequencing_technology: hifi # hifi (PacBio HiFi/CCS) | ont (Oxford Nanopore). Sets the minimap2/NGMLR presets, the @RG PL tag and the cuteSV clustering parameters
 
 # Mapping on the reference genome
-minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
+seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # SV calling
 # Common settings

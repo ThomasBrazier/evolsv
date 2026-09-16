@@ -23,24 +23,24 @@ rule stage_bam:
     Validation runs first, so a rejected BAM never leaves a canonical path behind.
     """
     input:
-        bam=lambda wildcards: input_bams[wildcards.aligner],
-        bai=lambda wildcards: input_bais[wildcards.aligner],
+        bam=lambda wildcards: input_bams[(wildcards.sample, wildcards.aligner)],
+        bai=lambda wildcards: input_bais[(wildcards.sample, wildcards.aligner)],
         fai="{wdir}/genome/{genome}.fna.fai",
     output:
-        bam="{wdir}/bam/{genome}_{aligner}_sorted.bam",
-        bai="{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
-        report="{wdir}/bam/{genome}_{aligner}_bam_check.txt",
+        bam="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
+        bai="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
+        report="{wdir}/{sample}/bam/{genome}_{aligner}_bam_check.txt",
     conda:
         "../envs/bamcheck.yaml"
     log:
-        "{wdir}/logs/{genome}_{aligner}_stage_bam.log",
+        "{wdir}/{sample}/logs/{genome}_{aligner}_stage_bam.log",
     shell:
         """
-        mkdir --parents {wdir}/bam
+        mkdir --parents {wdir}/{wildcards.sample}/bam
 
         python workflow/scripts/check_bam_reference.py \
         --bam {input.bam} --fai {input.fai} \
-        --sample-id {sample_id} --aligner {wildcards.aligner} \
+        --sample-id {wildcards.sample} --aligner {wildcards.aligner} \
         --report {output.report} 2> {log}
 
         ln -sf $(realpath {input.bam}) {output.bam}
@@ -63,14 +63,14 @@ rule stage_fastq:
     matches what rule merge_fastq does in FASTQ mode.
     """
     input:
-        fastq=input_fastqs,
+        fastq=lambda wildcards: input_fastqs[wildcards.sample],
     output:
-        merged_fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
+        merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
     log:
-        "{wdir}/logs/{genome}_stage_fastq.log",
+        "{wdir}/{sample}/logs/{genome}_stage_fastq.log",
     shell:
         """
-        mkdir --parents {wdir}/fastq
+        mkdir --parents {wdir}/{wildcards.sample}/fastq
 
         nfastq=$(echo {input.fastq} | wc -w)
         if [ "$nfastq" -eq 1 ]

@@ -1,0 +1,9 @@
+# CI dry-run config: local reference FASTA with local assembly metadata.
+#
+# Nothing is downloaded from NCBI: rule stage_genome replaces rule download_genome, and
+# rule stage_assembly_data_report stages the assembly report for the final report.
+reference_fasta: .test/fixtures/ref.fna
+sequence_report: .test/fixtures/sequence_report.jsonl
+assembly_data_report: .test/fixtures/assembly_data_report.jsonl
+datadir: .test/fixtures/data/
+bigtmp: ""

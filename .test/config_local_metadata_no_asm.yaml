@@ -1,0 +1,7 @@
+# CI dry-run config: local reference FASTA and sequence report, no assembly report.
+#
+# assembly_data_report is optional: the final report skips its assembly section.
+reference_fasta: .test/fixtures/ref.fna
+sequence_report: .test/fixtures/sequence_report.jsonl
+datadir: .test/fixtures/data/
+bigtmp: ""

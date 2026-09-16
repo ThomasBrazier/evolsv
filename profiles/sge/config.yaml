@@ -62,13 +62,16 @@ default-resources:
 
 # Control number of threads each rule will use.
 #
-# svim, cutesv, jasmine and merging_qc pass no thread flag to their tool, so their
+# svim and merging_qc pass no thread flag to their tool, so their
 # values here are pure allocation reservations rather than parallelism. Note that on
 # SGE they also divide the per-slot memory request, so lowering them raises h_vmem.
 set-threads:
   # Data acquisition. Single-threaded: network- and I/O-bound.
   download_sra: 1
   download_genome: 1
+  stage_genome: 1 # local reference_fasta + sequence_report only
+  stage_assembly_data_report: 1
+  check_reference_names: 1
   sample_ids: 1
   merge_fastq: 1
   # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
@@ -76,9 +79,12 @@ set-threads:
   stage_fastq: 1
   # Fastq processing. Can use more than 1 thread.
   fastqc: 16
-  nanoplot: 1
+  longqc: 8 # LongQC needs at least 4
+  hifiadapterfilt: 16 # PacBio HiFi only
+  porechop_abi: 16 # ONT only
+  nanoplot: 4
   filter_reads_chopper: 16
-  nanoplot_after_filtering: 1
+  nanoplot_after_filtering: 4
   # Alignment. Can use more than 1 thread, except samtools_sort.
   minimap2: 16
   ngmlr: 16
@@ -112,28 +118,39 @@ set-threads:
   samplot_subset_DUP: 1
   samplot_subset_INV: 1
   samplot_subset_DEL: 1
-  samplot_plot: 1
+  samplot_plot: 4
   vcf_to_tsv: 1
   vcf_to_tsv_tools: 1
   final_report: 1
   light_vcf: 1
   gzvcf: 1
   # Mappability and annotation
-  mosdepth_summary: 1
-  mosdepth_quantize: 1
+  mosdepth_summary: 4 # mosdepth: no gain beyond 4 BAM decompression threads
+  mosdepth_quantize: 4
   callable_bed: 1
-  genmap: 1
+  genmap: 8
   mappability_bed: 1
   add_mappability: 1
+  bwa_index: 1
   truvari_grm: 8
 
 # Control other resources used by each rule. Rules absent from this block take the
 # default-resources values above. cpus_per_task is deliberately never set here: it is
 # derived from set-threads. mem_mb is always the TOTAL for the job.
+#
+# Not yet measured: longqc, hifiadapterfilt, porechop_abi, genmap and bwa_index use the
+# default mem_mb and runtime. Each writes a benchmark: file (max_rss, s); set their
+# values here from a real run.
 set-resources:
   download_sra:
     mem_mb: attempt * 2000
   download_genome:
+    mem_mb: attempt * 2000
+  stage_genome:
+    mem_mb: attempt * 2000
+  stage_assembly_data_report:
+    mem_mb: attempt * 2000
+  check_reference_names:
     mem_mb: attempt * 2000
   stage_bam:
     mem_mb: attempt * 2000

@@ -3,30 +3,25 @@ rule minimap2:
     Map reads to the reference genome with Minimap2
     """
     input:
-        fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
+        fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         fasta="{wdir}/genome/{genome}.fna",
-        html=expand(
-            "{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]
-        ),
-        qczip=expand(
-            "{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]
-        ),
-        nanoplot=expand(
-            "{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]
-        ),
-        nanoplot_filtered="{wdir}/nanoplot_filtered/{genome}_NanoStats.txt",
+        html=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.html"),
+        qczip=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.zip"),
+        nanoplot=lambda wildcards: run_qc_files(wildcards, "nanoplot/{run}_NanoStats.txt"),
+        longqc=lambda wildcards: run_qc_files(wildcards, "longqc/{run}"),
+        nanoplot_filtered="{wdir}/{sample}/nanoplot_filtered/{genome}_NanoStats.txt",
     output:
-        sam=temp("{wdir}/bam/{genome}_minimap2.sam"),
+        sam=temp("{wdir}/{sample}/bam/{genome}_minimap2.sam"),
     conda:
         "../envs/minimap2.yaml"
     log:
-        "{wdir}/logs/{genome}_minimap2.log",
+        "{wdir}/{sample}/logs/{genome}_minimap2.log",
     shell:
         """
         minimap2 -ax {config[minimap_ax]} --MD -2 \
-        --seed {config[minimap_seed]} --eqx \
+        --seed {config[seed]} --eqx \
         -t {resources.cpus_per_task} \
-        -R "@RG\\tID:{sample_id}\\tSM:{sample_id}\\tPL:{config[read_group_platform]}" \
+        -R "@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:{config[read_group_platform]}" \
         --sam-hit-only {input.fasta} {input.fastq} > {output.sam}
         """
 
@@ -56,31 +51,26 @@ rule ngmlr:
         Split alignments with poor quality [false]
     """
     input:
-        fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
+        fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         fasta="{wdir}/genome/{genome}.fna",
-        html=expand(
-            "{wdir}/fastqc/{sample}_sra_fastqc.html", wdir=wdir, sample=samples["sra"]
-        ),
-        qczip=expand(
-            "{wdir}/fastqc/{sample}_sra_fastqc.zip", wdir=wdir, sample=samples["sra"]
-        ),
-        nanoplot=expand(
-            "{wdir}/nanoplot/{sample}_NanoStats.txt", wdir=wdir, sample=samples["sra"]
-        ),
-        nanoplot_filtered="{wdir}/nanoplot_filtered/{genome}_NanoStats.txt",
+        html=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.html"),
+        qczip=lambda wildcards: run_qc_files(wildcards, "fastqc/{run}_sra_fastqc.zip"),
+        nanoplot=lambda wildcards: run_qc_files(wildcards, "nanoplot/{run}_NanoStats.txt"),
+        longqc=lambda wildcards: run_qc_files(wildcards, "longqc/{run}"),
+        nanoplot_filtered="{wdir}/{sample}/nanoplot_filtered/{genome}_NanoStats.txt",
     output:
-        sam=temp("{wdir}/bam/{genome}_ngmlr.sam"),
+        sam=temp("{wdir}/{sample}/bam/{genome}_ngmlr.sam"),
     conda:
         "../envs/ngmlr.yaml"
     log:
-        "{wdir}/logs/{genome}_ngmlr.log",
+        "{wdir}/{sample}/logs/{genome}_ngmlr.log",
     shell:
         """
         ngmlr -t {resources.cpus_per_task} \
         -r {input.fasta} -q {input.fastq} \
         --presets {config[ngmlr_preset]} \
         --min-identity {config[min-identity]} \
-        --rg-id {sample_id} --rg-sm {sample_id} \
+        --rg-id {wildcards.sample} --rg-sm {wildcards.sample} \
         --rg-pl {config[read_group_platform]} \
         -o {output.sam}
         """
@@ -91,11 +81,11 @@ rule samtools_view:
     Transform the sam file to a bam file
     """
     input:
-        sam_minimap2="{wdir}/bam/{genome}_minimap2.sam",
-        sam_ngmlr="{wdir}/bam/{genome}_ngmlr.sam",
+        sam_minimap2="{wdir}/{sample}/bam/{genome}_minimap2.sam",
+        sam_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr.sam",
     output:
-        bam_minimap2=temp("{wdir}/bam/{genome}_minimap2.bam"),
-        bam_ngmlr=temp("{wdir}/bam/{genome}_ngmlr.bam"),
+        bam_minimap2=temp("{wdir}/{sample}/bam/{genome}_minimap2.bam"),
+        bam_ngmlr=temp("{wdir}/{sample}/bam/{genome}_ngmlr.bam"),
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -110,9 +100,9 @@ rule samtools_sort:
     Sort the bam file
     """
     input:
-        "{wdir}/bam/{genome}_{aligner}.bam",
+        "{wdir}/{sample}/bam/{genome}_{aligner}.bam",
     output:
-        "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -126,9 +116,9 @@ rule samtools_index:
     Create an index related file of the sorted bam file
     """
     input:
-        "{wdir}/bam/{genome}_{aligner}_sorted.bam",
+        "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
     output:
-        "{wdir}/bam/{genome}_{aligner}_sorted.bam.bai",
+        "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     conda:
         "../envs/samtools.yaml"
     shell:

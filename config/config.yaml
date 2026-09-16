@@ -4,12 +4,14 @@ datadir: data/ # The directory where data and results must be stored
 bigtmp: "./tmp/" #Set to a path with lots of free space to use for commands that require large amounts of temp space; defaults to system tmpdir if empty
 
 # SAMPLE
-samples: config/samples.tsv # The sample files with sample name and SRA number of the long-read SRA archive
+samples: config/samples.tsv # The sample sheet: one row per SRA run, with sample name (the individual), SRA number of the long-read SRA archive and genome. Several individuals are processed separately, one output directory each
 # genome: GCA_947369205.1 # GCA/GCF number of the reference genome
 
 # INPUT MODE
 start_from_bam: false # true: skip the SRA download, read QC and alignment stages and use the pre-aligned BAM files declared in samples.tsv (columns bam_minimap2, bam_ngmlr, fastq). Reads are still required to genotype with SVJedi-graph
-reference_fasta: "" # Optional path to a local reference FASTA (uncompressed or bgzipped), used instead of the NCBI copy. Leave empty to download the assembly from NCBI. Assembly metadata is downloaded from NCBI either way
+reference_fasta: "" # Optional path to a local reference FASTA (uncompressed or bgzipped), used instead of the NCBI copy. Leave empty to download the assembly from NCBI. Without sequence_report, the assembly metadata is still downloaded from NCBI
+sequence_report: "" # Optional NCBI-format sequence_report.jsonl that describes reference_fasta. Needs reference_fasta. With it, nothing is downloaded from NCBI
+assembly_data_report: "" # Optional NCBI-format assembly_data_report.jsonl, only read by the final report. Needs sequence_report
 
 scaffolds_to_exclude: "MT,Mt,Un,Pltd" # comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 filter_variant_positions: "config/filter_variant_positions.tsv" # A tsv file with chromosome and positions to filter out
@@ -27,11 +29,18 @@ chopper_maxlength: 20000000 # Sets a maximum read length [default: 20 Mb]
 chopper_minlength: 500 # Sets a minimum read length [default: 500 bp]
 chopper_quality: 10 # Sets a minimum Phred average quality score [default: 10]
 chopper_tailcrop: 0 # Trim N nucleotides from the end of a read [default: 0]
+# Remove reads with adapter matches with HiFiAdapterFilt (sequencing_technology: hifi only)
+hifiadapterfilt_min_length: 44 # Minimum adapter match length to remove a read [default: 44]
+hifiadapterfilt_min_match: 97 # Minimum adapter match percentage to remove a read [default: 97]
+# Trim adapters with Porechop_ABI (sequencing_technology: ont only)
+porechop_ab_initio: true # Infer adapters from the reads (-abi) in addition to the Porechop adapter database. No seed: inferred adapters can differ between runs
+# Long-read QC with LongQC
+# longqc_preset: pb-hifi # LongQC -x preset (pb-rs2, pb-sequel, pb-hifi, ont-ligation, ont-rapid, ont-1dsq). Leave commented to use the sequencing_technology preset (hifi -> pb-hifi, ont -> ont-ligation)
 
 # MAPPING
 # Mapping on the reference genome with Minimap2
 # minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual). Leave commented to use the sequencing_technology preset (hifi -> map-hifi, ont -> map-ont)
-minimap_seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
+seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.
 
 # Mapping on the reference genome with NGMLR
 # ngmlr_preset: pacbio # Preset for the sequencing technology, one of pacbio or ont. Leave commented to use the sequencing_technology preset (hifi -> pacbio, ont -> ont)

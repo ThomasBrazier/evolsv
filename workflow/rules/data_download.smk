@@ -6,67 +6,115 @@ if not bam_mode:
         and the genome from the NCBI genome assembly database
         """
         output:
-            fastq=temp("{wdir}/fastq/{sample}_sra.fastq.gz"),
+            fastq=temp("{wdir}/{sample}/fastq/{run}_sra.fastq.gz"),
         params:
             outdir=lambda wildcards, output: os.path.dirname(output.fastq),
         conda:
             "../envs/download.yaml"
         log:
-            "{wdir}/logs/download_sra/{sample}.log",
+            "{wdir}/{sample}/logs/download_sra/{run}.log",
         shell:
             """
             mkdir --parents {params.outdir}
-            fastq-dump -v --gzip --outdir {params.outdir}/ {wildcards.sample} &> {log}
-            mv "{params.outdir}/{wildcards.sample}.fastq.gz" "{output.fastq}" 2>> {log}
+            fastq-dump -v --gzip --outdir {params.outdir}/ {wildcards.run} &> {log}
+            mv "{params.outdir}/{wildcards.run}.fastq.gz" "{output.fastq}" 2>> {log}
             """
 
 
-rule download_genome:
-    """
-    Download the reference genome and its metadata from the NCBI genome assembly
-    database.
+if reference_source == "local":
 
-    The assembly metadata (assembly_data_report.jsonl, sequence_report.jsonl) is
-    always downloaded, because rule autosomes_sexchromosomes and the final report
-    read it. Only the FASTA itself can be replaced by a local copy, via the
-    `reference_fasta` config key: a pre-aligned BAM must be checked against the exact
-    FASTA it was aligned to, which is not necessarily the NCBI GenBank copy.
-    """
-    output:
-        "{wdir}/genome/{genome}.fna",
-        "{wdir}/genome/{genome}.fna.fai",
-        temp("{wdir}/genome/{genome}.zip"),
-        "{wdir}/genome/{genome}_config.yaml",
-        "{wdir}/genome/{genome}_assembly_data_report.jsonl",
-        "{wdir}/genome/{genome}_sequence_report.jsonl",
-    conda:
-        "../envs/download.yaml"
-    params:
-        local_fasta=config.get("reference_fasta", ""),
-    shell:
+    rule stage_genome:
         """
-        datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
-        unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
+        Stage a local reference genome and its local sequence report. Nothing is
+        downloaded from NCBI (config keys reference_fasta and sequence_report, see
+        reference_source in rules/common.smk).
 
-        if [ -n "{params.local_fasta}" ]
-        then
-        echo "Using the local reference FASTA {params.local_fasta} instead of the NCBI copy."
-        ln -sf $(realpath {params.local_fasta}) {wdir}/genome/{genome}.fna
-        else
-        cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna
-        fi
-        samtools faidx {wdir}/genome/{genome}.fna
-
-        if test -f {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff
-        then
-        echo "GFF annotation exists."
-        cp {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff {wdir}/genome/{genome}.gff
-        fi
-        
-        cp {wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/genome/{genome}_assembly_data_report.jsonl
-        cp {wdir}/genome/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/genome/{genome}_sequence_report.jsonl
-        cp config/config.yaml {wdir}/genome/{genome}_config.yaml
+        The FASTA is symlinked (it can be several GB). The sequence report is copied,
+        so the run keeps the exact version it used. Rule check_reference_names then
+        checks that the report and the FASTA name the same contigs.
         """
+        input:
+            fasta=reference_fasta,
+            sequence_report=sequence_report,
+        output:
+            fasta="{wdir}/genome/{genome}.fna",
+            fai="{wdir}/genome/{genome}.fna.fai",
+            config="{wdir}/genome/{genome}_config.yaml",
+            sequence_report="{wdir}/genome/{genome}_sequence_report.jsonl",
+        conda:
+            "../envs/samtools.yaml"
+        shell:
+            """
+            echo "Using the local reference FASTA {input.fasta} instead of the NCBI copy."
+            ln -sf $(realpath {input.fasta}) {output.fasta}
+            samtools faidx {output.fasta}
+            cp {input.sequence_report} {output.sequence_report}
+            cp config/config.yaml {output.config}
+            """
+
+    if assembly_data_report:
+
+        rule stage_assembly_data_report:
+            """
+            Copy the local assembly_data_report.jsonl (config key assembly_data_report).
+            Only the final report reads it.
+            """
+            input:
+                assembly_data_report,
+            output:
+                "{wdir}/genome/{genome}_assembly_data_report.jsonl",
+            shell:
+                """
+                cp {input} {output}
+                """
+
+else:
+
+    rule download_genome:
+        """
+        Download the reference genome and its metadata from the NCBI genome assembly
+        database.
+
+        The FASTA can be replaced by a local copy, via the `reference_fasta` config key:
+        a pre-aligned BAM must be checked against the exact FASTA it was aligned to,
+        which is not necessarily the NCBI GenBank copy. The metadata is then still
+        downloaded; to use local metadata too, set sequence_report (rule stage_genome).
+        """
+        output:
+            "{wdir}/genome/{genome}.fna",
+            "{wdir}/genome/{genome}.fna.fai",
+            temp("{wdir}/genome/{genome}.zip"),
+            "{wdir}/genome/{genome}_config.yaml",
+            "{wdir}/genome/{genome}_assembly_data_report.jsonl",
+            "{wdir}/genome/{genome}_sequence_report.jsonl",
+        conda:
+            "../envs/download.yaml"
+        params:
+            local_fasta=reference_fasta,
+        shell:
+            """
+            datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
+            unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
+
+            if [ -n "{params.local_fasta}" ]
+            then
+            echo "Using the local reference FASTA {params.local_fasta} instead of the NCBI copy."
+            ln -sf $(realpath {params.local_fasta}) {wdir}/genome/{genome}.fna
+            else
+            cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna
+            fi
+            samtools faidx {wdir}/genome/{genome}.fna
+
+            if test -f {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff
+            then
+            echo "GFF annotation exists."
+            cp {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff {wdir}/genome/{genome}.gff
+            fi
+
+            cp {wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/genome/{genome}_assembly_data_report.jsonl
+            cp {wdir}/genome/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/genome/{genome}_sequence_report.jsonl
+            cp config/config.yaml {wdir}/genome/{genome}_config.yaml
+            """
 
 
 rule sample_ids:
@@ -78,16 +126,16 @@ rule sample_ids:
     pre-aligned BAM files.
     """
     output:
-        sampleids="{wdir}/{genome}.samples",
+        sampleids="{wdir}/{sample}/{genome}.samples",
+        sheet="{wdir}/{sample}/{genome}_samples.tsv",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "{wdir}/logs/{genome}_sample_ids.log",
+        "{wdir}/{sample}/logs/{genome}_sample_ids.log",
     shell:
         """
-        mkdir --parents {wdir}
-        echo {sample_id} > {output.sampleids}
-        cp {config[samples]} {wdir}/{genome}_samples.tsv
+        echo {wildcards.sample} > {output.sampleids}
+        cp {config[samples]} {output.sheet}
         """
 
 
@@ -95,21 +143,26 @@ if not bam_mode:
 
     rule merge_fastq:
         """
-        Merge fastq files for mapping
+        Merge the fastq files of one individual for mapping
+
+        The runs are merged after adapter removal: rule hifiadapterfilt for
+        sequencing_technology hifi, rule porechop_abi for ont.
         """
         input:
-            fastq=expand(
-                "{wdir}/fastq/{sample}_sra.fastq.gz", wdir=wdir, sample=samples["sra"]
+            fastq=lambda wildcards: expand(
+                {
+                    "hifi": "{wdir}/{sample}/fastq/{run}_sra.filt.fastq.gz",
+                    "ont": "{wdir}/{sample}/fastq/{run}_sra.porechop.fastq.gz",
+                }[sequencing_technology],
+                wdir=wildcards.wdir,
+                sample=wildcards.sample,
+                run=runs_of(wildcards.sample),
             ),
         output:
-            merged_fastq=temp(
-                expand("{wdir}/fastq/{genome}.fastq.gz", wdir=wdir, genome=genome)
-            ),
+            merged_fastq=temp("{wdir}/{sample}/fastq/{genome}.fastq.gz"),
         conda:
             "../envs/samtools.yaml"
-        params:
-            fastqlist=" ".join(samplelist),
         shell:
             """
-            cat {params.fastqlist} > {output.merged_fastq}
+            cat {input.fastq} > {output.merged_fastq}
             """

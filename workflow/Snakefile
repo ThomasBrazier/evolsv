@@ -1,8 +1,11 @@
 """
-Pipeline for calling and genotyping Structural Variants from long-read sequencing in a single individual
+Pipeline for calling and genotyping Structural Variants from long-read sequencing
 """
 
 import os
+import re
+
+from snakemake.exceptions import WorkflowError
 
 
 configfile: "config/config.yaml"
@@ -21,10 +24,29 @@ for optional_column in ["bam_minimap2", "bam_ngmlr", "fastq"]:
 
 samples = samples.set_index("sample_name", drop=False).sort_index()
 
-# Only accepts a single genome and a single sample/individual
-# genome = config['genome']
-genome = samples["genome"].iloc[0]
-sample_id = samples["sample_name"].iloc[0]
+# One reference genome per sample sheet. Each individual is processed on its own, in
+# its own {wdir}/{sample}/ directory; only the reference and its derived files are shared.
+genomes = sorted(set(samples["genome"]))
+if len(genomes) != 1:
+    raise WorkflowError(
+        "All individuals in {} must use the same reference genome. Found: {}.".format(
+            config["samples"], ", ".join("'{}'".format(g) for g in genomes)
+        )
+    )
+genome = genomes[0]
+
+individuals = sorted(set(samples["sample_name"]))
+for individual in individuals:
+    # The name becomes a directory name and a VCF sample name.
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", individual):
+        raise WorkflowError(
+            "Invalid sample_name '{}' in {}. Use only letters, digits, '.', '_' "
+            "and '-'.".format(individual, config["samples"])
+        )
+
+# SRA runs. Several runs can belong to one individual; their reads are merged per
+# individual, never across individuals.
+sra_runs = sorted(set(r for r in samples["sra"] if r))
 
 wdir = f"{config['datadir']}{genome}"
 
@@ -38,7 +60,8 @@ bam_mode = bool(config.get("start_from_bam", False))
 wildcard_constraints:
     wdir=wdir,
     genome=genome,
-    sample_id=sample_id,
+    sample="|".join(re.escape(i) for i in individuals),
+    run="|".join(re.escape(r) for r in sra_runs) if sra_runs else "__no_sra_run__",
     aligner="|".join(aligners),
 
 
@@ -77,54 +100,26 @@ include: "rules/annotate.smk"
 
 rule all:
     input:
-        expand("{wdir}/{genome}_final.vcf.gz", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_final_light.vcf.gz", wdir=wdir, genome=genome),
-        expand("{wdir}/{genome}_finalQC.html", wdir=wdir, genome=genome),
-        expand(
-            "{wdir}/samplot/minimap2_{genome}/DUP/index.html", wdir=wdir, genome=genome
+        per_individual("{wdir}/{sample}/{genome}_final.vcf.gz"),
+        per_individual("{wdir}/{sample}/{genome}_final_light.vcf.gz"),
+        per_individual("{wdir}/{sample}/{genome}_finalQC.html"),
+        per_individual(
+            "{wdir}/{sample}/samplot/{aligner}_{genome}/{svtype}/index.html",
+            aligner=aligners,
+            svtype=["DUP", "INV", "DEL"],
         ),
-        expand(
-            "{wdir}/samplot/minimap2_{genome}/INV/index.html", wdir=wdir, genome=genome
+        per_individual(
+            "{wdir}/{sample}/calling_QC/{aligner}_{caller}_QC_{genome}/variant_count.jpg",
+            aligner=aligners,
+            caller=["svim", "cutesv", "sniffles"],
         ),
-        expand(
-            "{wdir}/samplot/minimap2_{genome}/DEL/index.html", wdir=wdir, genome=genome
+        per_individual(
+            "{wdir}/{sample}/callability/{genome}_{aligner}_callable_mappable.bed",
+            aligner=aligners,
         ),
-        expand("{wdir}/samplot/ngmlr_{genome}/DUP/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/samplot/ngmlr_{genome}/INV/index.html", wdir=wdir, genome=genome),
-        expand("{wdir}/samplot/ngmlr_{genome}/DEL/index.html", wdir=wdir, genome=genome),
-        expand(
-            "{wdir}/calling_QC/{aligners}_svim_QC_{genome}/variant_count.jpg",
-            wdir=wdir,
-            genome=genome,
-            aligners=aligners,
-        ),
-        expand(
-            "{wdir}/calling_QC/{aligners}_cutesv_QC_{genome}/variant_count.jpg",
-            wdir=wdir,
-            genome=genome,
-            aligners=aligners,
-        ),
-        expand(
-            "{wdir}/calling_QC/{aligners}_sniffles_QC_{genome}/variant_count.jpg",
-            wdir=wdir,
-            genome=genome,
-            aligners=aligners,
-        ),
-        expand(
-            "{wdir}/callability/{genome}_{aligners}_callable_mappable.bed",
-            wdir=wdir,
-            genome=genome,
-            aligners=aligners,
-        ),
-        expand(
-            "{wdir}/callability/{genome}_callable_mappable.bed",
-            wdir=wdir,
-            genome=genome,
-        ),
-        expand("{wdir}/annotate_grm/{genome}_grm.jl", wdir=wdir, genome=genome),
-        expand(
-            "{wdir}/mapping_QC/{genome}_{aligners}_coverage.tsv",
-            wdir=wdir,
-            genome=genome,
-            aligners=aligners,
+        per_individual("{wdir}/{sample}/callability/{genome}_callable_mappable.bed"),
+        per_individual("{wdir}/{sample}/annotate_grm/{genome}_grm.jl"),
+        per_individual(
+            "{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage.tsv",
+            aligner=aligners,
         ),

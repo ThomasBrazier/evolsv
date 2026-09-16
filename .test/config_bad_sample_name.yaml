@@ -1,0 +1,4 @@
+# CI dry-run config (negative): a sample_name that cannot be a directory name.
+samples: .test/fixtures/bad/samples_bad_name.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

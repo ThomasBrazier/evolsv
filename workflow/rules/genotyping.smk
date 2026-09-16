@@ -3,28 +3,52 @@ rule svjedigraph:
     Use SVjedi-graph on the merged dataset to genotype SVs
     """
     input:
-        merged="{wdir}/merging/{genome}_merged.vcf",
+        merged="{wdir}/{sample}/merging/{genome}_merged.vcf",
         fasta="{wdir}/genome/{genome}.fna",
-        merged_fastq="{wdir}/fastq/{genome}_filtered.fastq.gz",
-        sampleids="{wdir}/{genome}.samples",
+        merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
+        sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        vcf=temp("{wdir}/genotype/{genome}_merged_genotype_tmp.vcf"),
-        vcf_renamed=temp("{wdir}/genotype/{genome}_merged_genotype.vcf"),
-        gfa=temp("{wdir}/genotype/{genome}_merged.gfa"),
-        gaf=temp("{wdir}/genotype/{genome}_merged.gaf"),
-        aln="{wdir}/genotype/{genome}_merged_informative_aln.json",
+        vcf=temp("{wdir}/{sample}/genotype/{genome}_merged_genotype_tmp.vcf"),
+        vcf_renamed=temp("{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf"),
+        gfa=temp("{wdir}/{sample}/genotype/{genome}_merged.gfa"),
+        gaf=temp("{wdir}/{sample}/genotype/{genome}_merged.gaf"),
+        aln="{wdir}/{sample}/genotype/{genome}_merged_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
     log:
-        "{wdir}/logs/{genome}_svjedigraph.log",
+        "{wdir}/{sample}/logs/{genome}_svjedigraph.log",
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/genotype/{genome}_merged \
+        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_merged \
         -t {resources.cpus_per_task} --minsupport {config[svjedigraph_minsupport]}
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
+        """
+
+
+rule check_reference_names:
+    """
+    Check that the sequence report and the reference FASTA name the same contigs,
+    with the same lengths. Otherwise the autosome and sex-chromosome BED files select
+    nothing and the final VCF is empty, with no error.
+    See workflow/scripts/check_reference_names.py.
+    """
+    input:
+        seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        fai="{wdir}/genome/{genome}.fna.fai",
+    output:
+        "{wdir}/genome/{genome}_reference_names_check.txt",
+    conda:
+        "../envs/bamcheck.yaml"
+    log:
+        "{wdir}/logs/check_reference_names/{genome}.log",
+    shell:
+        """
+        python workflow/scripts/check_reference_names.py \
+        --sequence-report {input.seq} --fai {input.fai} \
+        --report {output} 2> {log}
         """
 
 
@@ -35,6 +59,7 @@ rule autosomes_sexchromosomes:
     """
     input:
         seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        names_check="{wdir}/genome/{genome}_reference_names_check.txt",
     output:
         sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
         autosomes="{wdir}/genome/{genome}.autosomes",
@@ -56,17 +81,17 @@ rule all_samples_vcf:
     Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
     """
     input:
-        jasmine="{wdir}/merging/{genome}_merged.vcf",
-        svjedi="{wdir}/genotype/{genome}_merged_genotype.vcf",
+        jasmine="{wdir}/{sample}/merging/{genome}_merged.vcf",
+        svjedi="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf",
         genome_index="{wdir}/genome/{genome}.fna.fai",
     output:
-        allsamples=temp("{wdir}/{genome}_allsamples.vcf"),
-        jasmine_reheadered=temp("{wdir}/merging/{genome}_reheadered.vcf"),
-        jasmine_gz=temp("{wdir}/merging/{genome}_merged.vcf.gz"),
+        allsamples=temp("{wdir}/{sample}/{genome}_allsamples.vcf"),
+        jasmine_reheadered=temp("{wdir}/{sample}/merging/{genome}_reheadered.vcf"),
+        jasmine_gz=temp("{wdir}/{sample}/merging/{genome}_merged_sorted.vcf.gz"),
         svjedi_reheadered=temp(
-            "{wdir}/genotype/{genome}_merged_genotype_reheadered.vcf"
+            "{wdir}/{sample}/genotype/{genome}_merged_genotype_reheadered.vcf"
         ),
-        svjedi_gz=temp("{wdir}/genotype/{genome}_merged_genotype.vcf.gz"),
+        svjedi_gz=temp("{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
     shell:
@@ -97,18 +122,17 @@ rule final_vcf:
     Separate autosomes and sex chromosomes
     """
     input:
-        vcf="{wdir}/{genome}_allsamples.vcf",
+        vcf="{wdir}/{sample}/{genome}_allsamples.vcf",
         sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
         autosomes="{wdir}/genome/{genome}.autosomes",
     output:
-        final_tmp=temp("{wdir}/{genome}_final_tmp.vcf"),
-        final="{wdir}/{genome}_final.vcf",
-        final_sexchr="{wdir}/{genome}_final_sexchr.vcf",
-    threads: workflow.cores
+        final_tmp=temp("{wdir}/{sample}/{genome}_final_tmp.vcf"),
+        final="{wdir}/{sample}/{genome}_final.vcf",
+        final_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
     conda:
         "../envs/bcftools.yaml"
     log:
-        "{wdir}/logs/{genome}_final_filtering.log",
+        "{wdir}/{sample}/logs/{genome}_final_filtering.log",
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.final_tmp} {input.vcf}

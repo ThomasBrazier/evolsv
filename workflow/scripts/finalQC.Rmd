@@ -1,10 +1,11 @@
 ---
-title: "SV calling from long reads in a single individual"
+title: "SV calling from long reads in individual `r params$sample`"
 date: "`r Sys.Date()`"
 output: html_document
 params:
   wdir: ""
   genome: ""
+  sample: ""
 ---
 
 
@@ -33,12 +34,15 @@ library(tidyverse)
 # document renders both from finalQC.R and standalone.
 if (!is.null(params$wdir) && nzchar(params$wdir)) wdir <- params$wdir
 if (!is.null(params$genome) && nzchar(params$genome)) genome <- params$genome
+if (!is.null(params$sample) && nzchar(params$sample)) sample <- params$sample
 
 # knitr sets the working directory to this file's location, hence the ../../ prefix.
-path_in <- function(...) paste0("../../", wdir, "/", ...)
+# The reference files are shared by all individuals; everything else is per individual.
+path_shared <- function(...) paste0("../../", wdir, "/", ...)
+path_in <- function(...) paste0("../../", wdir, "/", sample, "/", ...)
 
-assembly_path  <- path_in("genome/", genome, "_assembly_data_report.jsonl")
-seqreport_path <- path_in("genome/", genome, "_sequence_report.jsonl")
+assembly_path  <- path_shared("genome/", genome, "_assembly_data_report.jsonl")
+seqreport_path <- path_shared("genome/", genome, "_sequence_report.jsonl")
 calls_path     <- path_in(genome, "_final.tsv")
 unmerged_path  <- path_in("merging_QC/", genome, "_unmerged_sv.tsv")
 

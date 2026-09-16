@@ -1,0 +1,6 @@
+name: hifiadapterfilt
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - hifiadapterfilt

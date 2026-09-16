@@ -1,0 +1,5 @@
+# CI dry-run config (negative case): a local sequence report without a local FASTA.
+# Expected to fail in rules/common.smk with "sequence_report is set but reference_fasta is not".
+sequence_report: .test/fixtures/sequence_report.jsonl
+datadir: .test/fixtures/data/
+bigtmp: ""
