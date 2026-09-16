@@ -16,11 +16,13 @@ output = args.output
 # Import VCF
 from pysam import VariantFile
 
+# Writer that copes with an empty output, see workflow/scripts/VcfWriter.py
+from VcfWriter import VcfWriter
+
 bcf_in = VariantFile(input)  # auto-detect input format
-bcf_out = VariantFile(output, 'w', header=bcf_in.header)
 
 # Iterate over the VCF to add symbolic type to REF/ALT field
-with VariantFile(output, "w", header=bcf_in.header) as out:
+with VcfWriter(output, bcf_in.header) as out:
     for rec in bcf_in.fetch():
         if "INS" in rec.info["OLDTYPE"]:
             rec.alleles = (rec.alleles[0], "<INS>")

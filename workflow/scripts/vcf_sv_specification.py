@@ -19,24 +19,22 @@ sequences = FastaFile(fasta)
 # Import VCF
 from pysam import VariantFile
 
+# Writer that copes with an empty output, see workflow/scripts/VcfWriter.py
+from VcfWriter import VcfWriter
+
 bcf_in = VariantFile(input)  # auto-detect input format
 bcf_in.header.info.add("OLDTYPE", ".", "String", "Type before DUP to INS")
-
-bcf_out = VariantFile(output, 'w', header=bcf_in.header)
-# bcf_out.header.add_meta(key="INFO", items=[("ID", "OLDTYPE"), ("Number", "1"), ("Type", "Integer"), ("Description", "Type before DUP to INS")])
-# bcf_out.header.info.add("OLDTYPE", ".", "Integer", "Type before DUP to INS")
 
 dist_to_chromosome_end = []
 
 chrom_lengths = {name: contig.length for name, contig in bcf_in.header.contigs.items()}
 
-output_ignored = VariantFile(output + ".ignored", "w", header=bcf_in.header)
-
 # Iterate over the VCF
-with VariantFile(output, "w", header=bcf_in.header) as out:
-    # out.header.info.add("OLDTYPE", ".", "Integer", "Type before DUP to INS")
-    # out.header.add_meta(key="INFO", items=[("ID", "OLDTYPE"), ("Number", "1"), ("Type", "Integer"), ("Description", "Type before DUP to INS")])
-
+# Both writers are closed on the way out: leaving `output_ignored` open used to
+# discard every filtered-out record, since its buffered header was never flushed.
+with VcfWriter(output, bcf_in.header) as out, VcfWriter(
+    output + ".ignored", bcf_in.header
+) as output_ignored:
     for rec in bcf_in.fetch():
         chr = rec.chrom
         start = rec.pos
