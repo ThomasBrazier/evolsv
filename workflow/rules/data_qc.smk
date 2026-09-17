@@ -198,7 +198,7 @@ rule nanoplot:
         "{wdir}/{sample}/logs/{run}_nanoplot.log",
     shell:
         """
-        NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot/ --prefix '{wildcards.run}_' --N50 --no_static --verbose --title {wildcards.run}
+        NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot/ --prefix '{wildcards.run}_' --N50 --no_static --verbose --title {wildcards.run} &> {log}
         """
 
 
@@ -258,5 +258,5 @@ rule nanoplot_after_filtering:
         "{wdir}/{sample}/logs/{genome}_nanoplot_filtered.log",
     shell:
         """
-        NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot_filtered/ --prefix '{wildcards.genome}_' --N50 --no_static --verbose --title {wildcards.sample}
+        NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot_filtered/ --prefix '{wildcards.genome}_' --N50 --no_static --verbose --title {wildcards.sample} &> {log}
         """

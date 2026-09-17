@@ -8,7 +8,9 @@ rule svim:
         fasta="{wdir}/genome/{genome}.fna",
         sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        svimvariants=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim/variants.vcf"),
+        svimvariants=temp(
+            "{wdir}/{sample}/calling/{genome}_{aligner}_svim/variants.vcf"
+        ),
         vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim_tmp.vcf"),
         vcf_raw=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim_raw.vcf"),
         vcf_renamed="{wdir}/{sample}/calling/{genome}_{aligner}_svim.vcf",
@@ -175,7 +177,9 @@ rule removeBND:
         svim_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_svim_noBND.vcf"),
         cutesv_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_cutesv_noBND.vcf"),
         debreak_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_debreak_noBND.vcf"),
-        sniffles_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_sniffles_noBND.vcf"),
+        sniffles_minimap2=(
+            "{wdir}/{sample}/calling/{genome}_minimap2_sniffles_noBND.vcf"
+        ),
         svim_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_svim_noBND.vcf"),
         cutesv_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
         debreak_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
@@ -268,7 +272,9 @@ rule genotype_svim:
         merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        vcf_temp=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"),
+        vcf_temp=temp(
+            "{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"
+        ),
         vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype.vcf",
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim.gaf"),
@@ -298,7 +304,9 @@ rule genotype_cutesv:
         merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        vcf_temp=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"),
+        vcf_temp=temp(
+            "{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"
+        ),
         vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype.vcf",
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv.gaf"),
@@ -328,7 +336,9 @@ rule genotype_sniffles:
         merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        vcf_temp=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"),
+        vcf_temp=temp(
+            "{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"
+        ),
         vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype.vcf",
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles.gaf"),
@@ -358,7 +368,9 @@ rule genotype_debreak:
         merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
         sampleids="{wdir}/{sample}/{genome}.samples",
     output:
-        vcf_temp=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"),
+        vcf_temp=temp(
+            "{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"
+        ),
         vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype.vcf",
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak.gaf"),
