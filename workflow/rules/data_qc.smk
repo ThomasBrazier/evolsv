@@ -53,7 +53,7 @@ rule longqc:
         "{wdir}/{sample}/benchmarks/{run}.longqc.tsv"
     shell:
         """
-        rm -rf {output}
+        rm -rf {output} || true
         python "$(command -v longQC.py)" sampleqc \
         -x {config[longqc_preset]} \
         -p $(( {threads} < 4 ? 4 : {threads} )) \
@@ -99,7 +99,7 @@ rule hifiadapterfilt:
         ),
     shell:
         """
-        rm -rf {params.workdir}
+        rm -rf {params.workdir} || true
         mkdir -p {params.workdir}
         ln -s "$(realpath {input})" {params.workdir}/{wildcards.run}.fastq.gz
         log="$(realpath {log})"
@@ -115,7 +115,7 @@ rule hifiadapterfilt:
         mv {params.workdir}/{wildcards.run}.stats {output.stats}
         mv {params.workdir}/{wildcards.run}.blocklist {output.blocklist}
         mv {params.workdir}/{wildcards.run}.contaminant.blastout {output.blastout}
-        rm -rf {params.workdir}
+        rm -rf {params.workdir} || true
         """
 
 
@@ -153,7 +153,7 @@ rule porechop_abi:
         tmpdir="{wdir}/{sample}/porechop_abi/{run}_tmp",
     shell:
         """
-        rm -rf {params.tmpdir}
+        rm -rf {params.tmpdir} || true
         mkdir -p {params.tmpdir}
         porechop_abi -i {input} \
         -o {output.trimmed_fastq} \
@@ -162,7 +162,7 @@ rule porechop_abi:
         -t {resources.cpus_per_task} \
         --format fastq.gz \
         -v 1 &> {log}
-        rm -rf {params.tmpdir}
+        rm -rf {params.tmpdir} || true
         """
 
 
