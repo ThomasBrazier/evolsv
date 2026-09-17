@@ -39,6 +39,11 @@ rule longqc:
 
     The output is the whole folder: web_summary.html loads its figures from figs/.
     The bioconda package installs longQC.py without a shebang, so it runs with python.
+
+    Knwon issue:
+    https://github.com/yfukasawa/LongQC/issues/28
+    https://github.com/yfukasawa/LongQC/issues/76
+    the error means that the process ran out of memory. This can be addressed by lowering the index parameter (-i/--index) for the minimap step. For my dataset lowering it from the default '4G' to '1G' (python3 longQC.py sampleqc -x pb-sequel -i 1G ... ) solved the issue.
     """
     input:
         "{wdir}/{sample}/fastq/{run}_sra.fastq.gz",
@@ -53,13 +58,11 @@ rule longqc:
         "{wdir}/{sample}/benchmarks/{run}.longqc.tsv"
     shell:
         """
-        rm -rf {output} || true
         python "$(command -v longQC.py)" sampleqc \
         -x {config[longqc_preset]} \
-        -p $(( {threads} < 4 ? 4 : {threads} )) \
         -o {output} \
+        --index 1G \
         {input} &> {log}
-        test -s {output}/QC_vals_longQC_sampleqc.json
         """
 
 

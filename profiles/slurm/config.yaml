@@ -127,6 +127,10 @@ set-resources:
   fastqc:
     # fastqc allocates 250Mb of RAM per thread, so mem_mb must scale with threads.
     mem_mb: attempt * threads * 1000
+  longqc:
+    mem_mb: attempt * 20000
+  filter_reads_chopper:
+    mem_mb: attempt * 60000
   minimap2:
     mem_mb: attempt * 20000
     runtime: 2880 * 4

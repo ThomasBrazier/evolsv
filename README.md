@@ -298,3 +298,11 @@ The main output file is a VCF file containing the list of SVs of one individual,
 We also produce an automatic report to assess the quality and empirical performance of the workflow for each individual. Please check `{wdir}/{sample}/{genome}_finalQC.html` for details.
 
 **The results of different individuals are not merged.** Each individual is called, merged and genotyped alone. SV IDs, breakpoints and alleles are therefore not harmonised across individuals: the same SV can have different IDs and slightly different positions in two individuals. A population-level analysis needs a separate step that merges the per-individual VCFs (for example with JasmineSV) and genotypes all individuals at the same sites.
+
+
+
+
+## Known issues
+
+
+* **high impact/low probability** issue with **SVjdedi-graph**. The current version fails with some SVs close to chromosome boundaries. The fix is to filter these variants with the `filter_variant_positions` option in `config/config.yaml`, until a new corrected version of SVjedi-graph is released.
