@@ -3,4 +3,12 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  # longqc brings the Python dependencies (pandas, scipy, scikit-learn, jinja2,
+  # h5py, pysam, edlib). Its sdust and minimap2-coverage binaries are unusable as
+  # packaged, so longqc.post-deploy.sh builds them from the pinned upstream
+  # source -- hence the toolchain below. See that script for the full reason.
   - longqc=1.2.0c
+  - c-compiler
+  - make
+  - zlib
+  - curl

@@ -38,7 +38,14 @@ rule longqc:
     hifiadapterfilt and porechop_abi remove adapters.
 
     The output is the whole folder: web_summary.html loads its figures from figs/.
-    The bioconda package installs longQC.py without a shebang, so it runs with python.
+
+    longQC.py is run from $CONDA_PREFIX/share/LongQC, not from the copy bioconda
+    puts in bin/. LongQC resolves its sdust and minimap2-coverage binaries relative
+    to its own source file, a layout the bioconda packages do not provide, so
+    envs/longqc.post-deploy.sh builds them into that tree. Running the copy in bin/
+    makes every sdust call fail silently and the run dies ~30 min later on an empty
+    longqc_sdust.txt. The script has the details. It installs longQC.py without a
+    shebang, so it runs with python.
 
     Knwon issue:
     https://github.com/yfukasawa/LongQC/issues/28
@@ -58,7 +65,8 @@ rule longqc:
         "{wdir}/{sample}/benchmarks/{run}.longqc.tsv"
     shell:
         """
-        python "$(command -v longQC.py)" sampleqc \
+        rm -rf {output} || true
+        python "$CONDA_PREFIX/share/LongQC/longQC.py" sampleqc \
         -x {config[longqc_preset]} \
         -o {output} \
         --index 1G \

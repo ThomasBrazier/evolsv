@@ -9,6 +9,7 @@ that the workflow points at a file that exists and is a well-formed env spec.
 reference a deleted or misspelled env file and every dry-run test would still pass.
 """
 
+import os
 import re
 
 import pytest
@@ -88,6 +89,24 @@ def test_pip_bearing_env_list_is_complete():
         "envs with a pip: block changed: {} (update PIP_BEARING_ENVS here and the smoke "
         "checks in the CondaInstall job)".format(found)
     )
+
+
+def test_post_deploy_scripts_belong_to_a_referenced_env():
+    """Every *.post-deploy.sh sits beside an env file a rule actually uses.
+
+    Snakemake runs envs/<name>.post-deploy.sh after creating envs/<name>.yaml, matching
+    on the filename alone. Rename or drop the yaml and the script stops running with no
+    error at all -- which for longqc means sdust is silently missing again.
+    """
+    for script in sorted((REPO_ROOT / "workflow" / "envs").glob("*.post-deploy.sh")):
+        env = "workflow/envs/{}.yaml".format(script.name[: -len(".post-deploy.sh")])
+        assert env in ENVS, "{} has no referenced env {}".format(script.name, env)
+
+
+def test_post_deploy_scripts_are_executable():
+    """Snakemake executes these directly, so a lost +x bit fails the env build."""
+    for script in sorted((REPO_ROOT / "workflow" / "envs").glob("*.post-deploy.sh")):
+        assert os.access(script, os.X_OK), "{} is not executable".format(script.name)
 
 
 @pytest.mark.parametrize("env", ENVS)
