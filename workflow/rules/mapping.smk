@@ -96,6 +96,8 @@ rule samtools_view:
         bam_ngmlr=temp("{wdir}/{sample}/bam/{genome}_ngmlr.bam"),
     conda:
         "../envs/samtools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}.samtools_view.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.samtools_view.tsv"
     shell:
@@ -115,6 +117,8 @@ rule samtools_sort:
         "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
     conda:
         "../envs/samtools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.samtools_sort.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_sort.tsv"
     shell:
@@ -133,6 +137,8 @@ rule samtools_index:
         "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     conda:
         "../envs/samtools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.samtools_index.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_index.tsv"
     shell:

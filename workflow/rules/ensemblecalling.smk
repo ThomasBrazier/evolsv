@@ -18,6 +18,8 @@ rule svim:
         tmpdir=get_big_temp,
     conda:
         "../envs/svim.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.svim.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.svim.tsv"
     shell:
@@ -62,6 +64,8 @@ rule sniffles:
         tmpdir=get_big_temp,
     conda:
         "../envs/sniffles.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.sniffles.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.sniffles.tsv"
     shell:
@@ -101,6 +105,8 @@ rule cutesv:
         tmpdir=get_big_temp,
     conda:
         "../envs/cutesv.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.cutesv.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.cutesv.tsv"
     shell:
@@ -143,6 +149,8 @@ rule debreak:
         "../envs/debreak.yaml"
     resources:
         tmpdir=get_big_temp,
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.debreak.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.debreak.tsv"
     shell:
@@ -192,6 +200,8 @@ rule removeBND:
         cutesv_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
         debreak_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
         sniffles_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_sniffles_noBND.vcf"),
+    log:
+        "{wdir}/{sample}/logs/{genome}.removeBND.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.removeBND.tsv"
     shell:
@@ -223,6 +233,8 @@ rule vcf_sv_specification:
         ),
     conda:
         "../envs/pysam_v2.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.vcf_sv_specification.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.vcf_sv_specification.tsv"
     shell:
@@ -295,6 +307,8 @@ rule genotype_svim:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_svim_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_svim.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_svim.tsv"
     shell:
@@ -329,6 +343,8 @@ rule genotype_cutesv:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_cutesv.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_cutesv.tsv"
     shell:
@@ -363,6 +379,8 @@ rule genotype_sniffles:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_sniffles.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_sniffles.tsv"
     shell:
@@ -397,6 +415,8 @@ rule genotype_debreak:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_debreak.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_debreak.tsv"
     shell:
@@ -423,6 +443,8 @@ rule basic_filter:
         vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf",
     conda:
         "../envs/bcftools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.basic_filter.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.basic_filter.tsv"
     shell:

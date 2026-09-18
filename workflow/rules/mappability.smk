@@ -67,6 +67,8 @@ rule callable_bed:
         callable_bed="{wdir}/{sample}/callability/{genome}_{aligner}_callable.bed",
     conda:
         "../envs/mosdepth.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}.callable_bed.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.callable_bed.tsv"
     shell:

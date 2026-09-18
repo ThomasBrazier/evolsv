@@ -23,6 +23,8 @@ rule jasmine:
         bamlist="{wdir}/{sample}/merging/{genome}_bam_list.txt",
     conda:
         "../envs/jasminesv.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}.jasmine.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.jasmine.tsv"
     shell:

@@ -76,6 +76,8 @@ rule autosomes_sexchromosomes:
         autosomes="{wdir}/genome/{genome}.autosomes",
         scaffolds_to_exclude=config["scaffolds_to_exclude"],
         chromosome_names="{wdir}/genome/{genome}.chromosomes",
+    log:
+        "{wdir}/genome/logs/{genome}.autosomes_sexchromosomes.log",
     benchmark:
         "{wdir}/genome/benchmarks/{genome}.autosomes_sexchromosomes.tsv"
     script:
@@ -100,6 +102,8 @@ rule all_samples_vcf:
         svjedi_gz=temp("{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}.all_samples_vcf.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.all_samples_vcf.tsv"
     shell:

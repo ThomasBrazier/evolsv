@@ -232,6 +232,8 @@ rule filter_reads_chopper:
         filtered_reads=temp("{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz"),
     conda:
         "../envs/chopper.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}.filter_reads_chopper.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.filter_reads_chopper.tsv"
     shell:

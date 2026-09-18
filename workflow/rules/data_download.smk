@@ -97,6 +97,8 @@ else:
             "../envs/download.yaml"
         params:
             local_fasta=reference_fasta,
+        log:
+            "{wdir}/genome/logs/{genome}.download_genome.log",
         benchmark:
             "{wdir}/genome/benchmarks/{genome}.download_genome.tsv"
         shell:
@@ -172,6 +174,8 @@ if not bam_mode:
             merged_fastq=temp("{wdir}/{sample}/fastq/{genome}.fastq.gz"),
         conda:
             "../envs/samtools.yaml"
+        log:
+            "{wdir}/{sample}/logs/{genome}.merge_fastq.log",
         benchmark:
             "{wdir}/{sample}/benchmarks/{genome}.merge_fastq.tsv"
         shell:
