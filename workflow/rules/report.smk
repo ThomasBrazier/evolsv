@@ -10,6 +10,8 @@ rule samplot_subset_DUP:
         subset_dup=temp("{wdir}/{sample}/samplot/{genome}_samplot_DUP.vcf"),
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_DUP.tsv"
     shell:
         """
         bcftools filter -i'INFO/OLDTYPE="DUP"' {input.final} > {output.subset_dup_tmp}
@@ -32,6 +34,8 @@ rule samplot_subset_INV:
         subset_inv=temp("{wdir}/{sample}/samplot/{genome}_samplot_INV.vcf"),
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_INV.tsv"
     shell:
         """
         bcftools filter -i'INFO/SVTYPE="INV"' {input.final} > {output.subset_inv_tmp}
@@ -76,6 +80,8 @@ rule samplot_subset_DEL:
         subset_del=temp("{wdir}/{sample}/samplot/{genome}_samplot_DEL.vcf"),
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_DEL.tsv"
     shell:
         """
         bcftools filter -i'INFO/SVTYPE="DEL"' {input.final} > {output.subset_del_tmp}
@@ -112,6 +118,8 @@ rule samplot_plot:
     params:
         outdir_minimap2="{wdir}/{sample}/samplot/minimap2_{genome}",
         outdir_ngmlr="{wdir}/{sample}/samplot/ngmlr_{genome}",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.samplot_plot.tsv"
     shell:
         """
         if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
@@ -210,6 +218,8 @@ rule vcf_to_tsv:
         vcf="{wdir}/{sample}/{genome}_final.vcf",
     output:
         tsv="{wdir}/{sample}/{genome}_final.tsv",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.vcf_to_tsv.tsv"
     shell:
         """
         # All samples
@@ -231,6 +241,8 @@ rule merging_qc:
         "{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv",
     conda:
         "../envs/Renv.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.merging_qc.tsv"
     shell:
         """
         Rscript workflow/scripts/merging_qc.R {wdir}/{wildcards.sample} {genome}
@@ -259,6 +271,8 @@ rule vcf_to_tsv_tools:
         ngmlr_svim_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_svim.tsv",
         ngmlr_sniffles_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.tsv",
         ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.vcf_to_tsv_tools.tsv"
     shell:
         """
         # Tool specific output
@@ -309,6 +323,8 @@ rule final_report:
         "{wdir}/{sample}/performance/{genome}_performance.tsv",
     conda:
         "../envs/Renv.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.final_report.tsv"
     shell:
         """
         Rscript workflow/scripts/finalQC.R {wdir} {genome} {wildcards.sample}
@@ -328,6 +344,8 @@ rule light_vcf:
         light_vcf="{wdir}/{sample}/{genome}_final_light.vcf",
     conda:
         "../envs/pysam_v2.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.light_vcf.tsv"
     shell:
         """
         # Iterate over the VCF to add symbolic type to REF/ALT field
@@ -357,6 +375,8 @@ rule gzvcf:
         light_vcf_idx="{wdir}/{sample}/{genome}_final_light.vcf.gz.csi",
     conda:
         "../envs/samtools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.gzvcf.tsv"
     shell:
         """
         bcftools annotate --header-lines workflow/header/header.txt {input.vcf} > {output.tmp_vcf}

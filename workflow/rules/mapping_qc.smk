@@ -21,6 +21,8 @@ rule samtools_stats:
         plot="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_mapping_plot.html",
     conda:
         "../envs/samtools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_stats.tsv"
     shell:
         """
         mkdir -p {wdir}/{wildcards.sample}/mapping_QC
@@ -44,6 +46,8 @@ rule samtools_coverage:
         coverage_depth="{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage_depthplot.txt",
     conda:
         "../envs/samtools_coverage.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_coverage.tsv"
     shell:
         """
         # store coverage in a tsv/tab-separated file

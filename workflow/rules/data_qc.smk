@@ -12,6 +12,8 @@ rule fastqc:
         "../envs/fastqc.yaml"
     log:
         "{wdir}/{sample}/logs/{run}.fastqc.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{run}.fastqc.tsv"
     params:
         outdir=lambda wildcards, output: os.path.dirname(output.html),
     shell:
@@ -207,6 +209,8 @@ rule nanoplot:
         "../envs/nanoplot.yaml"
     log:
         "{wdir}/{sample}/logs/{run}_nanoplot.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{run}.nanoplot.tsv"
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot/ --prefix '{wildcards.run}_' --N50 --no_static --verbose --title {wildcards.run} &> {log}
@@ -228,6 +232,8 @@ rule filter_reads_chopper:
         filtered_reads=temp("{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz"),
     conda:
         "../envs/chopper.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.filter_reads_chopper.tsv"
     shell:
         """
         chopper -q {config[chopper_quality]} \
@@ -267,6 +273,8 @@ rule nanoplot_after_filtering:
         "../envs/nanoplot.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_nanoplot_filtered.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.nanoplot_after_filtering.tsv"
     shell:
         """
         NanoPlot --fastq {input.fastq} -t {resources.cpus_per_task} --tsv_stats --outdir {wildcards.wdir}/{wildcards.sample}/nanoplot_filtered/ --prefix '{wildcards.genome}_' --N50 --no_static --verbose --title {wildcards.sample} &> {log}

@@ -23,6 +23,8 @@ rule jasmine:
         bamlist="{wdir}/{sample}/merging/{genome}_bam_list.txt",
     conda:
         "../envs/jasminesv.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.jasmine.tsv"
     shell:
         """
         # Make sure local decimal point is '.'

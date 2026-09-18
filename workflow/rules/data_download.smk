@@ -13,6 +13,8 @@ if not bam_mode:
             "../envs/download.yaml"
         log:
             "{wdir}/{sample}/logs/download_sra/{run}.log",
+        benchmark:
+            "{wdir}/{sample}/benchmarks/{run}.download_sra.tsv"
         shell:
             """
             mkdir --parents {params.outdir}
@@ -43,6 +45,8 @@ if reference_source == "local":
             sequence_report="{wdir}/genome/{genome}_sequence_report.jsonl",
         conda:
             "../envs/samtools.yaml"
+        benchmark:
+            "{wdir}/genome/benchmarks/{genome}.stage_genome.tsv"
         shell:
             """
             echo "Using the local reference FASTA {input.fasta} instead of the NCBI copy."
@@ -63,6 +67,8 @@ if reference_source == "local":
                 assembly_data_report,
             output:
                 "{wdir}/genome/{genome}_assembly_data_report.jsonl",
+            benchmark:
+                "{wdir}/genome/benchmarks/{genome}.stage_assembly_data_report.tsv"
             shell:
                 """
                 cp {input} {output}
@@ -91,6 +97,8 @@ else:
             "../envs/download.yaml"
         params:
             local_fasta=reference_fasta,
+        benchmark:
+            "{wdir}/genome/benchmarks/{genome}.download_genome.tsv"
         shell:
             """
             datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
@@ -132,6 +140,8 @@ rule sample_ids:
         "../envs/bcftools.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_sample_ids.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.sample_ids.tsv"
     shell:
         """
         echo {wildcards.sample} > {output.sampleids}
@@ -162,6 +172,8 @@ if not bam_mode:
             merged_fastq=temp("{wdir}/{sample}/fastq/{genome}.fastq.gz"),
         conda:
             "../envs/samtools.yaml"
+        benchmark:
+            "{wdir}/{sample}/benchmarks/{genome}.merge_fastq.tsv"
         shell:
             """
             cat {input.fastq} > {output.merged_fastq}

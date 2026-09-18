@@ -17,6 +17,8 @@ rule svjedigraph:
         "../envs/svjedi-graph.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_svjedigraph.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.svjedigraph.tsv"
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
@@ -44,6 +46,8 @@ rule check_reference_names:
         "../envs/bamcheck.yaml"
     log:
         "{wdir}/logs/check_reference_names/{genome}.log",
+    benchmark:
+        "{wdir}/genome/benchmarks/{genome}.check_reference_names.tsv"
     shell:
         """
         python workflow/scripts/check_reference_names.py \
@@ -72,6 +76,8 @@ rule autosomes_sexchromosomes:
         autosomes="{wdir}/genome/{genome}.autosomes",
         scaffolds_to_exclude=config["scaffolds_to_exclude"],
         chromosome_names="{wdir}/genome/{genome}.chromosomes",
+    benchmark:
+        "{wdir}/genome/benchmarks/{genome}.autosomes_sexchromosomes.tsv"
     script:
         "../scripts/autosomes_sexchromosomes.R"
 
@@ -94,6 +100,8 @@ rule all_samples_vcf:
         svjedi_gz=temp("{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf.gz"),
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.all_samples_vcf.tsv"
     shell:
         """
         bcftools reheader --fai {input.genome_index} {input.jasmine} > {output.jasmine_reheadered}
@@ -133,6 +141,8 @@ rule final_vcf:
         "../envs/bcftools.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_final_filtering.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.final_vcf.tsv"
     shell:
         """
         bcftools view -T {input.autosomes} -l 0 -o {output.final_tmp} {input.vcf}

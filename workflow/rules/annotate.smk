@@ -47,6 +47,8 @@ rule truvari_grm:
         min_sv_size=config["min_sv_size"],
     log:
         "{wdir}/{sample}/logs/truvari_grm/{genome}.txt",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.truvari_grm.tsv"
     shell:
         """
         tabix {input.vcf} 2> {log}

@@ -34,6 +34,8 @@ rule stage_bam:
         "../envs/bamcheck.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_{aligner}_stage_bam.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.stage_bam.tsv"
     shell:
         """
         mkdir --parents {wdir}/{wildcards.sample}/bam
@@ -68,6 +70,8 @@ rule stage_fastq:
         merged_fastq="{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz",
     log:
         "{wdir}/{sample}/logs/{genome}_stage_fastq.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.stage_fastq.tsv"
     shell:
         """
         mkdir --parents {wdir}/{wildcards.sample}/fastq

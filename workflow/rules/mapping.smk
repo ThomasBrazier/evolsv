@@ -18,6 +18,8 @@ rule minimap2:
         "../envs/minimap2.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_minimap2.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.minimap2.tsv"
     shell:
         """
         minimap2 -ax {config[minimap_ax]} --MD -2 \
@@ -68,6 +70,8 @@ rule ngmlr:
         "../envs/ngmlr.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_ngmlr.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.ngmlr.tsv"
     shell:
         """
         ngmlr -t {resources.cpus_per_task} \
@@ -92,6 +96,8 @@ rule samtools_view:
         bam_ngmlr=temp("{wdir}/{sample}/bam/{genome}_ngmlr.bam"),
     conda:
         "../envs/samtools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.samtools_view.tsv"
     shell:
         """
         samtools view -S -b {input.sam_minimap2} > {output.bam_minimap2}
@@ -109,6 +115,8 @@ rule samtools_sort:
         "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
     conda:
         "../envs/samtools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_sort.tsv"
     shell:
         """
         samtools sort {input} -o {output}
@@ -125,6 +133,8 @@ rule samtools_index:
         "{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     conda:
         "../envs/samtools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_index.tsv"
     shell:
         """
         samtools index {input}

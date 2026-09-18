@@ -10,6 +10,8 @@ rule mosdepth_summary:
         "../envs/mosdepth.yaml"
     log:
         "{wdir}/{sample}/logs/mosdepth/{genome}_{aligner}.txt",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.mosdepth_summary.tsv"
     params:
         prefix="{wdir}/{sample}/callability/{genome}_{aligner}",
     shell:
@@ -34,6 +36,8 @@ rule mosdepth_quantize:
         "../envs/mosdepth.yaml"
     log:
         "{wdir}/{sample}/logs/mosdepth_quantize/{genome}_{aligner}.txt",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.mosdepth_quantize.tsv"
     params:
         # prefix = "{wdir}/{sample}/callability/{genome}_{aligner}",
         lower=round(config["quantize_cov_threshold_lower"]),
@@ -63,6 +67,8 @@ rule callable_bed:
         callable_bed="{wdir}/{sample}/callability/{genome}_{aligner}_callable.bed",
     conda:
         "../envs/mosdepth.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.callable_bed.tsv"
     shell:
         """
         zcat {input.quantized} | grep CALLABLE | bedtools sort | bedtools merge > {output.callable_bed}
@@ -112,6 +118,8 @@ rule mappability_bed:
         mappability=config["mappability_min"],
     log:
         "{wdir}/logs/mappability_bed/{genome}.txt",
+    benchmark:
+        "{wdir}/genome/benchmarks/{genome}.mappability_bed.tsv"
     shell:
         """
         awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map} 2> {log}
@@ -133,6 +141,8 @@ rule add_mappability:
         "../envs/mosdepth.yaml"
     log:
         "{wdir}/{sample}/logs/add_mappability/{genome}.txt",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.add_mappability.tsv"
     shell:
         """
         bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_ngmlr} | bedtools sort | bedtools merge > {output.callable} 2> {log}

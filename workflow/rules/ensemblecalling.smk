@@ -18,6 +18,8 @@ rule svim:
         tmpdir=get_big_temp,
     conda:
         "../envs/svim.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.svim.tsv"
     shell:
         """
         svim alignment {wdir}/{wildcards.sample}/calling/{genome}_{wildcards.aligner}_svim {input.bam} {input.fasta} \
@@ -60,6 +62,8 @@ rule sniffles:
         tmpdir=get_big_temp,
     conda:
         "../envs/sniffles.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.sniffles.tsv"
     shell:
         """
         sniffles --input {input.bam} \
@@ -97,6 +101,8 @@ rule cutesv:
         tmpdir=get_big_temp,
     conda:
         "../envs/cutesv.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.cutesv.tsv"
     shell:
         """
         if [ -d "{wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}" ]; then
@@ -137,6 +143,8 @@ rule debreak:
         "../envs/debreak.yaml"
     resources:
         tmpdir=get_big_temp,
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.debreak.tsv"
     shell:
         """
         echo $PATH
@@ -184,6 +192,8 @@ rule removeBND:
         cutesv_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
         debreak_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
         sniffles_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_sniffles_noBND.vcf"),
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.removeBND.tsv"
     shell:
         """
         cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
@@ -213,6 +223,8 @@ rule vcf_sv_specification:
         ),
     conda:
         "../envs/pysam_v2.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.vcf_sv_specification.tsv"
     shell:
         """
         mkdir -p {wdir}/{wildcards.sample}/preprocess
@@ -249,6 +261,8 @@ rule sniffles2plot:
         "../envs/sniffles.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_sniffles2plot.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.sniffles2plot.tsv"
     shell:
         """
         python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/{wildcards.sample}/calling_QC/minimap2_sniffles_QC_{genome}/
@@ -281,6 +295,8 @@ rule genotype_svim:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_svim_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_svim.tsv"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
@@ -313,6 +329,8 @@ rule genotype_cutesv:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_cutesv.tsv"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
@@ -345,6 +363,8 @@ rule genotype_sniffles:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_sniffles.tsv"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
@@ -377,6 +397,8 @@ rule genotype_debreak:
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_informative_aln.json",
     conda:
         "../envs/svjedi-graph.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_debreak.tsv"
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
@@ -401,6 +423,8 @@ rule basic_filter:
         vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf",
     conda:
         "../envs/bcftools.yaml"
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.basic_filter.tsv"
     shell:
         """
         # bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
