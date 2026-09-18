@@ -70,6 +70,7 @@ rule longqc:
         rm -rf {output} || true
         python "$CONDA_PREFIX/share/LongQC/longQC.py" sampleqc \
         -x {config[longqc_preset]} \
+        -p $(( {threads} < 4 ? 4 : {threads} )) \
         -o {output} \
         --index 1G \
         {input} &> {log}
