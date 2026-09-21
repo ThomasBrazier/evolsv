@@ -155,31 +155,24 @@ set-resources:
     mem_mb: attempt * 50000
   vcf_sv_specification:
     mem_mb: attempt * 200000
-    qos: "'bigmem'"
   sniffles2plot:
     mem_mb: attempt * 60000
   genotype_svim:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
   genotype_cutesv:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
   genotype_sniffles:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
   genotype_debreak:
     mem_mb: attempt * 40000
-    qos: "'bigmem'"
   basic_filter:
     mem_mb: attempt * 2000
   jasmine:
     mem_mb: attempt * 200000
-    qos: "'bigmem'"
   merging_qc:
     mem_mb: attempt * 20000
   svjedigraph:
     mem_mb: attempt * 20000
-    qos: "'bigmem'"
   autosomes_sexchromosomes:
     mem_mb: attempt * 2000
   truvari_grm:
