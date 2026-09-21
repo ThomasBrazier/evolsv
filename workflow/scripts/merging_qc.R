@@ -12,6 +12,17 @@ library(tidyverse)
 # import a dataset
 merged = read_tsv(paste0(wdir, "/", genome, "_final.tsv"))
 
+# If no SV in the final vcf/tsv, just output empty files
+if (nrow(merged) == 0) {
+  write_tsv(merged, paste0(wdir, "/merging_QC/", genome, "_svlen_equal_zero.tsv"))
+  write_tsv(merged, paste0(wdir, "/merging_QC/", genome, "_avglen_equal_zero.tsv"))
+  write_tsv(merged, paste0(wdir, "/merging_QC/", genome, "_no_avgend_field.tsv"))
+  write_tsv(merged, paste0(wdir, "/merging_QC/", genome, "_unmerged_sv.tsv"))
+}
+
+
+
+
 #--------------------------------------------------------
 # TODO
 # Add automatic tests
