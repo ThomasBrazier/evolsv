@@ -42,6 +42,7 @@ rule stage_bam:
         reads_source=lambda wildcards: (
             "sample-sheet" if input_fastqs[wildcards.sample] else "bam-derived"
         ),
+        reads_aligner=reads_aligner,
     conda:
         "../envs/bamcheck.yaml"
     log:
@@ -56,6 +57,7 @@ rule stage_bam:
         --bam {input.bam} --fai {input.fai} \
         --sample-id {wildcards.sample} --aligner {wildcards.aligner} \
         --reads-source {params.reads_source} \
+        --reads-aligner {params.reads_aligner} \
         --report {output.report} 2> {log}
 
         ln -sf $(realpath {input.bam}) {output.bam}
@@ -114,8 +116,10 @@ if bam_fastq_individuals:
 
         SVJedi-graph cannot genotype from a linear BAM, but the reads themselves are
         still in it, so requiring the original FASTQ alongside a BAM is unnecessary.
-        The minimap2 BAM is used; both alignments are assumed to come from the same read
-        set (see README), so the choice only matters through what each aligner kept.
+        The first selected aligner's BAM is used (minimap2 whenever it is selected, see
+        `aligners` in workflow/Snakefile); all the alignments of one individual are
+        assumed to come from the same read set (see README), so the choice only matters
+        through what each aligner kept.
 
         The extracted reads are NOT identical to the sequenced reads:
 
@@ -124,9 +128,9 @@ if bam_fastq_individuals:
           own read, inflating both the coverage the callers see and the read support
           SVJedi-graph counts.
         * unmapped records (0x4) are kept, but reads the aligner never wrote cannot be
-          recovered. A BAM produced with minimap2 --sam-hit-only (which rule minimap2
-          itself uses) or filtered to mapped reads yields fewer reads than the original
-          FASTQ.
+          recovered. A BAM produced with, for instance, minimap2 --sam-hit-only (which
+          rule minimap2 itself uses) or filtered to mapped reads yields fewer reads than
+          the original FASTQ.
         * samtools fastq restores reverse-strand reads to their original orientation,
           but bases removed by *hard* clipping on a primary alignment are gone.
         * no chopper filtering is applied, exactly as for rule stage_fastq. The
@@ -141,7 +145,9 @@ if bam_fastq_individuals:
             # by rule stage_fastq, which writes the same path.
             sample="|".join(re.escape(i) for i in bam_fastq_individuals),
         input:
-            bam="{wdir}/{sample}/bam/{genome}_minimap2_sorted.bam",
+            bam="{{wdir}}/{{sample}}/bam/{{genome}}_{aligner}_sorted.bam".format(
+                aligner=reads_aligner
+            ),
         output:
             fastq=temp("{wdir}/{sample}/fastq/{genome}_filtered.fastq.gz"),
         conda:

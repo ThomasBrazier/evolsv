@@ -32,8 +32,23 @@ if (nrow(merged) == 0) {
   #--------------------------------------------------------
   # Parse
   #--------------------------------------------------------
-  fix.merged = merged[,1:6]
-  gt.merged = merged[,7:16]
+  # Column layout of <genome>_final.tsv, written by workflow/scripts/vcf_to_tsv.sh:
+  # 6 fixed fields, FORMAT, one column per aligner + caller callset, then the
+  # SVjedi-graph genotyped sample last. The number of callsets follows the `aligners`
+  # config key, so it is read from the header rather than assumed (4 with one aligner,
+  # 8 with both). finalQC.Rmd derives the same thing the same way.
+  FORMAT_COL = 7
+  tool_cols = names(merged)[(FORMAT_COL + 1):(ncol(merged) - 1)]
+  tools = data.frame(
+    column = tool_cols,
+    # Callset columns are named <aligner>_<caller>; aligner names carry no underscore.
+    aligner = sub("_.*$", "", tool_cols),
+    caller = sub("^[^_]*_", "", tool_cols),
+    stringsAsFactors = FALSE
+  )
+
+  fix.merged = merged[,1:(FORMAT_COL - 1)]
+  gt.merged = merged[,FORMAT_COL:ncol(merged)]
 
   fix.merged$sv_type = as.vector(gsub("SVTYPE=", "", str_match(fix.merged$INFO, "SVTYPE=[A-Z]+")))
   fix.merged$sv_length = as.numeric(as.vector(gsub("SVLEN=", "", str_match(fix.merged$INFO, "SVLEN=[-]*[0-9]+"))))
@@ -42,21 +57,33 @@ if (nrow(merged) == 0) {
   fix.merged$n_supp = as.numeric(as.vector(gsub("SUPP=", "", str_match(fix.merged$INFO, "SUPP=[0-9]+"))))
   fix.merged$jasmine = ifelse(!is.na(fix.merged$supp_vec), 1, 0)
 
-  # Get aligner support
-  fix.merged$minimap2 = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" |
-                                lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" |
-                                lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1" |
-                                lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1", 1, 0)
-  fix.merged$ngmlr = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1" |
-                              lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1" |
-                              lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 7) == "1" |
-                              lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
+  # Bit i of Jasmine's SUPP_VEC is the callset tools$column[i]: both orders come from the
+  # order the VCFs are listed in workflow/rules/merging.smk. Decode once into a logical
+  # matrix instead of indexing the string by hand, which assumed 8 callsets in a fixed
+  # aligner order and silently mislabelled them with any other `aligners` setting.
+  supp_mat = matrix(FALSE, nrow = nrow(fix.merged), ncol = nrow(tools),
+                    dimnames = list(NULL, tools$column))
+  supp_ok = !is.na(fix.merged$supp_vec) & nchar(fix.merged$supp_vec) == nrow(tools)
+  if (any(!is.na(fix.merged$supp_vec) & !supp_ok)) {
+    warning("SUPP_VEC length does not match the ", nrow(tools),
+            " callset columns of the final TSV; those calls are treated as unsupported.")
+  }
+  if (any(supp_ok)) {
+    supp_mat[supp_ok, ] = do.call(
+      rbind, strsplit(fix.merged$supp_vec[supp_ok], "")) == "1"
+  }
 
-  # Get SV caller support
-  fix.merged$sniffles = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 1) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 5) == "1", 1, 0)
-  fix.merged$svim = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 2) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 6) == "1", 1, 0)
-  fix.merged$cutesv = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 3) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 7) == "1", 1, 0)
-  fix.merged$debreak = ifelse(lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 4) == "1" | lapply(strsplit(fix.merged$supp_vec, ""), `[[`, 8) == "1", 1, 0)
+  # Per-aligner and per-caller support: a call is supported by an aligner (or a caller)
+  # when any of its callsets supports it. Not read by the checks below; part of the parsed
+  # frame, and kept in step with finalQC.Rmd, which reports on the same columns.
+  for (aligner in unique(tools$aligner)) {
+    fix.merged[[aligner]] = as.integer(
+      rowSums(supp_mat[, tools$aligner == aligner, drop = FALSE]) > 0)
+  }
+  for (caller in unique(tools$caller)) {
+    fix.merged[[caller]] = as.integer(
+      rowSums(supp_mat[, tools$caller == caller, drop = FALSE]) > 0)
+  }
 
 
   #--------------------------------------------------------

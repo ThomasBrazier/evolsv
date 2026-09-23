@@ -4,7 +4,8 @@ Alignment-level QC.
 These rules only need a sorted BAM and its index, so they run in both input modes:
 after mapping (rules/mapping.smk) or on user-supplied BAMs (rules/bam_input.smk).
 Their outputs feed rule final_report, which reads
-mapping_QC/{genome}_{aligner}_mapping.stats.tsv for both aligners.
+mapping_QC/{genome}_{aligner}_mapping.stats.tsv for every selected aligner (config key
+`aligners`).
 """
 
 

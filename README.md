@@ -176,9 +176,31 @@ Two things worth knowing:
 * **Only the aligners and cuteSV have technology presets.** Sniffles2, SVIM, DeBreak and SVJedi-graph publish none upstream — Sniffles2 derives its thresholds from coverage, DeBreak accepts HiFi/CLR/ONT/mixed BAMs without a flag, and SVJedi-graph maps onto its variation graph with minigraph, which has no per-technology presets. An ONT run therefore uses the same settings as a HiFi run in those four tools. `min_sv_size`, `mapq` and `min_mapq` may deserve a second look on noisier data.
 
 
+### Choosing the aligners
+
+By default the reads are aligned twice, with minimap2 and with NGMLR, and the four SV callers run on both alignments — the eight callsets the ensemble consensus is built from. One aligner can be used instead:
+
+```yaml
+aligners:
+  - minimap2 # one or both of minimap2, ngmlr; the order does not matter
+```
+
+`aligners: [minimap2]` and `aligners: [ngmlr]` are both accepted, as is `--config aligners=minimap2` on the command line. An unknown name, or an empty list, stops the run before it starts.
+
+Every per-alignment stage then runs once instead of twice: the alignment itself, `samtools_view`/`sort`/`index`, the four callers, the filtering and preprocessing chain, `samtools_stats`, `samtools_coverage`, mosdepth, the callability BED, the Samplot diagnostics and the calling QC plots. The cost of a run drops by roughly half.
+
+**What you give up is the cross-aligner agreement, and that is the point of the ensemble.** Read this before choosing one aligner:
+
+* **Jasmine merges 4 callsets instead of 8**, so `SUPP` is out of 4 and `SUPP_VEC` is 4 bits long. A call supported by all four callers on one alignment is *not* comparable to one supported by four callers across two alignments: the four callers share every systematic error of the alignment they read, so agreement between them overstates confidence. The final report labels its per-aligner and per-caller tables from the callsets actually present, so it reports what was run — but the numbers are not on the same scale as a two-aligner run's.
+* **`callability/{genome}_callable.bed` is no longer an agreement.** With two aligners it is the intersection of the regions callable in both. With one it degenerates to that aligner's own callable regions, which is a looser definition of callable.
+* **`min-identity`, `minimap_ax` and `ngmlr_preset`** only matter for an aligner that is selected.
+
+The two aligner-specific parameter sets stay in `config/config.yaml` either way; the unused one is simply ignored.
+
+
 ### Starting from pre-aligned BAM files
 
-If your reads are already aligned — for instance because you mapped them to call SNPs — you can skip the SRA download, the read QC and both alignments, which are by far the most expensive stages of the workflow. Set in `config/config.yaml`:
+If your reads are already aligned — for instance because you mapped them to call SNPs — you can skip the SRA download, the read QC and the alignments, which are by far the most expensive stages of the workflow. Set in `config/config.yaml`:
 
 ```yaml
 start_from_bam: true
@@ -192,11 +214,11 @@ sample_name	sra	genome	bam_minimap2	bam_ngmlr	fastq
 SAMEA8724893		GCA_947247005.1	/path/mm2.bam	/path/ngmlr.bam	/path/reads.fastq.gz
 ```
 
-**One BAM per aligner is required.** The ensemble method relies on eight independent callsets produced by four callers on two different alignments, and the merging step (JasmineSV/IRIS) is given both BAM files. Supplying the same alignment twice would make the same evidence count as two independent observations and would inflate both the consensus and the per-tool performance scores.
+**One BAM per selected aligner is required.** With the default two, the ensemble method relies on eight independent callsets produced by four callers on two different alignments, and the merging step (JasmineSV/IRIS) is given both BAM files. Supplying the same alignment twice would make the same evidence count as two independent observations and would inflate both the consensus and the per-tool performance scores — declare one aligner in `aligners` instead (see [Choosing the aligners](#choosing-the-aligners)), which is the honest way to express having a single alignment. Only the selected aligners' columns are read, so a sheet may keep a `bam_ngmlr` path that an `aligners: [minimap2]` run ignores.
 
 **The reads are still needed, but the `fastq` column is optional.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column when you have them; several rows of the same individual are concatenated, as in the SRA mode. Declare exactly one `bam_minimap2` and one `bam_ngmlr` file per individual.
 
-Left blank, the column makes rule `bam_to_fastq` recover the reads from that individual's minimap2 BAM with `samtools fastq -F 0x900`. The decision is per individual, so one sheet can mix both forms. Prefer the original FASTQ when it is available: extracted reads are **not** the reads that were sequenced, and the difference is recorded in each `bam_check.txt` report.
+Left blank, the column makes rule `bam_to_fastq` recover the reads from that individual's BAM with `samtools fastq -F 0x900` — the first selected aligner's, so minimap2 whenever minimap2 is selected. The decision is per individual, so one sheet can mix both forms. Prefer the original FASTQ when it is available: extracted reads are **not** the reads that were sequenced, and the difference is recorded in each `bam_check.txt` report.
 
 * Secondary (`0x100`) and supplementary (`0x800`) records are excluded. They must be: a long read whose alignment is split would otherwise re-enter the callers as several reads, inflating both the coverage they see and the read support SVJedi-graph counts.
 * Unmapped records (`0x4`) are kept, but reads the aligner never wrote cannot be recovered. A BAM produced with minimap2 `--sam-hit-only` — which this pipeline's own `minimap2` rule uses — or filtered to mapped reads holds fewer reads than the original FASTQ.
@@ -214,7 +236,8 @@ Caveats to be aware of when interpreting the results:
 * **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour. HiFiAdapterFilt and Porechop_ABI are not applied either. This holds for reads extracted from a BAM too: the `_filtered` in their filename only keeps the downstream rules identical between the two entry points.
 * **Read-level QC (FastQC, NanoPlot, LongQC) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
 * **`sequencing_technology` still matters.** The aligner presets and the `@RG PL` tag are unused in this mode, since the alignments are supplied, but the key still drives the cuteSV clustering parameters. Set it to the technology the BAM files were produced from.
-* **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
+* **All the BAM files of one individual are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
+* **Changing `aligners` between runs on the same `datadir`** re-triggers `jasmine` and everything downstream of it, because its input list changed. The dropped aligner's own per-aligner files are left on disk, unused; delete them if the disk matters, but nothing reads them.
 
 The BAM files are symlinked, not copied, so no extra storage is used.
 

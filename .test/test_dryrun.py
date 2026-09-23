@@ -132,7 +132,17 @@ POSITIVE_CASES = [
     ("bam-mode-multi-individual", ".test/config_bam_multi.yaml"),
     ("bam-mode-no-fastq", ".test/config_bam_no_fastq.yaml"),
     ("bam-mode-mixed-fastq", ".test/config_bam_mixed_fastq.yaml"),
+    ("minimap2-only", ".test/config_minimap2_only.yaml"),
+    ("ngmlr-only", ".test/config_ngmlr_only.yaml"),
+    ("bam-mode-one-aligner", ".test/config_bam_one_aligner.yaml"),
 ]
+
+# The callsets Jasmine merges, in the order that fixes its SUPP_VEC bit order (`callsets`
+# in workflow/Snakefile). Both aligners, aligner-major.
+DEFAULT_CALLSETS = (
+    "minimap2_sniffles,minimap2_svim,minimap2_cutesv,minimap2_debreak,"
+    "ngmlr_sniffles,ngmlr_svim,ngmlr_cutesv,ngmlr_debreak"
+)
 
 
 @pytest.mark.parametrize("name,configfile", POSITIVE_CASES, ids=[c[0] for c in POSITIVE_CASES])
@@ -155,6 +165,110 @@ def test_default_uses_the_fastq_entry_point():
     assert counts["minimap2"] == 1
     assert counts["ngmlr"] == 1
     assert counts["jasmine"] == 1
+
+
+def test_default_runs_both_aligners_over_every_callset():
+    """The default `aligners` builds the full 8-callset ensemble.
+
+    The per-callset counts are the ones that would silently halve if `aligners` stopped
+    being honoured, or double if a rule kept enumerating the aligners itself.
+    """
+    counts = parse_job_stats(run_dryrun().stdout)
+
+    for rule in ("svim", "cutesv", "sniffles", "debreak", "samtools_view"):
+        assert counts[rule] == 2, f"{rule} should run once per aligner"
+    for rule in ("removeBND", "vcf_sv_specification", "basic_filter"):
+        assert counts[rule] == 8, f"{rule} should run once per aligner x caller"
+    # 3 SV types x 2 aligners, and 3 plottable callers x 2 aligners (no DeBreak plot).
+    assert counts["samplot_plot"] == 6
+    assert counts["sniffles2plot"] == 6
+    # One merge, over all of it.
+    assert counts["jasmine"] == 1
+
+
+@pytest.mark.parametrize(
+    "configfile,selected,dropped",
+    [
+        (".test/config_minimap2_only.yaml", "minimap2", "ngmlr"),
+        (".test/config_ngmlr_only.yaml", "ngmlr", "minimap2"),
+    ],
+    ids=["minimap2-only", "ngmlr-only"],
+)
+def test_one_aligner_halves_the_ensemble(configfile, selected, dropped):
+    """`aligners` with a single entry drops that aligner's half of every stage."""
+    result = run_dryrun(configfile)
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+
+    assert counts[selected] == 1
+    assert dropped not in counts, f"{dropped} must not be scheduled"
+    for rule in ("svim", "cutesv", "sniffles", "debreak", "samtools_view"):
+        assert counts[rule] == 1, f"{rule} should run once, for {selected} only"
+    for rule in ("removeBND", "vcf_sv_specification", "basic_filter"):
+        assert counts[rule] == 4, f"{rule} should run once per caller only"
+    assert counts["samplot_plot"] == 3
+    assert counts["sniffles2plot"] == 3
+    # Still one merge and one genotyping run, now over 4 callsets.
+    assert counts["jasmine"] == 1
+    assert counts["svjedigraph"] == 1
+    # Nothing may still be naming the aligner that was not selected.
+    assert f"_{dropped}_" not in result.stdout, (
+        f"a path or command still refers to {dropped}"
+    )
+
+
+def test_callset_order_reaching_vcf_to_tsv_is_aligner_major():
+    """This argument is what makes Jasmine's SUPP_VEC decodable downstream.
+
+    Jasmine numbers SUPP_VEC bits by the order of its file_list; vcf_to_tsv.sh names the
+    VCF sample columns in the order given here; merging_qc.R and finalQC.Rmd then read
+    bit i as column i. If the two orders ever diverge, every per-aligner and per-caller
+    count in the report is silently mislabelled -- no rule fails.
+    """
+    result = run_dryrun()
+    assert_succeeded(result)
+    assert f"vcf_to_tsv.sh " in result.stdout
+    assert DEFAULT_CALLSETS in result.stdout, (
+        "vcf_to_tsv.sh is not receiving the callsets aligner-major; expected "
+        + DEFAULT_CALLSETS
+    )
+
+    # The same order must be what Jasmine is given, or the bits refer to something else.
+    # The command that writes the list, not the `output:` line that merely names it.
+    vcflist = [
+        line
+        for line in result.stdout.splitlines()
+        if "_vcf_list.txt" in line and "filtered/" in line
+    ]
+    assert vcflist, "rule jasmine's vcf_list command not found"
+    listed = re.findall(r"filtered/[^ ]*?_(\w+)_(\w+)_filtered\.vcf", vcflist[0])
+    assert ",".join(f"{a}_{c}" for a, c in listed) == DEFAULT_CALLSETS
+
+
+def test_one_aligner_keeps_the_callsets_of_that_aligner_only():
+    """The 4 callsets handed to vcf_to_tsv.sh must be the selected aligner's, in order."""
+    result = run_dryrun(".test/config_minimap2_only.yaml")
+    assert_succeeded(result)
+    assert (
+        "minimap2_sniffles,minimap2_svim,minimap2_cutesv,minimap2_debreak"
+        in result.stdout
+    )
+
+
+def test_bam_mode_one_aligner_stages_one_bam_and_extracts_its_reads():
+    """With one aligner, only its BAM is read -- and it is the one reads come from.
+
+    rule bam_to_fastq used to hardcode the minimap2 BAM, which does not exist here.
+    """
+    result = run_dryrun(".test/config_bam_one_aligner.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+
+    assert counts["stage_bam"] == 1
+    assert counts["bam_to_fastq"] == 1
+    assert "samtools fastq -F 0x900" in result.stdout
+    assert "_ngmlr_sorted.bam" in result.stdout
+    assert "_minimap2_sorted.bam" not in result.stdout
 
 
 def test_sample_sheet_drives_the_download_count():
@@ -480,6 +594,8 @@ NEGATIVE_CASES = [
         "no bam_ngmlr file for individual 'SAMEA8724893' was declared",
     ),
     ("bad-technology", ".test/config_bad_tech.yaml", "Unknown sequencing_technology"),
+    ("bad-aligner", ".test/config_bad_aligner.yaml", "Unknown aligner(s) 'bwa'"),
+    ("no-aligner", ".test/config_bad_no_aligner.yaml", "Config key 'aligners' is empty"),
     ("bad-longqc-preset", ".test/config_bad_longqc_preset.yaml", "Unknown longqc_preset 'pb-hifii'"),
     ("two-genomes", ".test/config_bad_two_genomes.yaml", "must use the same reference genome"),
     (

@@ -1,16 +1,25 @@
 rule jasmine:
     """
-    Merge the VCF files obtained by the three SV callers
+    Merge the VCF files obtained by the SV callers
+
+    One callset per aligner + caller pair, in `callsets` order (see workflow/Snakefile):
+    Jasmine numbers the SUPP_VEC bits of a merged call by the position of the callset in
+    file_list, and workflow/scripts/vcf_to_tsv.sh names the VCF sample columns in that
+    same order. Writing the list from {input.vcfs} keeps the two from drifting.
+
+    With a single aligner this merges 4 callsets instead of 8, so SUPP counts are out of
+    4 and the calls no longer carry cross-aligner agreement (see README).
     """
     input:
-        sniffles_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_sniffles_filtered.vcf",
-        svim_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_svim_filtered.vcf",
-        cutesv_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_cutesv_filtered.vcf",
-        debreak_minimap2="{wdir}/{sample}/filtered/{genome}_minimap2_debreak_filtered.vcf",
-        sniffles_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_sniffles_filtered.vcf",
-        svim_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_svim_filtered.vcf",
-        cutesv_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_cutesv_filtered.vcf",
-        debreak_ngmlr="{wdir}/{sample}/filtered/{genome}_ngmlr_debreak_filtered.vcf",
+        vcfs=expand(
+            "{{wdir}}/{{sample}}/filtered/{{genome}}_{aligner}_{caller}_filtered.vcf",
+            zip,
+            aligner=[aligner for aligner, _ in callsets],
+            caller=[caller for _, caller in callsets],
+        ),
+        bams=expand(
+            "{{wdir}}/{{sample}}/bam/{{genome}}_{aligner}_sorted.bam", aligner=aligners
+        ),
         fasta="{wdir}/genome/{genome}.fna",
         fasta_fai="{wdir}/genome/{genome}.fna.fai",
     output:
@@ -23,6 +32,9 @@ rule jasmine:
         bamlist="{wdir}/{sample}/merging/{genome}_bam_list.txt",
     conda:
         "../envs/jasminesv.yaml"
+    params:
+        aligners=" ".join(aligners),
+        callers=" ".join(CALLERS),
     log:
         "{wdir}/{sample}/logs/{genome}.jasmine.log",
     benchmark:
@@ -38,21 +50,15 @@ rule jasmine:
         LANG=en_US
         export LANG
 
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_sniffles_filtered.vcf" > {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_svim_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_cutesv_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_minimap2_debreak_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_sniffles_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_svim_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_cutesv_filtered.vcf" >> {output.vcflist}
-        echo "{wdir}/{wildcards.sample}/filtered/{genome}_ngmlr_debreak_filtered.vcf" >> {output.vcflist}
+        # One line per callset, in {input.vcfs} order: that order is what SUPP_VEC bits
+        # refer to downstream.
+        printf '%s\\n' {input.vcfs} > {output.vcflist}
 
-        echo "{wdir}/{wildcards.sample}/bam/{genome}_minimap2_sorted.bam" > {output.bamlist}
-        echo "{wdir}/{wildcards.sample}/bam/{genome}_ngmlr_sorted.bam" >> {output.bamlist}
+        printf '%s\\n' {input.bams} > {output.bamlist}
 
         # Modify header to prevent missing contig
-        for aligner in minimap2 ngmlr; do
-        for tool in sniffles svim cutesv debreak; do
+        for aligner in {params.aligners}; do
+        for tool in {params.callers}; do
         bcftools reheader --fai {wdir}/genome/{genome}.fna.fai -o {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
         rm {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
         mv {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf

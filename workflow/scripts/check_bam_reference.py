@@ -22,10 +22,11 @@ import pysam
 
 # How the reads given to SVJedi-graph were obtained (--reads-source), as written to the
 # report. "bam-derived" means the sample sheet left the `fastq` column blank and rule
-# bam_to_fastq recovered the reads from this individual's minimap2 BAM.
+# bam_to_fastq recovered the reads from one of this individual's BAMs; which aligner's is
+# a run-level choice (--reads-aligner), so both texts below name it rather than assume it.
 READS_SOURCES = {
     "sample-sheet": "declared in the sample sheet (rule stage_fastq)",
-    "bam-derived": "extracted from the minimap2 BAM (rule bam_to_fastq)",
+    "bam-derived": "extracted from the {aligner} BAM (rule bam_to_fastq)",
 }
 
 READS_CAVEATS = {
@@ -35,7 +36,7 @@ READS_CAVEATS = {
     ),
     "bam-derived": (
         "CAVEAT: no `fastq` file was declared for this individual, so the reads were\n"
-        "extracted from the minimap2 BAM with `samtools fastq -F 0x900`. They are not\n"
+        "extracted from the {aligner} BAM with `samtools fastq -F 0x900`. They are not\n"
         "the sequenced reads: secondary and supplementary records are excluded (they\n"
         "would otherwise be counted as extra reads), reads the aligner never wrote\n"
         "(e.g. unmapped reads dropped by minimap2 --sam-hit-only) are absent, and bases\n"
@@ -163,7 +164,13 @@ def main():
         required=True,
         choices=("sample-sheet", "bam-derived"),
         help="where the reads given to SVJedi-graph come from: the fastq column of the "
-        "sample sheet, or extraction from the minimap2 BAM (rule bam_to_fastq)",
+        "sample sheet, or extraction from a BAM (rule bam_to_fastq)",
+    )
+    parser.add_argument(
+        "--reads-aligner",
+        default="",
+        help="with --reads-source bam-derived, the aligner whose BAM the reads were "
+        "extracted from",
     )
     parser.add_argument("--report", required=True, help="path of the provenance report to write")
     args = parser.parse_args()
@@ -200,7 +207,11 @@ def main():
         report.write("source BAM:       {}\n".format(args.bam))
         report.write("reference index:  {}\n".format(args.fai))
         report.write("sample id:        {}\n".format(args.sample_id))
-        report.write("reads:            {}\n".format(READS_SOURCES[args.reads_source]))
+        report.write(
+            "reads:            {}\n".format(
+                READS_SOURCES[args.reads_source].format(aligner=args.reads_aligner)
+            )
+        )
         report.write("sort order:       coordinate\n")
         report.write("BAM contigs:      {}\n".format(len(bam_contigs)))
         report.write("reference contigs: {}\n".format(len(reference_lengths)))
@@ -215,7 +226,9 @@ def main():
             "Read-level QC (FastQC, NanoPlot) is skipped; alignment QC is still\n"
             "produced in mapping_QC/ and callability/.\n"
         )
-        report.write("\n" + READS_CAVEATS[args.reads_source])
+        report.write(
+            "\n" + READS_CAVEATS[args.reads_source].format(aligner=args.reads_aligner)
+        )
 
 
 if __name__ == "__main__":

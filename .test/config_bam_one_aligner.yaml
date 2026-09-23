@@ -1,0 +1,10 @@
+# CI dry-run config: pre-aligned BAM entry point with a single aligner.
+#
+# .test/fixtures/samples_bam_no_fastq.tsv declares both bam_ columns; only the selected
+# aligner's is read. The reads are extracted from the ngmlr BAM, since no minimap2 BAM is
+# staged in this mode (see reads_aligner in workflow/rules/common.smk).
+start_from_bam: true
+aligners: [ngmlr]
+samples: .test/fixtures/samples_bam_no_fastq.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

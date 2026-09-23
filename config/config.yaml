@@ -38,6 +38,17 @@ porechop_ab_initio: true # Infer adapters from the reads (-abi) in addition to t
 # longqc_preset: pb-hifi # LongQC -x preset (pb-rs2, pb-sequel, pb-hifi, ont-ligation, ont-rapid, ont-1dsq). Leave commented to use the sequencing_technology preset (hifi -> pb-hifi, ont -> ont-ligation)
 
 # MAPPING
+# Which aligners to run. One or both of minimap2, ngmlr; the order here does not matter.
+# The ensemble is built from every SV caller x aligner pair, so dropping an aligner halves
+# the cost of a run and takes the callsets Jasmine merges from 8 down to 4. It also drops
+# the cross-aligner agreement the consensus relies on: SUPP counts are then out of 4, and
+# callability/{genome}_callable.bed stops being an agreement between two alignments.
+# See the README before using a single aligner. The minimap_ax and ngmlr_preset keys below
+# only matter for an aligner that is selected.
+aligners:
+  - minimap2
+  - ngmlr
+
 # Mapping on the reference genome with Minimap2
 # minimap_ax: map-hifi # Preset for the sequencing technology (see Minimap2 manual). Leave commented to use the sequencing_technology preset (hifi -> map-hifi, ont -> map-ont)
 seed: 42 # Integer seed for randomizing equally best hits. Minimap2 hashes INT and read name when choosing between equally best hits.

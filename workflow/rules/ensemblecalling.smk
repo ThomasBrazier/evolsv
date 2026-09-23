@@ -179,42 +179,31 @@ rule removeBND:
     """
     Remove BND before merging - BND are difficult to treat in downstream analyses
     Remove TRANSLOCATION (TRA)
+
+    One job per aligner + caller callset, so the rule follows the `aligners` config key.
+    DeBreak needs a different filter from the other three: it writes the type in
+    SVTYPE= only, while svim, cuteSV and Sniffles put BND in the ALT/ID fields as well,
+    where the looser pattern catches it.
     """
+    wildcard_constraints:
+        caller="|".join(CALLERS),
     input:
-        sniffles_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.vcf",
-        svim_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_svim.vcf",
-        cutesv_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.vcf",
-        debreak_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_debreak.vcf",
-        sniffles_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.vcf",
-        svim_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_svim.vcf",
-        cutesv_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.vcf",
-        debreak_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.vcf",
+        vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}.vcf",
     output:
-        svim_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_svim_noBND.vcf"),
-        cutesv_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_cutesv_noBND.vcf"),
-        debreak_minimap2=("{wdir}/{sample}/calling/{genome}_minimap2_debreak_noBND.vcf"),
-        sniffles_minimap2=(
-            "{wdir}/{sample}/calling/{genome}_minimap2_sniffles_noBND.vcf"
+        vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
+    params:
+        bnd_filter=lambda wildcards: (
+            "grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA'"
+            if wildcards.caller == "debreak"
+            else "grep -v '[a-zA-Z]*.BND'"
         ),
-        svim_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_svim_noBND.vcf"),
-        cutesv_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_cutesv_noBND.vcf"),
-        debreak_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_debreak_noBND.vcf"),
-        sniffles_ngmlr=("{wdir}/{sample}/calling/{genome}_ngmlr_sniffles_noBND.vcf"),
     log:
-        "{wdir}/{sample}/logs/{genome}.removeBND.log",
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.removeBND.log",
     benchmark:
-        "{wdir}/{sample}/benchmarks/{genome}.removeBND.tsv"
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.removeBND.tsv"
     shell:
         """
-        cat {input.svim_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.svim_minimap2}
-        cat {input.cutesv_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.cutesv_minimap2}
-        cat {input.debreak_minimap2} | grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA' > {output.debreak_minimap2}
-        cat {input.sniffles_minimap2} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_minimap2}
-
-        cat {input.svim_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.svim_ngmlr}
-        cat {input.cutesv_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.cutesv_ngmlr}
-        cat {input.debreak_ngmlr} | grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA' > {output.debreak_ngmlr}
-        cat {input.sniffles_ngmlr} | grep -v '[a-zA-Z]*.BND' > {output.sniffles_ngmlr}
+        cat {input.vcf} | {params.bnd_filter} > {output.vcf} 2> {log}
         """
 
 
@@ -254,36 +243,28 @@ rule sniffles2plot:
     """
     Run sniffles2-plot for each SV caller
     The sniffles2-plot package output a set of QC summary plots for a single VCF
+
+    One job per aligner + caller, so the rule follows the `aligners` config key. DeBreak
+    is absent on purpose: sniffles2_plot cannot read its VCF, which is why PLOT_CALLERS
+    in workflow/Snakefile is a subset of CALLERS.
     """
+    wildcard_constraints:
+        caller="|".join(PLOT_CALLERS),
     input:
-        svim_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_svim_noBND.vcf",
-        cutesv_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_cutesv_noBND.vcf",
-        sniffles_minimap2="{wdir}/{sample}/calling/{genome}_minimap2_sniffles_noBND.vcf",
-        svim_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_svim_noBND.vcf",
-        cutesv_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv_noBND.vcf",
-        sniffles_ngmlr="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles_noBND.vcf",
+        vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
     output:
-        "{wdir}/{sample}/calling_QC/minimap2_sniffles_QC_{genome}/variant_count.jpg",
-        "{wdir}/{sample}/calling_QC/minimap2_svim_QC_{genome}/variant_count.jpg",
-        "{wdir}/{sample}/calling_QC/minimap2_cutesv_QC_{genome}/variant_count.jpg",
-        "{wdir}/{sample}/calling_QC/ngmlr_sniffles_QC_{genome}/variant_count.jpg",
-        "{wdir}/{sample}/calling_QC/ngmlr_svim_QC_{genome}/variant_count.jpg",
-        "{wdir}/{sample}/calling_QC/ngmlr_cutesv_QC_{genome}/variant_count.jpg",
+        plot="{wdir}/{sample}/calling_QC/{aligner}_{caller}_QC_{genome}/variant_count.jpg",
     conda:
         "../envs/sniffles.yaml"
+    params:
+        outdir="{wdir}/{sample}/calling_QC/{aligner}_{caller}_QC_{genome}",
     log:
-        "{wdir}/{sample}/logs/{genome}_sniffles2plot.log",
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}_sniffles2plot.log",
     benchmark:
-        "{wdir}/{sample}/benchmarks/{genome}.sniffles2plot.tsv"
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.sniffles2plot.tsv"
     shell:
         """
-        python3 -m sniffles2_plot -i {input.sniffles_minimap2} -o {wdir}/{wildcards.sample}/calling_QC/minimap2_sniffles_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.svim_minimap2} -o {wdir}/{wildcards.sample}/calling_QC/minimap2_svim_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.cutesv_minimap2} -o {wdir}/{wildcards.sample}/calling_QC/minimap2_cutesv_QC_{genome}/
-
-        python3 -m sniffles2_plot -i {input.sniffles_ngmlr} -o {wdir}/{wildcards.sample}/calling_QC/ngmlr_sniffles_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.svim_ngmlr} -o {wdir}/{wildcards.sample}/calling_QC/ngmlr_svim_QC_{genome}/
-        python3 -m sniffles2_plot -i {input.cutesv_ngmlr} -o {wdir}/{wildcards.sample}/calling_QC/ngmlr_cutesv_QC_{genome}/
+        python3 -m sniffles2_plot -i {input.vcf} -o {params.outdir}/ 2> {log}
         """
 
 

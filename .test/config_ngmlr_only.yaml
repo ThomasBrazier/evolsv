@@ -1,0 +1,5 @@
+# CI dry-run config: ngmlr only (config key `aligners`).
+#
+# The mirror image of .test/config_minimap2_only.yaml. Also the case that catches anything
+# still assuming minimap2 is always present -- rule bam_to_fastq did, before `aligners`.
+aligners: [ngmlr]

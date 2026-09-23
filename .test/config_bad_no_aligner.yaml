@@ -1,0 +1,3 @@
+# CI dry-run config (negative case): no aligner selected at all.
+# Expected to fail with "Config key 'aligners' is empty".
+aligners: []

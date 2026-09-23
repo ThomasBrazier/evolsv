@@ -50,7 +50,46 @@ sra_runs = sorted(set(r for r in samples["sra"] if r))
 
 wdir = f"{config['datadir']}{genome}"
 
-aligners = ["minimap2", "ngmlr"]
+# The aligners and callers the workflow knows, in a canonical order that must not be
+# reshuffled. Jasmine writes one SUPP_VEC bit per input VCF, in the order the VCFs are
+# listed (rules/merging.smk), workflow/scripts/vcf_to_tsv.sh writes the tool column names
+# in that same order, and both workflow/scripts/finalQC.Rmd and merging_qc.R decode bit i
+# as tool column i. `callsets` below is the single definition of that order.
+#
+# CALLERS is the set merged by rule jasmine. It is deliberately not the three-caller list
+# in rule all, which is the sniffles2plot QC set (DeBreak has no such plot).
+ALIGNERS = ("minimap2", "ngmlr")
+CALLERS = ("sniffles", "svim", "cutesv", "debreak")
+
+# The callers rule sniffles2plot can draw. sniffles2_plot cannot read DeBreak's VCF, so
+# the calling_QC plots cover three of the four callers.
+PLOT_CALLERS = ("svim", "cutesv", "sniffles")
+
+# Which aligners to run (config key `aligners`). One is allowed: it halves the cost of the
+# run, at the price of the cross-aligner agreement the ensemble is built on (see README).
+requested_aligners = config.get("aligners", list(ALIGNERS))
+if isinstance(requested_aligners, str):
+    # `--config aligners=minimap2,ngmlr` arrives as a string, not a list.
+    requested_aligners = [a.strip() for a in requested_aligners.split(",") if a.strip()]
+unknown_aligners = [a for a in requested_aligners if a not in ALIGNERS]
+if unknown_aligners:
+    raise WorkflowError(
+        "Unknown aligner(s) {} in config key 'aligners'. Supported values are: {}.".format(
+            ", ".join("'{}'".format(a) for a in unknown_aligners), ", ".join(ALIGNERS)
+        )
+    )
+if not requested_aligners:
+    raise WorkflowError(
+        "Config key 'aligners' is empty. Select at least one of: {}.".format(
+            ", ".join(ALIGNERS)
+        )
+    )
+# Deduplicated and put back into ALIGNERS order, so the SUPP_VEC bit order does not depend
+# on how the config file happens to be written.
+aligners = [a for a in ALIGNERS if a in requested_aligners]
+
+# Every aligner + caller pair whose callset enters rule jasmine, aligner-major.
+callsets = [(aligner, caller) for aligner in aligners for caller in CALLERS]
 
 # Input mode. When True, the SRA download, read QC and alignment stages are replaced
 # by staging user-supplied, pre-aligned BAM files (one per aligner) and their reads.
@@ -111,7 +150,7 @@ rule all:
         per_individual(
             "{wdir}/{sample}/calling_QC/{aligner}_{caller}_QC_{genome}/variant_count.jpg",
             aligner=aligners,
-            caller=["svim", "cutesv", "sniffles"],
+            caller=PLOT_CALLERS,
         ),
         per_individual(
             "{wdir}/{sample}/callability/{genome}_{aligner}_callable_mappable.bed",

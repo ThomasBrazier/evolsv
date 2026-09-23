@@ -102,128 +102,49 @@ rule samplot_plot:
     """
     Plot a random subset of SVs
     For diagnostic purpose
+
+    One job per aligner and SV type. The six blocks this replaces were identical up to
+    the aligner and the SV type, and enumerating the aligners made a single-aligner run
+    (config key `aligners`) impossible.
+
+    An empty subset VCF is not an error: rules samplot_subset_* draw at most
+    config[n_samplot] calls of that type and a callset may hold none. The index.html is
+    then created empty, so the rule still satisfies rule all.
     """
+    wildcard_constraints:
+        # Without this, {svtype} would also match the `DUP_tmp` subset files.
+        svtype="DUP|INV|DEL",
     input:
-        subset_DUP="{wdir}/{sample}/samplot/{genome}_samplot_DUP.vcf",
-        subset_INV="{wdir}/{sample}/samplot/{genome}_samplot_INV.vcf",
-        subset_DEL="{wdir}/{sample}/samplot/{genome}_samplot_DEL.vcf",
+        subset="{wdir}/{sample}/samplot/{genome}_samplot_{svtype}.vcf",
         fasta="{wdir}/genome/{genome}.fna",
-        bam_minimap2="{wdir}/{sample}/bam/{genome}_minimap2_sorted.bam",
-        bam_index_minimap2="{wdir}/{sample}/bam/{genome}_minimap2_sorted.bam.bai",
-        bam_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr_sorted.bam",
-        bam_index_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr_sorted.bam.bai",
+        bam="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam",
+        bam_index="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
     output:
-        "{wdir}/{sample}/samplot/minimap2_{genome}/DUP/index.html",
-        "{wdir}/{sample}/samplot/minimap2_{genome}/INV/index.html",
-        "{wdir}/{sample}/samplot/minimap2_{genome}/DEL/index.html",
-        "{wdir}/{sample}/samplot/ngmlr_{genome}/DUP/index.html",
-        "{wdir}/{sample}/samplot/ngmlr_{genome}/INV/index.html",
-        "{wdir}/{sample}/samplot/ngmlr_{genome}/DEL/index.html",
+        index="{wdir}/{sample}/samplot/{aligner}_{genome}/{svtype}/index.html",
     conda:
         "../envs/samplot.yaml"
     params:
-        outdir_minimap2="{wdir}/{sample}/samplot/minimap2_{genome}",
-        outdir_ngmlr="{wdir}/{sample}/samplot/ngmlr_{genome}",
+        outdir="{wdir}/{sample}/samplot/{aligner}_{genome}/{svtype}",
     log:
-        "{wdir}/{sample}/logs/{genome}.samplot_plot.log",
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{svtype}.samplot_plot.log",
     benchmark:
-        "{wdir}/{sample}/benchmarks/{genome}.samplot_plot.tsv"
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{svtype}.samplot_plot.tsv"
     shell:
         """
-        if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No duplication found."
-            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/DUP/index.html
+        if [[ $(cat {input.subset} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No {wildcards.svtype} found." > {log}
+            touch {output.index}
         else
             samplot vcf \
-            --vcf {input.subset_DUP} \
+            --vcf {input.subset} \
             --plot_all \
             --threads {threads} \
-            -d {params.outdir_minimap2}/DUP \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            -b {input.bam_minimap2} \
-            --sample_ids {wildcards.sample} \
-            --debug
-        fi
-
-        if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No inversion found."
-            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/INV/index.html
-        else
-            samplot vcf \
-            --vcf {input.subset_INV} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir_minimap2}/INV \
+            -d {params.outdir} \
             -O jpg \
             --format GT,DP,AD,PL \
             --sample_ids {wildcards.sample} \
-            -b {input.bam_minimap2} \
-            --debug
-        fi
-        
-        if [[ $(cat {input.subset_DEL} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No inversion found."
-            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/DEL/index.html
-        else
-            samplot vcf \
-            --vcf {input.subset_DEL} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir_minimap2}/DEL \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            --sample_ids {wildcards.sample} \
-            -b {input.bam_minimap2} \
-            --debug
-        fi
-
-        if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No duplication found."
-            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/DUP/index.html
-        else
-            samplot vcf \
-            --vcf {input.subset_DUP} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir_ngmlr}/DUP \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            -b {input.bam_ngmlr} \
-            --sample_ids {wildcards.sample} \
-            --debug
-        fi
-
-        if [[ $(cat {input.subset_INV} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No inversion found."
-            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/INV/index.html
-        else
-            samplot vcf \
-            --vcf {input.subset_INV} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir_ngmlr}/INV \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            --sample_ids {wildcards.sample} \
-            -b {input.bam_ngmlr} \
-            --debug
-        fi
-
-        if [[ $(cat {input.subset_DEL} | grep -v '#' | wc -l) -eq 0 ]]; then
-            echo "No inversion found."
-            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/DEL/index.html
-        else
-            samplot vcf \
-            --vcf {input.subset_DEL} \
-            --plot_all \
-            --threads {threads} \
-            -d {params.outdir_ngmlr}/DEL \
-            -O jpg \
-            --format GT,DP,AD,PL \
-            --sample_ids {wildcards.sample} \
-            -b {input.bam_ngmlr} \
-            --debug
+            -b {input.bam} \
+            --debug 2> {log}
         fi
         """
 
@@ -231,11 +152,18 @@ rule samplot_plot:
 rule vcf_to_tsv:
     """
     Convert the full vcf to tabular data frame for R scripts
+
+    The callset names are passed in rather than hardcoded in the script: they name the
+    VCF sample columns, and their order is the order of Jasmine's SUPP_VEC bits (see
+    `callsets` in workflow/Snakefile). merging_qc.R and finalQC.Rmd both read the shape
+    of the run out of this header.
     """
     input:
         vcf="{wdir}/{sample}/{genome}_final.vcf",
     output:
         tsv="{wdir}/{sample}/{genome}_final.tsv",
+    params:
+        callsets=",".join(f"{aligner}_{caller}" for aligner, caller in callsets),
     log:
         "{wdir}/{sample}/logs/{genome}.vcf_to_tsv.log",
     benchmark:
@@ -243,7 +171,7 @@ rule vcf_to_tsv:
     shell:
         """
         # All samples
-        bash workflow/scripts/vcf_to_tsv.sh {input.vcf} {output.tsv}
+        bash workflow/scripts/vcf_to_tsv.sh {input.vcf} {output.tsv} {params.callsets}
         """
 
 
@@ -276,39 +204,32 @@ rule vcf_to_tsv_tools:
     Convert the full vcf to tabular data frame for R scripts
     """
     input:
-        minimap2_cutesv_vcf="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.vcf",
-        minimap2_svim_vcf="{wdir}/{sample}/calling/{genome}_minimap2_svim.vcf",
-        minimap2_sniffles_vcf="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.vcf",
-        minimap2_debreak_vcf="{wdir}/{sample}/calling/{genome}_minimap2_debreak.vcf",
-        ngmlr_cutesv_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.vcf",
-        ngmlr_svim_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_svim.vcf",
-        ngmlr_sniffles_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.vcf",
-        ngmlr_debreak_vcf="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.vcf",
+        vcfs=expand(
+            "{{wdir}}/{{sample}}/calling/{{genome}}_{aligner}_{caller}.vcf",
+            zip,
+            aligner=[aligner for aligner, _ in callsets],
+            caller=[caller for _, caller in callsets],
+        ),
     output:
-        minimap2_cutesv_tsv="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv="{wdir}/{sample}/calling/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv="{wdir}/{sample}/calling/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
+        tsvs=expand(
+            "{{wdir}}/{{sample}}/calling/{{genome}}_{aligner}_{caller}.tsv",
+            zip,
+            aligner=[aligner for aligner, _ in callsets],
+            caller=[caller for _, caller in callsets],
+        ),
     log:
         "{wdir}/{sample}/logs/{genome}.vcf_to_tsv_tools.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.vcf_to_tsv_tools.tsv"
     shell:
         """
-        # Tool specific output
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_cutesv_vcf} {output.minimap2_cutesv_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_svim_vcf} {output.minimap2_svim_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_sniffles_vcf} {output.minimap2_sniffles_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.minimap2_debreak_vcf} {output.minimap2_debreak_tsv}
-        
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_cutesv_vcf} {output.ngmlr_cutesv_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_svim_vcf} {output.ngmlr_svim_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_sniffles_vcf} {output.ngmlr_sniffles_tsv}
-        bash workflow/scripts/vcf_to_tsv_tools.sh {input.ngmlr_debreak_vcf} {output.ngmlr_debreak_tsv}
+        # Tool specific output. Both lists are built from `callsets`, so the nth VCF and
+        # the nth TSV are the same callset.
+        vcfs=({input.vcfs})
+        tsvs=({output.tsvs})
+        for i in "${{!vcfs[@]}}"; do
+            bash workflow/scripts/vcf_to_tsv_tools.sh "${{vcfs[$i]}}" "${{tsvs[$i]}}" 2>> {log}
+        done
         """
 
 
@@ -324,16 +245,16 @@ rule final_report:
         avglen_equal_zero="{wdir}/{sample}/merging_QC/{genome}_avglen_equal_zero.tsv",
         no_avgend_field="{wdir}/{sample}/merging_QC/{genome}_no_avgend_field.tsv",
         unmerged_sv="{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv",
-        minimap2_cutesv_tsv="{wdir}/{sample}/calling/{genome}_minimap2_cutesv.tsv",
-        minimap2_svim_tsv="{wdir}/{sample}/calling/{genome}_minimap2_svim.tsv",
-        minimap2_sniffles_tsv="{wdir}/{sample}/calling/{genome}_minimap2_sniffles.tsv",
-        minimap2_debreak_tsv="{wdir}/{sample}/calling/{genome}_minimap2_debreak.tsv",
-        ngmlr_cutesv_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_cutesv.tsv",
-        ngmlr_svim_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_svim.tsv",
-        ngmlr_sniffles_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_sniffles.tsv",
-        ngmlr_debreak_tsv="{wdir}/{sample}/calling/{genome}_ngmlr_debreak.tsv",
-        mapping_minimap2="{wdir}/{sample}/mapping_QC/{genome}_minimap2_mapping.stats.tsv",
-        mapping_ngmlr="{wdir}/{sample}/mapping_QC/{genome}_ngmlr_mapping.stats.tsv",
+        caller_tsvs=expand(
+            "{{wdir}}/{{sample}}/calling/{{genome}}_{aligner}_{caller}.tsv",
+            zip,
+            aligner=[aligner for aligner, _ in callsets],
+            caller=[caller for _, caller in callsets],
+        ),
+        mapping_stats=expand(
+            "{{wdir}}/{{sample}}/mapping_QC/{{genome}}_{aligner}_mapping.stats.tsv",
+            aligner=aligners,
+        ),
         # Read by finalQC.Rmd. Absent only with a local sequence_report and no local
         # assembly_data_report; the report then skips its assembly section.
         assembly_report=(

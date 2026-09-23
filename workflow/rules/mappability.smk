@@ -130,27 +130,55 @@ rule mappability_bed:
 
 
 rule add_mappability:
+    """
+    Cross the callable regions with the mappable ones, per aligner and over all of them.
+
+    {genome}_callable.bed is the intersection of the callable regions of every selected
+    aligner (config key `aligners`). CAVEAT: with a single aligner that intersection
+    degenerates to that aligner's own callable set, so the file no longer expresses
+    agreement between two independent alignments -- a looser definition of callable than
+    the two-aligner default, though the only one available in that mode.
+    """
     input:
-        callable_bed_minimap2="{wdir}/{sample}/callability/{genome}_minimap2_callable.bed",
-        callable_bed_ngmlr="{wdir}/{sample}/callability/{genome}_ngmlr_callable.bed",
+        callable_beds=expand(
+            "{{wdir}}/{{sample}}/callability/{{genome}}_{aligner}_callable.bed",
+            aligner=aligners,
+        ),
         mappable_bed="{wdir}/mappability/{genome}_mappable.bed",
     output:
         callable="{wdir}/{sample}/callability/{genome}_callable.bed",
         callable_mappable="{wdir}/{sample}/callability/{genome}_callable_mappable.bed",
-        callable_mappable_minimap2="{wdir}/{sample}/callability/{genome}_minimap2_callable_mappable.bed",
-        callable_mappable_ngmlr="{wdir}/{sample}/callability/{genome}_ngmlr_callable_mappable.bed",
+        per_aligner=expand(
+            "{{wdir}}/{{sample}}/callability/{{genome}}_{aligner}_callable_mappable.bed",
+            aligner=aligners,
+        ),
     conda:
         "../envs/mosdepth.yaml"
+    params:
+        aligners=" ".join(aligners),
+        callability_dir="{wdir}/{sample}/callability",
     log:
         "{wdir}/{sample}/logs/add_mappability/{genome}.txt",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.add_mappability.tsv"
     shell:
         """
-        bedtools intersect -a {input.callable_bed_minimap2} -b {input.callable_bed_ngmlr} | bedtools sort | bedtools merge > {output.callable} 2> {log}
+        # Intersect the callable regions of every selected aligner, accumulating so that
+        # one aligner yields its own callable set and two reproduce a plain intersect.
+        first=1
+        for bed in {input.callable_beds}; do
+            if [ "$first" -eq 1 ]; then
+                bedtools sort -i $bed | bedtools merge > {output.callable} 2> {log}
+                first=0
+            else
+                bedtools intersect -a {output.callable} -b $bed | bedtools sort | bedtools merge > {output.callable}.tmp 2>> {log}
+                mv {output.callable}.tmp {output.callable}
+            fi
+        done
+
         bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable} 2>> {log}
 
-        bedtools intersect -a {input.callable_bed_minimap2} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_minimap2} 2>> {log}
-
-        bedtools intersect -a {input.callable_bed_ngmlr} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable_ngmlr} 2>> {log}
+        for aligner in {params.aligners}; do
+            bedtools intersect -a {params.callability_dir}/{genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge > {params.callability_dir}/{genome}_${{aligner}}_callable_mappable.bed 2>> {log}
+        done
         """

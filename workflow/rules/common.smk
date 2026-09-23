@@ -242,13 +242,18 @@ if bam_mode:
     fastq_individuals = [i for i in individuals if input_fastqs[i]]
     bam_fastq_individuals = [i for i in individuals if not input_fastqs[i]]
 
+    # The alignment rule bam_to_fastq extracts reads from. The first selected aligner:
+    # with `aligners` in canonical order this is minimap2 whenever minimap2 is selected,
+    # and hardcoding it would break an ngmlr-only run, whose minimap2 BAM never exists.
+    reads_aligner = aligners[0]
+
     # Reads reconstructed from an alignment are not the reads that were sequenced (see
     # the caveats on rule bam_to_fastq), so the choice is logged rather than silent.
     if bam_fastq_individuals:
         logger.info(
             "start_from_bam: no 'fastq' declared in {} for {}. Their reads will be "
-            "extracted from the minimap2 BAM (rule bam_to_fastq).".format(
-                config["samples"], ", ".join(bam_fastq_individuals)
+            "extracted from the {} BAM (rule bam_to_fastq).".format(
+                config["samples"], ", ".join(bam_fastq_individuals), reads_aligner
             )
         )
 

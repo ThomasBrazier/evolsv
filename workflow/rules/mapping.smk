@@ -87,23 +87,24 @@ rule ngmlr:
 rule samtools_view:
     """
     Transform the sam file to a bam file
+
+    One job per aligner, like rules samtools_sort and samtools_index below: a single job
+    converting every alignment at once could not run when only one aligner is selected
+    (config key `aligners`), because it would demand the other aligner's SAM.
     """
     input:
-        sam_minimap2="{wdir}/{sample}/bam/{genome}_minimap2.sam",
-        sam_ngmlr="{wdir}/{sample}/bam/{genome}_ngmlr.sam",
+        sam="{wdir}/{sample}/bam/{genome}_{aligner}.sam",
     output:
-        bam_minimap2=temp("{wdir}/{sample}/bam/{genome}_minimap2.bam"),
-        bam_ngmlr=temp("{wdir}/{sample}/bam/{genome}_ngmlr.bam"),
+        bam=temp("{wdir}/{sample}/bam/{genome}_{aligner}.bam"),
     conda:
         "../envs/samtools.yaml"
     log:
-        "{wdir}/{sample}/logs/{genome}.samtools_view.log",
+        "{wdir}/{sample}/logs/{genome}_{aligner}.samtools_view.log",
     benchmark:
-        "{wdir}/{sample}/benchmarks/{genome}.samtools_view.tsv"
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_view.tsv"
     shell:
         """
-        samtools view -S -b {input.sam_minimap2} > {output.bam_minimap2}
-        samtools view -S -b {input.sam_ngmlr} > {output.bam_ngmlr}
+        samtools view -S -b {input.sam} > {output.bam}
         """
 
 

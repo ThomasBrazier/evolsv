@@ -1,0 +1,3 @@
+# CI dry-run config (negative case): an aligner the workflow does not know.
+# Expected to fail with "Unknown aligner(s) 'bwa'".
+aligners: [minimap2, bwa]

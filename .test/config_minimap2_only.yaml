@@ -1,0 +1,6 @@
+# CI dry-run config: minimap2 only (config key `aligners`).
+#
+# The ensemble is then 4 callsets instead of 8, ngmlr never runs, and the callability BED
+# is no longer a cross-aligner agreement. Every other key is inherited from
+# config/config.yaml.
+aligners: [minimap2]
