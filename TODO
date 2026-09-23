@@ -1,0 +1,5 @@
+Add all rules in profile
+Benchmark
+Convert aligned BAM in fastq if fastq not provided
+Download fastq from accession in start from bam pipeline (optional, if accession number supplied and no path to fastq). Redo fastq filtering. SVjedigraph needs reads (fastq)
+Index input BAM if not
