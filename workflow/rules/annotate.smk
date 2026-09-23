@@ -52,9 +52,14 @@ rule truvari_grm:
     shell:
         """
         tabix {input.vcf} 2> {log}
+                if [[ $(cat {input.vcf} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No SV found."
+            touch {output.grm_pandas}
+        else
         singularity exec workflow/containers/truvari.sif truvari anno grm \
         -i {input.vcf} -r {input.fasta} -o {output.grm_pandas} \
         -k {params.kmersize} -m {params.min_sv_size} -t {resources.cpus_per_task} 2>> {log}
+        fi
         """
 
 

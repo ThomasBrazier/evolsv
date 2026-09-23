@@ -162,7 +162,11 @@ rule samplot_plot:
             --debug
         fi
         
-        samplot vcf \
+        if [[ $(cat {input.subset_DEL} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No inversion found."
+            touch {wdir}/{wildcards.sample}/samplot/minimap2_{genome}/DEL/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
             --threads {threads} \
@@ -172,6 +176,7 @@ rule samplot_plot:
             --sample_ids {wildcards.sample} \
             -b {input.bam_minimap2} \
             --debug
+        fi
 
         if [[ $(cat {input.subset_DUP} | grep -v '#' | wc -l) -eq 0 ]]; then
             echo "No duplication found."
@@ -205,7 +210,11 @@ rule samplot_plot:
             --debug
         fi
 
-        samplot vcf \
+        if [[ $(cat {input.subset_DEL} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No inversion found."
+            touch {wdir}/{wildcards.sample}/samplot/ngmlr_{genome}/DEL/index.html
+        else
+            samplot vcf \
             --vcf {input.subset_DEL} \
             --plot_all \
             --threads {threads} \
@@ -215,6 +224,7 @@ rule samplot_plot:
             --sample_ids {wildcards.sample} \
             -b {input.bam_ngmlr} \
             --debug
+        fi
         """
 
 
@@ -332,9 +342,9 @@ rule final_report:
             else []
         ),
     output:
-        "{wdir}/{sample}/{genome}_finalQC.html",
+        html="{wdir}/{sample}/{genome}_finalQC.html",
         # "{wdir}/{sample}/{genome}_finalQC.pdf",
-        "{wdir}/{sample}/performance/{genome}_performance.tsv",
+        performance="{wdir}/{sample}/performance/{genome}_performance.tsv",
     conda:
         "../envs/Renv.yaml"
     log:
@@ -343,7 +353,13 @@ rule final_report:
         "{wdir}/{sample}/benchmarks/{genome}.final_report.tsv"
     shell:
         """
+        if [[ $(cat {input.vcf} | grep -v '#' | wc -l) -eq 0 ]]; then
+            echo "No SV found."
+            touch {output.html}
+            touch {output.performance}
+        else
         Rscript workflow/scripts/finalQC.R {wdir} {genome} {wildcards.sample}
+        fi
         """
 
 
