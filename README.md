@@ -41,7 +41,6 @@ conda activate snakemake
 
 
 The current version is fully functional, yet I plan to implement in a near future new features to address more types of data (e.g., ONT) and improve computation times:
-* Running one or both aligners (minimap2 or ngmlr, optional), scalability.
 * Simplify the rule 'final_report' to generalize better to different options and datasets.
 * Better cleanup and compression for temporary and output files (optimize storage).
 * Improved documentation and tests.
@@ -178,24 +177,16 @@ Two things worth knowing:
 
 ### Choosing the aligners
 
-By default the reads are aligned twice, with minimap2 and with NGMLR, and the four SV callers run on both alignments — the eight callsets the ensemble consensus is built from. One aligner can be used instead:
+By default the reads are aligned twice, with minimap2 and with NGMLR, and the four SV callers run on both — the eight callsets the ensemble consensus is built from. A single aligner can be used instead, which roughly halves the cost of a run:
 
 ```yaml
 aligners:
   - minimap2 # one or both of minimap2, ngmlr; the order does not matter
 ```
 
-`aligners: [minimap2]` and `aligners: [ngmlr]` are both accepted, as is `--config aligners=minimap2` on the command line. An unknown name, or an empty list, stops the run before it starts.
+`--config aligners=ngmlr` works too. An unknown name, or an empty list, stops the run before it starts. Every per-alignment stage — the alignment, the four callers, the QC, the callability BED, the diagnostic plots — then runs once instead of twice, and the aligner-specific keys (`minimap_ax`, `ngmlr_preset`, `min-identity`) only matter for a selected aligner.
 
-Every per-alignment stage then runs once instead of twice: the alignment itself, `samtools_view`/`sort`/`index`, the four callers, the filtering and preprocessing chain, `samtools_stats`, `samtools_coverage`, mosdepth, the callability BED, the Samplot diagnostics and the calling QC plots. The cost of a run drops by roughly half.
-
-**What you give up is the cross-aligner agreement, and that is the point of the ensemble.** Read this before choosing one aligner:
-
-* **Jasmine merges 4 callsets instead of 8**, so `SUPP` is out of 4 and `SUPP_VEC` is 4 bits long. A call supported by all four callers on one alignment is *not* comparable to one supported by four callers across two alignments: the four callers share every systematic error of the alignment they read, so agreement between them overstates confidence. The final report labels its per-aligner and per-caller tables from the callsets actually present, so it reports what was run — but the numbers are not on the same scale as a two-aligner run's.
-* **`callability/{genome}_callable.bed` is no longer an agreement.** With two aligners it is the intersection of the regions callable in both. With one it degenerates to that aligner's own callable regions, which is a looser definition of callable.
-* **`min-identity`, `minimap_ax` and `ngmlr_preset`** only matter for an aligner that is selected.
-
-The two aligner-specific parameter sets stay in `config/config.yaml` either way; the unused one is simply ignored.
+**With one aligner the ensemble loses the cross-aligner agreement it is built on.** Jasmine merges 4 callsets instead of 8, so `SUPP` is out of 4 and does not mean what a two-aligner `SUPP` means: the four callers share every systematic error of the alignment they all read, so their agreement overstates confidence. `callability/{genome}_callable.bed` likewise stops being the intersection of two alignments and becomes that aligner's own callable regions. The final report labels its tables from the callsets actually present, so it reports what was run — on a different scale from a two-aligner run.
 
 
 ### Starting from pre-aligned BAM files
