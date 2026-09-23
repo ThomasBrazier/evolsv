@@ -45,6 +45,7 @@ set-threads:
   # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
   stage_bam: 1
   stage_fastq: 1
+  bam_to_fastq: 4 # samtools fastq + bgzip; I/O bound beyond a few threads
   # Fastq processing. Can use more than 1 thread.
   fastqc: 16
   longqc: 8 # LongQC needs at least 4
@@ -123,6 +124,8 @@ set-resources:
   stage_bam:
     mem_mb: attempt * 2000
   stage_fastq:
+    mem_mb: attempt * 2000
+  bam_to_fastq:
     mem_mb: attempt * 2000
   fastqc:
     # fastqc allocates 250Mb of RAM per thread, so mem_mb must scale with threads.

@@ -76,6 +76,10 @@ write_bam_sheet() {
 
 write_bam_sheet "$fixtures/samples_bam.tsv" "$good_minimap2" "$good_ngmlr" "$good_fastq"
 
+# The fastq column left blank: a supported shape, not a failure. The reads are extracted
+# from the minimap2 BAM by rule bam_to_fastq instead of rule stage_fastq.
+write_bam_sheet "$fixtures/samples_bam_no_fastq.tsv" "$good_minimap2" "$good_ngmlr" ""
+
 # --- failure modes -----------------------------------------------------------
 
 # check_readable_file: path does not exist.
@@ -93,9 +97,6 @@ printf 'placeholder\n' > "$bad/noindex_minimap2.bam"
 rm -f "$bad/noindex_minimap2.bam.bai" "$bad/noindex_minimap2.bai"
 write_bam_sheet "$bad/samples_no_index.tsv" \
     "$bad/noindex_minimap2.bam" "$good_ngmlr" "$good_fastq"
-
-# The fastq column is blank: SVJedi-graph has no reads to genotype with.
-write_bam_sheet "$bad/samples_no_fastq.tsv" "$good_minimap2" "$good_ngmlr" ""
 
 # The bam_ngmlr column is blank: the ensemble needs one BAM per aligner.
 write_bam_sheet "$bad/samples_no_ngmlr.tsv" "$good_minimap2" "" "$good_fastq"
@@ -130,6 +131,16 @@ printf 'placeholder\n' > "$fixtures/${sample2}_reads.fastq.gz"
         "$fixtures/${sample2}_minimap2.bam" "$fixtures/${sample2}_ngmlr.bam" \
         "$fixtures/${sample2}_reads.fastq.gz"
 } > "$fixtures/samples_bam_multi.tsv"
+
+# Two individuals, only one of which declares its reads. Both rules that write
+# {genome}_filtered.fastq.gz are then in the same DAG, which is what their
+# wildcard_constraints have to keep unambiguous (see workflow/rules/bam_input.smk).
+{
+    printf 'sample_name\tsra\tgenome\tbam_minimap2\tbam_ngmlr\tfastq\n'
+    printf '%s\t\t%s\t%s\t%s\t%s\n' "$sample" "$genome" "$good_minimap2" "$good_ngmlr" "$good_fastq"
+    printf '%s\t\t%s\t%s\t%s\t\n' "$sample2" "$genome" \
+        "$fixtures/${sample2}_minimap2.bam" "$fixtures/${sample2}_ngmlr.bam"
+} > "$fixtures/samples_bam_mixed_fastq.tsv"
 
 # --- failure modes -----------------------------------------------------------
 

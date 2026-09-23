@@ -1,0 +1,9 @@
+name: samtools_fastq
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # workflow/envs/samtools.yaml pins samtools<1.10, whose `samtools fastq` has no
+  # --threads option. bgzip comes from htslib.
+  - samtools==1.23
+  - htslib

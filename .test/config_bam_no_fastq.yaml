@@ -1,0 +1,9 @@
+# CI dry-run config: pre-aligned BAM entry point with a blank `fastq` column.
+#
+# The reads are recovered from the minimap2 BAM by rule bam_to_fastq instead of being
+# staged from the sample sheet by rule stage_fastq. Same shape as .test/config_bam.yaml
+# otherwise; every other key is inherited from config/config.yaml.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_no_fastq.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

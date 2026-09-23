@@ -225,18 +225,32 @@ if bam_mode:
             input_bais[(individual, aligner)] = resolve_bam_index(bam)
 
         # Reads are still needed: SVJedi-graph genotypes by mapping reads onto a
-        # variation graph, which a linear BAM cannot substitute for.
+        # variation graph, which a linear BAM cannot substitute for. The column is
+        # optional: left blank, the reads are extracted back out of the minimap2 BAM
+        # by rule bam_to_fastq (see rules/bam_input.smk).
         input_fastqs[individual] = [
             check_readable_file(f, f"fastq file for individual '{individual}'")
             for f in rows["fastq"]
             if f
         ]
-        if not input_fastqs[individual]:
-            raise WorkflowError(
-                "start_from_bam is set but no 'fastq' file was declared for individual "
-                "'{}' in {}. Reads are required to genotype the SVs with "
-                "SVJedi-graph.".format(individual, config["samples"])
+
+    # Individuals whose reads come from the sample sheet, and those whose reads are
+    # extracted from their minimap2 BAM. These two lists are the wildcard_constraints
+    # of rules stage_fastq and bam_to_fastq, which both produce
+    # {wdir}/{sample}/fastq/{genome}_filtered.fastq.gz: the split keeps their wildcard
+    # domains disjoint, so the output is never ambiguous.
+    fastq_individuals = [i for i in individuals if input_fastqs[i]]
+    bam_fastq_individuals = [i for i in individuals if not input_fastqs[i]]
+
+    # Reads reconstructed from an alignment are not the reads that were sequenced (see
+    # the caveats on rule bam_to_fastq), so the choice is logged rather than silent.
+    if bam_fastq_individuals:
+        logger.info(
+            "start_from_bam: no 'fastq' declared in {} for {}. Their reads will be "
+            "extracted from the minimap2 BAM (rule bam_to_fastq).".format(
+                config["samples"], ", ".join(bam_fastq_individuals)
             )
+        )
 
 
 def get_mean_cov(summary_file):

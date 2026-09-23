@@ -1,0 +1,9 @@
+# CI dry-run config: two individuals in BAM mode, only one of which declares its reads.
+#
+# Both rules that write {genome}_filtered.fastq.gz (stage_fastq and bam_to_fastq) are in
+# this DAG, so it is the case that fails with an AmbiguousRuleException if their
+# wildcard_constraints stop being disjoint.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_mixed_fastq.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

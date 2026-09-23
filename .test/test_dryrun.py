@@ -130,6 +130,8 @@ POSITIVE_CASES = [
     ("ont", ".test/config_ont.yaml"),
     ("multi-individual", ".test/config_multi.yaml"),
     ("bam-mode-multi-individual", ".test/config_bam_multi.yaml"),
+    ("bam-mode-no-fastq", ".test/config_bam_no_fastq.yaml"),
+    ("bam-mode-mixed-fastq", ".test/config_bam_mixed_fastq.yaml"),
 ]
 
 
@@ -171,6 +173,37 @@ def test_bam_mode_stages_bams_and_skips_alignment():
     assert counts["stage_fastq"] == 1
     for rule in FASTQ_ENTRY_RULES:
         assert rule not in counts, "{} should be skipped in BAM mode".format(rule)
+
+
+def test_bam_mode_extracts_reads_when_no_fastq_is_declared():
+    """A blank `fastq` column is supported: the reads come back out of the minimap2 BAM."""
+    result = run_dryrun(".test/config_bam_no_fastq.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+
+    assert counts["bam_to_fastq"] == 1
+    assert "stage_fastq" not in counts, "nothing was declared to stage"
+    # The reads exist for the reason the rule exists.
+    assert counts["svjedigraph"] == 1
+    # Secondary and supplementary records must be excluded: if they were kept, every
+    # clipped segment of a split long-read alignment would enter the callers as an extra
+    # read. Losing the flag changes the science without breaking the DAG, so it is
+    # asserted on here.
+    assert "samtools fastq -F 0x900" in result.stdout
+
+
+def test_bam_mode_mixes_declared_and_extracted_reads():
+    """Both producers of {genome}_filtered.fastq.gz can coexist in one DAG.
+
+    stage_fastq and bam_to_fastq write the same path, so this is the case that raises
+    AmbiguousRuleException if their wildcard_constraints stop being disjoint.
+    """
+    result = run_dryrun(".test/config_bam_mixed_fastq.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+
+    assert counts["stage_fastq"] == 1
+    assert counts["bam_to_fastq"] == 1
 
 
 def test_bam_mode_still_runs_alignment_qc_and_calling():
@@ -441,7 +474,6 @@ NEGATIVE_CASES = [
     ("missing-bam", ".test/config_bad_missing_bam.yaml", "does not exist"),
     ("empty-bam", ".test/config_bad_empty_bam.yaml", "is empty"),
     ("no-index", ".test/config_bad_no_index.yaml", "No BAI index found"),
-    ("no-fastq", ".test/config_bad_no_fastq.yaml", "Reads are required to genotype the SVs"),
     (
         "no-ngmlr",
         ".test/config_bad_no_ngmlr.yaml",

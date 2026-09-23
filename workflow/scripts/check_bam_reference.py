@@ -20,6 +20,30 @@ import sys
 
 import pysam
 
+# How the reads given to SVJedi-graph were obtained (--reads-source), as written to the
+# report. "bam-derived" means the sample sheet left the `fastq` column blank and rule
+# bam_to_fastq recovered the reads from this individual's minimap2 BAM.
+READS_SOURCES = {
+    "sample-sheet": "declared in the sample sheet (rule stage_fastq)",
+    "bam-derived": "extracted from the minimap2 BAM (rule bam_to_fastq)",
+}
+
+READS_CAVEATS = {
+    "sample-sheet": (
+        "The reads are the files declared in the `fastq` column of the sample sheet,\n"
+        "used as supplied.\n"
+    ),
+    "bam-derived": (
+        "CAVEAT: no `fastq` file was declared for this individual, so the reads were\n"
+        "extracted from the minimap2 BAM with `samtools fastq -F 0x900`. They are not\n"
+        "the sequenced reads: secondary and supplementary records are excluded (they\n"
+        "would otherwise be counted as extra reads), reads the aligner never wrote\n"
+        "(e.g. unmapped reads dropped by minimap2 --sam-hit-only) are absent, and bases\n"
+        "removed by hard clipping cannot be recovered. Declare the reads in the sample\n"
+        "sheet if the original FASTQ is available.\n"
+    ),
+}
+
 
 def read_header(bam_path):
     """Return the BAM header as a plain dict, and whether a BAI index is present.
@@ -134,6 +158,13 @@ def main():
     parser.add_argument("--fai", required=True, help="samtools faidx index of the reference")
     parser.add_argument("--sample-id", required=True, help="sample_name from the sample sheet")
     parser.add_argument("--aligner", required=True, help="aligner the BAM was produced with")
+    parser.add_argument(
+        "--reads-source",
+        required=True,
+        choices=("sample-sheet", "bam-derived"),
+        help="where the reads given to SVJedi-graph come from: the fastq column of the "
+        "sample sheet, or extraction from the minimap2 BAM (rule bam_to_fastq)",
+    )
     parser.add_argument("--report", required=True, help="path of the provenance report to write")
     args = parser.parse_args()
 
@@ -169,6 +200,7 @@ def main():
         report.write("source BAM:       {}\n".format(args.bam))
         report.write("reference index:  {}\n".format(args.fai))
         report.write("sample id:        {}\n".format(args.sample_id))
+        report.write("reads:            {}\n".format(READS_SOURCES[args.reads_source]))
         report.write("sort order:       coordinate\n")
         report.write("BAM contigs:      {}\n".format(len(bam_contigs)))
         report.write("reference contigs: {}\n".format(len(reference_lengths)))
@@ -179,10 +211,11 @@ def main():
             "CAVEAT: in start_from_bam mode the chopper read filters\n"
             "(chopper_quality, chopper_minlength, chopper_maxlength, chopper_headcrop,\n"
             "chopper_tailcrop) are NOT applied. The alignment is used as supplied, and\n"
-            "the reads passed to SVJedi-graph for genotyping are the ones declared in\n"
-            "the sample sheet, unfiltered. Read-level QC (FastQC, NanoPlot) is skipped;\n"
-            "alignment QC is still produced in mapping_QC/ and callability/.\n"
+            "the reads passed to SVJedi-graph for genotyping are unfiltered.\n"
+            "Read-level QC (FastQC, NanoPlot) is skipped; alignment QC is still\n"
+            "produced in mapping_QC/ and callability/.\n"
         )
+        report.write("\n" + READS_CAVEATS[args.reads_source])
 
 
 if __name__ == "__main__":

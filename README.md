@@ -194,7 +194,14 @@ SAMEA8724893		GCA_947247005.1	/path/mm2.bam	/path/ngmlr.bam	/path/reads.fastq.gz
 
 **One BAM per aligner is required.** The ensemble method relies on eight independent callsets produced by four callers on two different alignments, and the merging step (JasmineSV/IRIS) is given both BAM files. Supplying the same alignment twice would make the same evidence count as two independent observations and would inflate both the consensus and the per-tool performance scores.
 
-**The reads are still required.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column; several rows of the same individual are concatenated, as in the SRA mode. Declare exactly one `bam_minimap2` and one `bam_ngmlr` file per individual.
+**The reads are still needed, but the `fastq` column is optional.** Genotyping with SVJedi-graph maps reads onto a variation graph, so it cannot work from a linear BAM. Give the read file(s) in the `fastq` column when you have them; several rows of the same individual are concatenated, as in the SRA mode. Declare exactly one `bam_minimap2` and one `bam_ngmlr` file per individual.
+
+Left blank, the column makes rule `bam_to_fastq` recover the reads from that individual's minimap2 BAM with `samtools fastq -F 0x900`. The decision is per individual, so one sheet can mix both forms. Prefer the original FASTQ when it is available: extracted reads are **not** the reads that were sequenced, and the difference is recorded in each `bam_check.txt` report.
+
+* Secondary (`0x100`) and supplementary (`0x800`) records are excluded. They must be: a long read whose alignment is split would otherwise re-enter the callers as several reads, inflating both the coverage they see and the read support SVJedi-graph counts.
+* Unmapped records (`0x4`) are kept, but reads the aligner never wrote cannot be recovered. A BAM produced with minimap2 `--sam-hit-only` — which this pipeline's own `minimap2` rule uses — or filtered to mapped reads holds fewer reads than the original FASTQ.
+* Reverse-strand reads are restored to their original orientation, but bases removed by *hard* clipping on a primary alignment are gone.
+* The extracted FASTQ is a temporary file: it is deleted once every rule that consumes it has run, and re-extracted if you later rerun one of them.
 
 Requirements on the BAM files, all checked before the run proceeds (see `workflow/scripts/check_bam_reference.py`, which writes a report to `{wdir}/{sample}/bam/{genome}_{aligner}_bam_check.txt`):
 
@@ -204,7 +211,7 @@ Requirements on the BAM files, all checked before the run proceeds (see `workflo
 
 Caveats to be aware of when interpreting the results:
 
-* **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour. HiFiAdapterFilt and Porechop_ABI are not applied either.
+* **The `chopper` read filters are not applied.** In the SRA mode, `chopper_quality`, `chopper_minlength`, `chopper_maxlength`, `chopper_headcrop` and `chopper_tailcrop` decide which reads reach every caller and genotyper. In BAM mode the alignment is used as supplied and the reads passed to SVJedi-graph are unfiltered, so those config keys have no effect. Filter your reads before aligning if you need the equivalent behaviour. HiFiAdapterFilt and Porechop_ABI are not applied either. This holds for reads extracted from a BAM too: the `_filtered` in their filename only keeps the downstream rules identical between the two entry points.
 * **Read-level QC (FastQC, NanoPlot, LongQC) is skipped.** Alignment QC is still produced in `mapping_QC/` and `callability/`, and the final report is unaffected.
 * **`sequencing_technology` still matters.** The aligner presets and the `@RG PL` tag are unused in this mode, since the alignments are supplied, but the key still drives the cuteSV clustering parameters. Set it to the technology the BAM files were produced from.
 * **Both BAM files are assumed to come from the same read set.** This is not enforced: minimap2 (run with `--sam-hit-only`) and ngmlr legitimately retain different numbers of records, so comparing read counts would raise false alarms. Aligning two different read sets would bias the relative performance scores of the tools.
