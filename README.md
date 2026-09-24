@@ -279,7 +279,7 @@ This lets you run offline, or on an assembly that is not in NCBI. Without `assem
 
 ## Data directory setup
 
-Project data can be stored in the current `evolsv` git directory. The place where is the `data/` directory must be specified in the parameter `workingdir` in the `config.yaml`. The default is `workingdir: data/` which assumes `data/` to be in te current `evolsv/` directory (see below). `data/` will not be tracked by `git`.
+Project data can be stored in the current `evolsv` git directory. The place where is the `data/` directory must be specified in the parameter `workingdir` in the `config.yaml`. The default is `workingdir: results/` which assumes `results/` to be in te current `evolsv/` directory (see below). `results/` will not be tracked by `git`.
 
 ```
 .
@@ -287,7 +287,7 @@ Project data can be stored in the current `evolsv` git directory. The place wher
 │   ├── config/
 │   │   ├── config.yaml
 ├   |   |── samples.tsv
-│   ├── data/
+│   ├── results/
 ├   ├── profiles/
 ├   ├   ├── slurm/
 │   ├   │   ├── config.yaml
