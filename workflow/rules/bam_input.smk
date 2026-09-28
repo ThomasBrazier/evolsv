@@ -16,8 +16,60 @@ bam_to_fastq when it does not. Both write the same canonical path, so their `sam
 wildcard domains are made disjoint (see fastq_individuals and bam_fastq_individuals in
 rules/common.smk).
 
+A bam_<aligner> column may also point at a CRAM. Rule convert_cram_to_bam then decodes
+it against the workflow reference into an intermediate BAM, and rule stage_bam stages
+that BAM like any other (see input_crams in rules/common.smk).
+
 Alignment-level QC (rules/mapping_qc.smk, rules/mappability.smk) runs as usual.
 """
+
+if input_crams:
+
+    rule convert_cram_to_bam:
+        """
+        Decode a user-supplied CRAM into a BAM, so the rest of the workflow is unchanged.
+
+        A CRAM stores reads as differences to a reference, so it can only be decoded with
+        the FASTA it was encoded against. The workflow reference is used: it is the one
+        rule stage_bam checks contigs against, so a CRAM made against another assembly
+        is rejected either way. samtools also compares each @SQ M5 checksum with the
+        FASTA and fails on a mismatch.
+
+        REF_PATH is set to a local, empty location so that a sequence missing from the
+        FASTA makes the conversion fail instead of being silently fetched from the EBI
+        reference server, which could decode the reads against a different sequence.
+
+        The output is not temp(): rule stage_bam symlinks it to the canonical path.
+        Sort order is preserved as is; rule stage_bam rejects an unsorted result.
+        """
+        input:
+            cram=lambda wildcards: input_crams[(wildcards.sample, wildcards.aligner)],
+            fasta="{wdir}/genome/{genome}.fna",
+            # Declared so that samtools reads the existing index rather than writing
+            # its own next to the shared FASTA.
+            fai="{wdir}/genome/{genome}.fna.fai",
+        output:
+            bam="{wdir}/{sample}/bam/cram/{genome}_{aligner}_from_cram.bam",
+            bai="{wdir}/{sample}/bam/cram/{genome}_{aligner}_from_cram.bam.bai",
+        conda:
+            # samtools.yaml pins samtools<1.10, too old for current CRAM files.
+            "../envs/samtools_fastq.yaml"
+        log:
+            "{wdir}/{sample}/logs/{genome}_{aligner}_convert_cram_to_bam.log",
+        benchmark:
+            "{wdir}/{sample}/benchmarks/{genome}_{aligner}.convert_cram_to_bam.tsv"
+        shell:
+            """
+            mkdir --parents {wdir}/{wildcards.sample}/bam/cram
+
+            export REF_PATH="$(realpath {wdir})/genome/no_remote_reference/%s"
+            unset REF_CACHE
+
+            samtools view -b --threads {resources.cpus_per_task} \
+            --reference {input.fasta} -o {output.bam} {input.cram} 2> {log}
+
+            samtools index {output.bam} 2>> {log}
+            """
 
 
 rule stage_bam:

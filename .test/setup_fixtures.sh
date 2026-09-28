@@ -80,6 +80,12 @@ write_bam_sheet "$fixtures/samples_bam.tsv" "$good_minimap2" "$good_ngmlr" "$goo
 # from the minimap2 BAM by rule bam_to_fastq instead of rule stage_fastq.
 write_bam_sheet "$fixtures/samples_bam_no_fastq.tsv" "$good_minimap2" "$good_ngmlr" ""
 
+# The minimap2 alignment is a CRAM, which rule convert_cram_to_bam decodes before rule
+# stage_bam sees it. No .crai is written: a CRAM needs no index to be converted.
+printf 'placeholder\n' > "$fixtures/${sample}_minimap2.cram"
+write_bam_sheet "$fixtures/samples_bam_cram.tsv" \
+    "$fixtures/${sample}_minimap2.cram" "$good_ngmlr" "$good_fastq"
+
 # --- failure modes -----------------------------------------------------------
 
 # check_readable_file: path does not exist.

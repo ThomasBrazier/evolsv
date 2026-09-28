@@ -306,6 +306,26 @@ def test_bam_mode_extracts_reads_when_no_fastq_is_declared():
     assert "samtools fastq -F 0x900" in result.stdout
 
 
+def test_bam_mode_converts_a_cram_before_staging_it():
+    """A CRAM in a bam_<aligner> column is decoded to BAM, then staged like a BAM."""
+    result = run_dryrun(".test/config_bam_cram.yaml")
+    assert_succeeded(result)
+    counts = parse_job_stats(result.stdout)
+
+    # Only the minimap2 alignment is a CRAM; both alignments are still staged.
+    assert counts["convert_cram_to_bam"] == 1
+    assert counts["stage_bam"] == 2
+    # Decoding must use the workflow reference, not whatever samtools finds itself.
+    assert "--reference" in result.stdout
+    assert "_minimap2_from_cram.bam" in result.stdout
+
+
+def test_bam_mode_without_cram_has_no_conversion():
+    """Plain BAM input must not gain a conversion step."""
+    counts = parse_job_stats(run_dryrun(".test/config_bam.yaml").stdout)
+    assert "convert_cram_to_bam" not in counts
+
+
 def test_bam_mode_mixes_declared_and_extracted_reads():
     """Both producers of {genome}_filtered.fastq.gz can coexist in one DAG.
 

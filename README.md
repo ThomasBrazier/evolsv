@@ -216,6 +216,8 @@ Left blank, the column makes rule `bam_to_fastq` recover the reads from that ind
 * Reverse-strand reads are restored to their original orientation, but bases removed by *hard* clipping on a primary alignment are gone.
 * The extracted FASTQ is a temporary file: it is deleted once every rule that consumes it has run, and re-extracted if you later rerun one of them.
 
+**CRAM files are accepted in the same columns.** A path ending in `.cram` is decoded to BAM by rule `convert_cram_to_bam` (`samtools view -b --reference`), into `{wdir}/{sample}/bam/cram/`, and the resulting BAM goes through the same checks as a declared BAM. No `.crai` index is needed. A CRAM can only be decoded with the FASTA it was encoded against, and the workflow reference is the one used: set `reference_fasta` to that FASTA. A mismatch makes the conversion fail. samtools compares the `@SQ M5` checksums, and the pipeline never lets it fetch a missing sequence from the EBI reference server. The converted BAM is kept on disk, so expect roughly the space of the BAM you would have supplied.
+
 Requirements on the BAM files, all checked before the run proceeds (see `workflow/scripts/check_bam_reference.py`, which writes a report to `{wdir}/{sample}/bam/{genome}_{aligner}_bam_check.txt`):
 
 * coordinate-sorted, with a `.bai` index next to the BAM (a `.csi` index is not accepted);

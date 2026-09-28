@@ -199,6 +199,11 @@ def resolve_bam_index(bam):
     )
 
 
+def is_cram(path):
+    """Whether a path declared in a bam_<aligner> column is a CRAM, by its extension."""
+    return Path(path).suffix.lower() == ".cram"
+
+
 if bam_mode:
     # Keyed by (individual, aligner). One pre-aligned BAM per aligner: the eight
     # callsets of the ensemble stay independent. Reusing a single alignment for both
@@ -206,6 +211,10 @@ if bam_mode:
     input_bams = {}
     input_bais = {}
     input_fastqs = {}
+    # A CRAM declared in a bam_<aligner> column is decoded to BAM by rule
+    # convert_cram_to_bam, and input_bams/input_bais point at that rule's output
+    # instead, so rule stage_bam validates the converted BAM like any other.
+    input_crams = {}
     for individual in individuals:
         rows = rows_of(individual)
         for aligner in aligners:
@@ -221,8 +230,18 @@ if bam_mode:
                 declared[0] if declared else "",
                 f"bam_{aligner} file for individual '{individual}'",
             )
-            input_bams[(individual, aligner)] = bam
-            input_bais[(individual, aligner)] = resolve_bam_index(bam)
+            if is_cram(bam):
+                # No index is required: the whole CRAM is decoded, and the BAI of the
+                # converted BAM is built by rule convert_cram_to_bam.
+                converted = (
+                    f"{wdir}/{individual}/bam/cram/{genome}_{aligner}_from_cram.bam"
+                )
+                input_crams[(individual, aligner)] = bam
+                input_bams[(individual, aligner)] = converted
+                input_bais[(individual, aligner)] = f"{converted}.bai"
+            else:
+                input_bams[(individual, aligner)] = bam
+                input_bais[(individual, aligner)] = resolve_bam_index(bam)
 
         # Reads are still needed: SVJedi-graph genotypes by mapping reads onto a
         # variation graph, which a linear BAM cannot substitute for. The column is
@@ -254,6 +273,17 @@ if bam_mode:
             "start_from_bam: no 'fastq' declared in {} for {}. Their reads will be "
             "extracted from the {} BAM (rule bam_to_fastq).".format(
                 config["samples"], ", ".join(bam_fastq_individuals), reads_aligner
+            )
+        )
+
+    # Decoding depends on the reference the CRAM was encoded against, so the
+    # conversion is logged rather than silent.
+    if input_crams:
+        logger.info(
+            "start_from_bam: CRAM input declared in {} for {}. They will be decoded to "
+            "BAM against the workflow reference (rule convert_cram_to_bam).".format(
+                config["samples"],
+                ", ".join(f"{i} ({a})" for i, a in sorted(input_crams)),
             )
         )
 
