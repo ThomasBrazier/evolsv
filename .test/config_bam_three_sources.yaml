@@ -1,0 +1,10 @@
+# CI dry-run config: three individuals, one per read source (fastq column, sra column,
+# extraction from the BAM).
+#
+# All three rules that write {genome}_filtered.fastq.gz -- stage_fastq,
+# filter_reads_chopper and bam_to_fastq -- are in this DAG, so it is the case that fails
+# with an AmbiguousRuleException if their wildcard_constraints stop being disjoint.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_three_sources.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""
