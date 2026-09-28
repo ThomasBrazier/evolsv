@@ -11,6 +11,7 @@ workflow/containers/
 data-lewontin/        
 data-lewontin/
 debug/
+results/
 
 .devcontainer/devcontainer-lock.json
 

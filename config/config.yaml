@@ -1,6 +1,6 @@
 # CONFIG
 # Directory setup
-datadir: data/ # The directory where data and results must be stored
+datadir: results/ # The directory where data and results must be stored
 bigtmp: "./tmp/" #Set to a path with lots of free space to use for commands that require large amounts of temp space; defaults to system tmpdir if empty
 
 # SAMPLE
