@@ -1,0 +1,9 @@
+# CI dry-run config: pre-aligned BAM entry point with the reads downloaded from the SRA.
+#
+# The fastq column is blank but the sra column is not, so the reads come from fastq-dump
+# and go through adapter removal, merge_fastq and filter_reads_chopper -- the same chain as
+# the FASTQ entry point. The alignment is still the supplied BAM, which is NOT filtered.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_sra.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""

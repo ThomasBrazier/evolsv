@@ -13,7 +13,7 @@ rule svim:
         ),
         vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim_tmp.vcf"),
         vcf_raw=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim_raw.vcf"),
-        vcf_renamed="{wdir}/{sample}/calling/{genome}_{aligner}_svim.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/calling/{genome}_{aligner}_svim.vcf"),
     resources:
         tmpdir=get_big_temp,
     conda:
@@ -59,7 +59,7 @@ rule sniffles:
     output:
         vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_sniffles_tmp.vcf"),
         vcf_raw=temp("{wdir}/{sample}/calling/{genome}_{aligner}_sniffles_raw.vcf"),
-        vcf_renamed="{wdir}/{sample}/calling/{genome}_{aligner}_sniffles.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/calling/{genome}_{aligner}_sniffles.vcf"),
     resources:
         tmpdir=get_big_temp,
     conda:
@@ -100,7 +100,7 @@ rule cutesv:
     output:
         vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_cutesv_tmp.vcf"),
         vcf_raw=temp("{wdir}/{sample}/calling/{genome}_{aligner}_cutesv_raw.vcf"),
-        vcf_renamed="{wdir}/{sample}/calling/{genome}_{aligner}_cutesv.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/calling/{genome}_{aligner}_cutesv.vcf"),
     resources:
         tmpdir=get_big_temp,
     conda:
@@ -144,7 +144,7 @@ rule debreak:
     output:
         vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_debreak_tmp.vcf"),
         vcf_raw=temp("{wdir}/{sample}/calling/{genome}_{aligner}_debreak_raw.vcf"),
-        vcf_renamed="{wdir}/{sample}/calling/{genome}_{aligner}_debreak.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/calling/{genome}_{aligner}_debreak.vcf"),
     conda:
         "../envs/debreak.yaml"
     resources:
@@ -190,7 +190,7 @@ rule removeBND:
     input:
         vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}.vcf",
     output:
-        vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
+        vcf=temp("{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf"),
     params:
         bnd_filter=lambda wildcards: (
             "grep -v 'SVTYPE=BND' | grep -v 'SVTYPE=TRA'"
@@ -216,7 +216,7 @@ rule vcf_sv_specification:
         vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta="{wdir}/genome/{genome}.fna",
     output:
-        vcf=("{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"),
+        vcf=temp("{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"),
         vcf_tmp=temp(
             "{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"
         ),
@@ -421,7 +421,7 @@ rule basic_filter:
     input:
         vcf="{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf",
     output:
-        vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf",
+        vcf=("{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf"),
     conda:
         "../envs/bcftools.yaml"
     log:
@@ -432,4 +432,49 @@ rule basic_filter:
         """
         # bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
         bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]}" -o {output.vcf} -O v {input.vcf}
+        """
+
+
+rule gzip_filtered:
+    """
+    """
+    input:
+        vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf",
+        final="{wdir}/{sample}/{genome}_final.vcf.gz",
+    output:
+        vcf="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf.gz",
+        index="{wdir}/{sample}/filtered/{genome}_{aligner}_{caller}_filtered.vcf.gz.csi",
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.gzip_filtered.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.gzip_filtered.tsv"
+    shell:
+        """
+        bgzip -f {input.vcf}
+        tabix --csi -f {output.vcf}
+        """
+
+
+
+rule gzip_genotype:
+    """
+    """
+    input:
+        vcf="{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf",
+        final="{wdir}/{sample}/{genome}_final.vcf.gz",
+    output:
+        vcf="{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf.gz",
+        index="{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf.gz.csi",
+    conda:
+        "../envs/bcftools.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.gzip_genotype.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.gzip_genotype.tsv"
+    shell:
+        """
+        bgzip -f {input.vcf}
+        tabix --csi -f {output.vcf}
         """

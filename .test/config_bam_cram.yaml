@@ -1,0 +1,8 @@
+# CI dry-run config: start_from_bam with the minimap2 alignment supplied as a CRAM.
+#
+# Rule convert_cram_to_bam must decode it to BAM before rule stage_bam stages it; the
+# ngmlr alignment is a plain BAM, so both kinds of input are in the same DAG.
+start_from_bam: true
+samples: .test/fixtures/samples_bam_cram.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""
