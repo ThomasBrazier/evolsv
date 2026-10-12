@@ -13,6 +13,21 @@ data-lewontin/
 debug/
 results/
 
+config/config_download_fastq.yaml
+config/config_lewontin.yaml
+config/config_start_from_bam.yaml
+config/config_start_from_bam_convert_fastq.yaml
+config/samples_download_fastq.tsv
+config/samples_start_from_bam.tsv
+config/samples_start_from_bam_convert_fastq.tsv
+config/samples_start_from_bam_dl_fastq.tsv
+profiles/slurm_genouest/
+run_download_fasta.sh
+run_lewontin.sh
+run_start_from_bam_convert_fastq.sh
+
+
+
 .devcontainer/devcontainer-lock.json
 
 .R*
