@@ -81,8 +81,9 @@ write_bam_sheet "$fixtures/samples_bam.tsv" "$good_minimap2" "$good_ngmlr" "$goo
 write_bam_sheet "$fixtures/samples_bam_no_fastq.tsv" "$good_minimap2" "$good_ngmlr" ""
 
 # The minimap2 alignment is a CRAM, which rule convert_cram_to_bam decodes before rule
-# stage_bam sees it. No .crai is written: a CRAM needs no index to be converted.
+# stage_bam sees it. Its .crai is required, like a BAM's .bai.
 printf 'placeholder\n' > "$fixtures/${sample}_minimap2.cram"
+printf 'placeholder\n' > "$fixtures/${sample}_minimap2.cram.crai"
 write_bam_sheet "$fixtures/samples_bam_cram.tsv" \
     "$fixtures/${sample}_minimap2.cram" "$good_ngmlr" "$good_fastq"
 
@@ -98,11 +99,17 @@ printf 'placeholder\n' > "$bad/empty_minimap2.bam.bai"
 write_bam_sheet "$bad/samples_empty_bam.tsv" \
     "$bad/empty_minimap2.bam" "$good_ngmlr" "$good_fastq"
 
-# resolve_bam_index: a readable BAM with neither <bam>.bai nor <stem>.bai next to it.
+# resolve_alignment_index: a readable BAM with neither <bam>.bai nor <stem>.bai next to it.
 printf 'placeholder\n' > "$bad/noindex_minimap2.bam"
 rm -f "$bad/noindex_minimap2.bam.bai" "$bad/noindex_minimap2.bai"
 write_bam_sheet "$bad/samples_no_index.tsv" \
     "$bad/noindex_minimap2.bam" "$good_ngmlr" "$good_fastq"
+
+# resolve_alignment_index: a readable CRAM with neither <cram>.crai nor <stem>.crai.
+printf 'placeholder\n' > "$bad/nocrai_minimap2.cram"
+rm -f "$bad/nocrai_minimap2.cram.crai" "$bad/nocrai_minimap2.crai"
+write_bam_sheet "$bad/samples_no_crai.tsv" \
+    "$bad/nocrai_minimap2.cram" "$good_ngmlr" "$good_fastq"
 
 # The bam_ngmlr column is blank: the ensemble needs one BAM per aligner.
 write_bam_sheet "$bad/samples_no_ngmlr.tsv" "$good_minimap2" "" "$good_fastq"

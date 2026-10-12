@@ -608,6 +608,7 @@ NEGATIVE_CASES = [
     ("missing-bam", ".test/config_bad_missing_bam.yaml", "does not exist"),
     ("empty-bam", ".test/config_bad_empty_bam.yaml", "is empty"),
     ("no-index", ".test/config_bad_no_index.yaml", "No BAI index found"),
+    ("no-crai", ".test/config_bad_no_crai.yaml", "No CRAI index found"),
     (
         "no-ngmlr",
         ".test/config_bad_no_ngmlr.yaml",

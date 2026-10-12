@@ -180,28 +180,30 @@ else:
     reference_source = "ncbi"
 
 
-def resolve_bam_index(bam):
-    """Locate the index of a user-supplied BAM.
+def is_cram(path):
+    """Whether a path declared in a bam_<aligner> column is a CRAM, by its extension."""
+    return Path(path).suffix.lower() == ".cram"
 
-    Downstream callers require a BAI index (a CSI index is not accepted), and
-    samtools writes it either as <bam>.bai or, with `samtools index -o`, as
-    <bam without extension>.bai. Both layouts are accepted here.
+
+def resolve_alignment_index(path):
+    """Locate the index of a user-supplied alignment file, as a function of its type.
+
+    A BAM needs a BAI and a CRAM needs a CRAI (a CSI index is not accepted for a BAM).
+    samtools writes the index either as <file>.bai / <file>.crai or, with
+    `samtools index -o`, as <file without extension>.bai / .crai. Both layouts are
+    accepted here.
     """
-    candidates = [f"{bam}.bai", str(Path(bam).with_suffix(".bai"))]
+    kind = "crai" if is_cram(path) else "bai"
+    candidates = [f"{path}.{kind}", str(Path(path).with_suffix(f".{kind}"))]
     for candidate in candidates:
         if Path(candidate).is_file():
             return candidate
     raise WorkflowError(
-        "No BAI index found for '{}'. Looked for {}. "
-        "Index the BAM with `samtools index` before running in start_from_bam mode.".format(
-            bam, " and ".join("'{}'".format(c) for c in candidates)
+        "No {} index found for '{}'. Looked for {}. "
+        "Index the file with `samtools index` before running in start_from_bam mode.".format(
+            kind.upper(), path, " and ".join("'{}'".format(c) for c in candidates)
         )
     )
-
-
-def is_cram(path):
-    """Whether a path declared in a bam_<aligner> column is a CRAM, by its extension."""
-    return Path(path).suffix.lower() == ".cram"
 
 
 if bam_mode:
@@ -215,6 +217,7 @@ if bam_mode:
     # convert_cram_to_bam, and input_bams/input_bais point at that rule's output
     # instead, so rule stage_bam validates the converted BAM like any other.
     input_crams = {}
+    input_crais = {}
     for individual in individuals:
         rows = rows_of(individual)
         for aligner in aligners:
@@ -231,17 +234,18 @@ if bam_mode:
                 f"bam_{aligner} file for individual '{individual}'",
             )
             if is_cram(bam):
-                # No index is required: the whole CRAM is decoded, and the BAI of the
+                # The CRAI is required (a missing one fails at parse time); the BAI of the
                 # converted BAM is built by rule convert_cram_to_bam.
                 converted = (
                     f"{wdir}/{individual}/bam/cram/{genome}_{aligner}_from_cram.bam"
                 )
                 input_crams[(individual, aligner)] = bam
+                input_crais[(individual, aligner)] = resolve_alignment_index(bam)
                 input_bams[(individual, aligner)] = converted
                 input_bais[(individual, aligner)] = f"{converted}.bai"
             else:
                 input_bams[(individual, aligner)] = bam
-                input_bais[(individual, aligner)] = resolve_bam_index(bam)
+                input_bais[(individual, aligner)] = resolve_alignment_index(bam)
 
         # Reads are still needed: SVJedi-graph genotypes by mapping reads onto a
         # variation graph, which a linear BAM cannot substitute for. The column is

@@ -44,6 +44,7 @@ if input_crams:
         """
         input:
             cram=lambda wildcards: input_crams[(wildcards.sample, wildcards.aligner)],
+            crai=lambda wildcards: input_crais[(wildcards.sample, wildcards.aligner)],
             fasta="{wdir}/genome/{genome}.fna",
             # Declared so that samtools reads the existing index rather than writing
             # its own next to the shared FASTA.

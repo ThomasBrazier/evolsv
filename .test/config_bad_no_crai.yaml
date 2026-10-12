@@ -1,0 +1,6 @@
+# CI dry-run config (negative case): a readable CRAM with no CRAI beside it.
+# Expected to fail in resolve_alignment_index with "No CRAI index found".
+start_from_bam: true
+samples: .test/fixtures/bad/samples_no_crai.tsv
+datadir: .test/fixtures/data/
+bigtmp: ""
