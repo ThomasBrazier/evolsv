@@ -123,6 +123,8 @@ set-threads:
   final_report: 1
   light_vcf: 1
   gzvcf: 1
+  gzip_filtered: 1 # bgzip + tabix, no thread flag
+  gzip_genotype: 1
   # Mappability and annotation
   mosdepth_summary: 4 # mosdepth: no gain beyond 4 BAM decompression threads
   mosdepth_quantize: 4

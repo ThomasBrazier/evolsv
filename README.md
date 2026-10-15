@@ -63,6 +63,7 @@ There are three config files to set up your analysis:
 | `profiles/slurm/` | SLURM | `slurm` |
 | `profiles/pbs/` | PBS Pro / OpenPBS (and Torque, with one line swapped) | `cluster-generic` |
 | `profiles/sge/` | SGE / SoGE / UGE | `cluster-generic` |
+| `profiles/lsf/` | IBM Spectrum LSF | `cluster-generic` |
 | `profiles/ci/` | none -- dry runs and DAG checks only | -- |
 
 Edit the queue/account settings at the top of the profile you use before the first run. Thread counts live in that profile's `set-threads` block, which lists every rule in the workflow; `.test/test_profiles.py` fails the build if a rule is missing from it or if it names a rule that no longer exists.
@@ -134,7 +135,20 @@ Set `sge_queue`, and set `sge_pe` to a parallel environment that exists on your 
 
 `profiles/sge/` deliberately does not use `snakemake-executor-plugin-sge`. That plugin is PyPI-only (absent from bioconda and conda-forge), and in 0.6.24 it reads the CPU count from a resource named `threads` rather than from the job's threads -- so every job is submitted single-slot -- and appends `-l tmem=`, a site-specific complex, to every submission.
 
-> **Not yet run against real PBS or SGE hardware.** Both profiles build the DAG correctly and are derived from the executor plugin's own source, but no job has been submitted to a live PBS or SGE cluster. Run the `config_test.yaml` dataset end to end before trusting them for a real analysis, and expect the status scripts (`pbs-status.py`, `sge-status.py`) to be the parts most likely to need tuning against your site's job-retention settings.
+**IBM Spectrum LSF.** Same mechanism, via `profiles/lsf/`.
+
+```
+conda env create -f workflow/envs/snakemake_lsf.yaml
+mkdir -p logs/lsf                       # bsub fails if the -o/-e directory does not exist
+chmod +x profiles/lsf/lsf-submit.sh profiles/lsf/lsf-status.py
+
+snakemake --snakefile ./workflow/Snakefile --configfile ./config/config.yaml \
+--profile ./profiles/lsf --use-conda
+```
+
+Set `lsf_queue` (`bqueues`) and, if your site bills projects, `lsf_project`. Two site-configured settings change what `bsub -M` and `rusage[mem=]` mean, and a wrong value is silent: `lsf_mem_unit` must match `LSF_UNIT_FOR_LIMITS` in `lsf.conf` (KB, MB or GB; MB is the LSF 10.1 default), and `lsf_mem_scope` is `job` if memory is reserved per job or `slot` if per slot (the wrapper then divides the profile's total `mem_mb` by the thread count). Submission goes through `profiles/lsf/lsf-submit.sh` because `bsub` prints `Job <id> is submitted ...` rather than a bare id, and `-W` takes `[hours:]minutes`. Jobs request `span[hosts=1]` so all threads share one node.
+
+> **Not yet run against real PBS, SGE or LSF hardware.** These profiles build the DAG correctly and are derived from the executor plugin's own source, but no job has been submitted to a live PBS, SGE or LSF cluster. Run the `config_test.yaml` dataset end to end before trusting them for a real analysis, and expect the status scripts (`pbs-status.py`, `sge-status.py`, `lsf-status.py`) to be the parts most likely to need tuning against your site's job-retention settings.
 
 ### Sequencing technology
 
@@ -291,6 +305,10 @@ Project data can be stored in the current `evolsv` git directory. The place wher
 │   ├   │   ├── config.yaml
 │   ├   │   ├── sge-submit.sh
 │   ├   │   ├── sge-status.py
+├   ├   ├── lsf/
+│   ├   │   ├── config.yaml
+│   ├   │   ├── lsf-submit.sh
+│   ├   │   ├── lsf-status.py
 ├   ├   ├── ci/
 │   ├   │   ├── config.yaml
 │   ├── workflow/
