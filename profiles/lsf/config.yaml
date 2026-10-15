@@ -117,6 +117,7 @@ set-threads:
   svjedigraph: 16
   autosomes_sexchromosomes: 1
   all_samples_vcf: 1
+  annotate_tool_genotypes: 1
   final_vcf: 1
   # Report
   samplot_subset_DUP: 1

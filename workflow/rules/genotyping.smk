@@ -84,12 +84,54 @@ rule autosomes_sexchromosomes:
         "../scripts/autosomes_sexchromosomes.R"
 
 
-rule all_samples_vcf:
+rule annotate_tool_genotypes:
     """
-    Merge samples from Jasmine (_merged.vcf) and SVjedi-graph (_merged_genotype.vcf)
+    Re-annotate the Jasmine-merged calls with the per-tool genotypes
+
+    Jasmine --output_genotypes keeps only GT in the callset columns, while the filtered
+    callset VCFs it merged carry GT:DP:AD:PL from SVjedi-graph (rules genotype_* and
+    basic_filter). This copies those fields back, callset by callset, onto the calls each
+    callset supports (SUPP_VEC). See workflow/scripts/annotate_tool_genotypes.py for how
+    a merged call is matched to its source record.
+
+    The callsets are listed in `callsets` order, which is Jasmine's SUPP_VEC bit order
+    and its sample-column order (see rule jasmine).
     """
     input:
-        jasmine="{wdir}/{sample}/merging/{genome}_merged.vcf",
+        merged="{wdir}/{sample}/merging/{genome}_merged.vcf",
+        vcfs=expand(
+            "{{wdir}}/{{sample}}/filtered/{{genome}}_{aligner}_{caller}_filtered.vcf",
+            zip,
+            aligner=[aligner for aligner, _ in callsets],
+            caller=[caller for _, caller in callsets],
+        ),
+    output:
+        vcf=temp("{wdir}/{sample}/merging/{genome}_merged_toolgt.vcf"),
+    params:
+        callsets=lambda wildcards, input: " ".join(
+            f"--callset {aligner}_{caller} {vcf}"
+            for (aligner, caller), vcf in zip(callsets, input.vcfs)
+        ),
+    conda:
+        "../envs/pysam_v2.yaml"
+    log:
+        "{wdir}/{sample}/logs/{genome}.annotate_tool_genotypes.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.annotate_tool_genotypes.tsv"
+    shell:
+        """
+        python workflow/scripts/annotate_tool_genotypes.py {input.merged} {output.vcf} \
+        {params.callsets} --max-dist {config[jasmine_max_dist]} 2> {log}
+        """
+
+
+rule all_samples_vcf:
+    """
+    Merge samples from Jasmine (_merged_toolgt.vcf, the merged calls re-annotated by
+    annotate_tool_genotypes) and SVjedi-graph (_merged_genotype.vcf)
+    """
+    input:
+        jasmine="{wdir}/{sample}/merging/{genome}_merged_toolgt.vcf",
         svjedi="{wdir}/{sample}/genotype/{genome}_merged_genotype.vcf",
         genome_index="{wdir}/genome/{genome}.fna.fai",
     output:
