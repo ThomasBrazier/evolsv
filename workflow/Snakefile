@@ -141,6 +141,12 @@ rule all:
     input:
         per_individual("{wdir}/{sample}/{genome}_final.vcf.gz"),
         per_individual("{wdir}/{sample}/{genome}_final_light.vcf.gz"),
+        # Per-callset genotyped VCFs, bgzipped by rule gzip_genotype once the final VCF exists.
+        per_individual(
+            "{wdir}/{sample}/genotype/{genome}_{aligner}_{caller}_genotype.vcf.gz",
+            aligner=aligners,
+            caller=CALLERS,
+        ),
         per_individual("{wdir}/{sample}/{genome}_finalQC.html"),
         per_individual(
             "{wdir}/{sample}/samplot/{aligner}_{genome}/{svtype}/index.html",

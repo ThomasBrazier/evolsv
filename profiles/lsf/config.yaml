@@ -1,0 +1,222 @@
+# Profile for IBM Spectrum LSF (bsub).
+#
+# There is no dedicated LSF executor plugin in the Snakemake catalog, so submission goes
+# through snakemake-executor-plugin-cluster-generic (workflow/envs/snakemake_lsf.yaml),
+# via the wrapper profiles/lsf/lsf-submit.sh.
+#
+# Site setup before the first run:
+#   * set lsf_queue below (`bqueues` lists them), and lsf_project if your site bills
+#     projects (bsub -P; leave "''" to omit it)
+#   * set lsf_mem_unit to the unit your cluster uses for bsub -M and rusage[mem=]. It is
+#     set by LSF_UNIT_FOR_LIMITS in lsf.conf: MB is the LSF 10.1 default, but many sites
+#     use KB or GB. Check with `badmin showconf | grep LSF_UNIT_FOR_LIMITS`. A wrong unit
+#     is silent: jobs request 1000x too much or too little memory.
+#   * set lsf_mem_scope: "job" if memory is reserved per job (LSB_JOB_MEMLIMIT=y,
+#     RESOURCE_RESERVE_PER_TASK=N), or "slot" if per slot/task. mem_mb is always the
+#     TOTAL for the job; for "slot" the wrapper divides it by threads.
+#   * mkdir -p logs/lsf   (bsub fails if the -o/-e directory does not exist)
+#   * chmod +x profiles/lsf/lsf-submit.sh profiles/lsf/lsf-status.py
+#
+# Do not put $VAR in the submit command: profile scalars go through
+# os.path.expandvars() at parse time, on the submitting host.
+executor: cluster-generic
+use-conda: True
+jobs: 25 # Have up to N jobs submitted at any given time
+latency-wait: 100 # Wait N seconds for output files due to latency
+retries: 6 # Retry jobs N times.
+
+# Upper bound on the threads any single rule may claim; must be >= the largest value
+# in set-threads. `--cores N` clamps every rule's threads to N even in cluster mode.
+cores: 64
+
+# Submission goes via a wrapper rather than a bare bsub line because:
+#   * bsub prints "Job <123> is submitted to queue <q>." and cluster-generic takes the
+#     first line of stdout verbatim as the job id, so the id has to be extracted;
+#   * bsub -W takes [hours:]minutes, not plain minutes, and the memory unit and
+#     per-job/per-slot semantics are site-configured (see above).
+# A bare filename that exists in the profile directory is rewritten to its full path
+# by the profile parser, so these resolve wherever snakemake is invoked from.
+cluster-generic-submit-cmd: >-
+  lsf-submit.sh
+  {rule}.{jobid}
+  {threads}
+  {resources.mem_mb}
+  {resources.runtime}
+  {resources.lsf_queue}
+  {resources.lsf_project}
+  {resources.lsf_mem_unit}
+  {resources.lsf_mem_scope}
+cluster-generic-status-cmd: lsf-status.py
+cluster-generic-cancel-cmd: bkill
+cluster-generic-cancel-nargs: 50
+
+default-resources:
+  # 14 rules interpolate {resources.cpus_per_task} into shell:. cluster-generic does
+  # not use this key itself -- the wrapper is passed {threads} -- but the shell
+  # commands fail to format without it. Deriving it from `threads` keeps the tool's
+  # -t flag and the slot request (bsub -n) in lockstep.
+  cpus_per_task: threads
+  mem_mb: attempt * 20000 # TOTAL for the job, always in MB whatever lsf_mem_unit is
+  runtime: 2880 # In minutes
+  lsf_queue: "'normal'"
+  lsf_project: "''" # bsub -P; empty string omits it
+  lsf_mem_unit: "'MB'" # KB, MB or GB; see LSF_UNIT_FOR_LIMITS
+  lsf_mem_scope: "'job'" # job or slot
+
+# Control number of threads each rule will use.
+#
+# svim and merging_qc pass no thread flag to their tool, so their
+# values here are pure allocation reservations rather than parallelism.
+set-threads:
+  # Data acquisition. Single-threaded: network- and I/O-bound.
+  download_sra: 1
+  download_genome: 1
+  stage_genome: 1 # local reference_fasta + sequence_report only
+  stage_assembly_data_report: 1
+  check_reference_names: 1
+  sample_ids: 1
+  merge_fastq: 1
+  # Pre-aligned BAM input (start_from_bam). Symlinking only, no computation.
+  stage_bam: 1
+  stage_fastq: 1
+  bam_to_fastq: 4 # samtools fastq + bgzip; I/O bound beyond a few threads
+  convert_cram_to_bam: 4 # samtools view CRAM -> BAM; decoding is I/O bound too
+  # Fastq processing. Can use more than 1 thread.
+  fastqc: 16
+  longqc: 8 # LongQC needs at least 4
+  hifiadapterfilt: 16 # PacBio HiFi only
+  porechop_abi: 16 # ONT only
+  nanoplot: 4
+  filter_reads_chopper: 16
+  nanoplot_after_filtering: 4
+  # Alignment. Can use more than 1 thread, except samtools_sort.
+  minimap2: 16
+  ngmlr: 16
+  samtools_view: 1
+  samtools_sort: 1 # Does NOT use more than 1 thread.
+  samtools_index: 1
+  samtools_stats: 1
+  samtools_coverage: 1
+  # Ensemble calling
+  svim: 8
+  sniffles: 8
+  cutesv: 8
+  debreak: 8
+  removeBND: 1
+  vcf_sv_specification: 1
+  sniffles2plot: 1
+  genotype_svim: 8
+  genotype_cutesv: 8
+  genotype_sniffles: 8
+  genotype_debreak: 8
+  basic_filter: 1
+  # Merging
+  jasmine: 16
+  merging_qc: 1
+  # Genotyping
+  svjedigraph: 16
+  autosomes_sexchromosomes: 1
+  all_samples_vcf: 1
+  annotate_tool_genotypes: 1
+  final_vcf: 1
+  # Report
+  samplot_subset_DUP: 1
+  samplot_subset_INV: 1
+  samplot_subset_DEL: 1
+  samplot_plot: 4
+  vcf_to_tsv: 1
+  vcf_to_tsv_tools: 1
+  final_report: 1
+  light_vcf: 1
+  gzvcf: 1
+  gzip_filtered: 1 # bgzip + tabix, no thread flag
+  gzip_genotype: 1
+  # Mappability and annotation
+  mosdepth_summary: 4 # mosdepth: no gain beyond 4 BAM decompression threads
+  mosdepth_quantize: 4
+  callable_bed: 1
+  genmap: 8
+  mappability_bed: 1
+  add_mappability: 1
+  bwa_index: 1
+  truvari_grm: 8
+
+# Control other resources used by each rule. Rules absent from this block take the
+# default-resources values above. cpus_per_task is deliberately never set here: it is
+# derived from set-threads.
+#
+# Not yet measured: longqc, hifiadapterfilt, porechop_abi, genmap and bwa_index use the
+# default mem_mb and runtime. Each writes a benchmark: file (max_rss, s); set their
+# values here from a real run.
+set-resources:
+  download_sra:
+    mem_mb: attempt * 2000
+  download_genome:
+    mem_mb: attempt * 2000
+  stage_genome:
+    mem_mb: attempt * 2000
+  stage_assembly_data_report:
+    mem_mb: attempt * 2000
+  check_reference_names:
+    mem_mb: attempt * 2000
+  stage_bam:
+    mem_mb: attempt * 2000
+  stage_fastq:
+    mem_mb: attempt * 2000
+  bam_to_fastq:
+    mem_mb: attempt * 2000
+  convert_cram_to_bam:
+    mem_mb: attempt * 2000
+  fastqc:
+    # fastqc allocates 250Mb of RAM per thread, so mem_mb must scale with threads.
+    mem_mb: attempt * threads * 1000
+  longqc:
+    mem_mb: attempt * 20000
+  filter_reads_chopper:
+    mem_mb: attempt * 60000
+  minimap2:
+    mem_mb: attempt * 20000
+    runtime: 2880 * 4
+  ngmlr:
+    mem_mb: attempt * 20000
+    runtime: 2880 * 12
+  samtools_view:
+    mem_mb: attempt * 2000
+  samtools_index:
+    mem_mb: attempt * 40000
+  samtools_stats:
+    mem_mb: attempt * 2000
+  samtools_coverage:
+    mem_mb: attempt * 2000
+  svim:
+    mem_mb: attempt * 50000
+  sniffles:
+    mem_mb: attempt * 50000
+  cutesv:
+    mem_mb: attempt * 50000
+  debreak:
+    mem_mb: attempt * 50000
+  vcf_sv_specification:
+    mem_mb: attempt * 200000
+  sniffles2plot:
+    mem_mb: attempt * 60000
+  genotype_svim:
+    mem_mb: attempt * 20000
+  genotype_cutesv:
+    mem_mb: attempt * 20000
+  genotype_sniffles:
+    mem_mb: attempt * 20000
+  genotype_debreak:
+    mem_mb: attempt * 40000
+  basic_filter:
+    mem_mb: attempt * 2000
+  jasmine:
+    mem_mb: attempt * 200000
+  merging_qc:
+    mem_mb: attempt * 20000
+  svjedigraph:
+    mem_mb: attempt * 20000
+  autosomes_sexchromosomes:
+    mem_mb: attempt * 2000
+  truvari_grm:
+    mem_mb: attempt * 20000

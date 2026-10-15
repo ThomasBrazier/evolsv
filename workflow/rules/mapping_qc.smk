@@ -26,13 +26,16 @@ rule samtools_stats:
         "{wdir}/{sample}/logs/{genome}_{aligner}.samtools_stats.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.samtools_stats.tsv"
+    params:
+        wdir=wdir,
+        genome=genome,
     shell:
         """
-        mkdir -p {wdir}/{wildcards.sample}/mapping_QC
+        mkdir -p {params.wdir}/{wildcards.sample}/mapping_QC
         samtools stats {input.bam} > {output.stats}
         cat {output.stats} | grep ^SN | cut -f 2- > {output.stattsv}
         # QC visualization
-        plot-bamstats -p {wdir}/{wildcards.sample}/mapping_QC/{genome}_{wildcards.aligner}_mapping_plot {output.stats}
+        plot-bamstats -p {params.wdir}/{wildcards.sample}/mapping_QC/{params.genome}_{wildcards.aligner}_mapping_plot {output.stats}
         """
 
 

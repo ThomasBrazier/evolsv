@@ -33,6 +33,9 @@ rule jasmine:
     conda:
         "../envs/jasminesv.yaml"
     params:
+        jasmine_max_dist=config["jasmine_max_dist"],
+        wdir=wdir,
+        genome=genome,
         aligners=" ".join(aligners),
         callers=" ".join(CALLERS),
     log:
@@ -59,17 +62,17 @@ rule jasmine:
         # Modify header to prevent missing contig
         for aligner in {params.aligners}; do
         for tool in {params.callers}; do
-        bcftools reheader --fai {wdir}/genome/{genome}.fna.fai -o {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
-        rm {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
-        mv {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {wdir}/{wildcards.sample}/filtered/{genome}_${{aligner}}_${{tool}}_filtered.vcf
+        bcftools reheader --fai {params.wdir}/genome/{params.genome}.fna.fai -o {params.wdir}/{wildcards.sample}/filtered/{params.genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {params.wdir}/{wildcards.sample}/filtered/{params.genome}_${{aligner}}_${{tool}}_filtered.vcf
+        rm {params.wdir}/{wildcards.sample}/filtered/{params.genome}_${{aligner}}_${{tool}}_filtered.vcf
+        mv {params.wdir}/{wildcards.sample}/filtered/{params.genome}_${{aligner}}_${{tool}}_filtered.reheadered.vcf {params.wdir}/{wildcards.sample}/filtered/{params.genome}_${{aligner}}_${{tool}}_filtered.vcf
         done 
         done 
 
         jasmine file_list={output.vcflist} \
         out_file={output.vcf} genome_file={input.fasta} \
-        out_dir={wdir}/{wildcards.sample}/jasmine bam_list={output.bamlist} \
+        out_dir={params.wdir}/{wildcards.sample}/jasmine bam_list={output.bamlist} \
         threads={threads} \
-        --ignore_strand --max_dist {config[jasmine_max_dist]} \
+        --ignore_strand --max_dist {params.jasmine_max_dist} \
         --output_genotypes
 
         # Re-annotate header and fields, then sort

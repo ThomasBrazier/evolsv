@@ -43,6 +43,7 @@ ENGINE_KEY_PREFIXES = {
     "slurm": ("slurm_", "qos"),
     "pbs": ("pbs_",),
     "sge": ("sge_",),
+    "lsf": ("lsf_",),
 }
 
 # Rules that interpolate {resources.cpus_per_task} into shell:. Derived from the source

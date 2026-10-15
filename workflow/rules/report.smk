@@ -14,11 +14,13 @@ rule samplot_subset_DUP:
         "{wdir}/{sample}/logs/{genome}.samplot_subset_DUP.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_DUP.tsv"
+    params:
+        n_samplot=config["n_samplot"],
     shell:
         """
         bcftools filter -i'INFO/OLDTYPE="DUP"' {input.final} > {output.subset_dup_tmp}
         # Subset N random SNPs (default=100)
-        N={config[n_samplot]}
+        N={params.n_samplot}
         cat {output.subset_dup_tmp} | grep '^#' > {output.subset_dup}
         cat {output.subset_dup_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_dup} || true
         """
@@ -40,11 +42,15 @@ rule samplot_subset_INV:
         "{wdir}/{sample}/logs/{genome}.samplot_subset_INV.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_INV.tsv"
+    params:
+        n_samplot=config["n_samplot"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         bcftools filter -i'INFO/SVTYPE="INV"' {input.final} > {output.subset_inv_tmp}
         # Subset N random SNPs (default=100)
-        N={config[n_samplot]}
+        N={params.n_samplot}
         cat {output.subset_inv_tmp} | grep '^#' > {output.subset_inv}
         cat {output.subset_inv_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_inv} || true
         """
@@ -56,17 +62,17 @@ rule samplot_subset_INV:
 #     Subset N variants of each type DEL/DUP/INS/INV
 #     """
 #     input:
-#         final = "{wdir}/{sample}/{genome}_final.vcf.gz"
+#         final = "{params.wdir}/{sample}/{params.genome}_final.vcf.gz"
 #     output:
-#         subset_ins_tmp = temp("{wdir}/{sample}/samplot/{genome}_samplot_INS_tmp.vcf"),
-#         subset_ins = temp("{wdir}/{sample}/samplot/{genome}_samplot_INS.vcf")
+#         subset_ins_tmp = temp("{params.wdir}/{sample}/samplot/{params.genome}_samplot_INS_tmp.vcf"),
+#         subset_ins = temp("{params.wdir}/{sample}/samplot/{params.genome}_samplot_INS.vcf")
 #     conda:
 #         "../envs/bcftools.yaml"
 #     shell:
 #         """
 #         bcftools filter -i'INFO/SVTYPE="INS"' {input.final} > {output.subset_ins_tmp}
 #         # Subset N random SNPs (default=100)
-#         N={config[n_samplot]}
+#         N={params.n_samplot}
 #         cat {output.subset_ins_tmp} | grep '^#' > {output.subset_ins}
 #         cat {output.subset_ins_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_ins}
 #         """
@@ -88,11 +94,13 @@ rule samplot_subset_DEL:
         "{wdir}/{sample}/logs/{genome}.samplot_subset_DEL.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.samplot_subset_DEL.tsv"
+    params:
+        n_samplot=config["n_samplot"],
     shell:
         """
         bcftools filter -i'INFO/SVTYPE="DEL"' {input.final} > {output.subset_del_tmp}
         # Subset N random SNPs (default=100)
-        N={config[n_samplot]}
+        N={params.n_samplot}
         cat {output.subset_del_tmp} | grep '^#' > {output.subset_del}
         cat {output.subset_del_tmp} | grep -v '^#' | shuf -n $N  >> {output.subset_del} || true
         """
@@ -164,6 +172,8 @@ rule vcf_to_tsv:
         tsv="{wdir}/{sample}/{genome}_final.tsv",
     params:
         callsets=",".join(f"{aligner}_{caller}" for aligner, caller in callsets),
+    conda:
+        "../envs/bcftools.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}.vcf_to_tsv.log",
     benchmark:
@@ -193,9 +203,12 @@ rule merging_qc:
         "{wdir}/{sample}/logs/{genome}.merging_qc.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.merging_qc.tsv"
+    params:
+        wdir=wdir,
+        genome=genome,
     shell:
         """
-        Rscript workflow/scripts/merging_qc.R {wdir}/{wildcards.sample} {genome}
+        Rscript workflow/scripts/merging_qc.R {params.wdir}/{wildcards.sample} {params.genome}
         """
 
 
@@ -217,6 +230,8 @@ rule vcf_to_tsv_tools:
             aligner=[aligner for aligner, _ in callsets],
             caller=[caller for _, caller in callsets],
         ),
+    conda:
+        "../envs/bcftools.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}.vcf_to_tsv_tools.log",
     benchmark:
@@ -272,6 +287,9 @@ rule final_report:
         "{wdir}/{sample}/logs/{genome}.final_report.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.final_report.tsv"
+    params:
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         if [[ $(cat {input.vcf} | grep -v '#' | wc -l) -eq 0 ]]; then
@@ -279,7 +297,7 @@ rule final_report:
             touch {output.html}
             touch {output.performance}
         else
-        Rscript workflow/scripts/finalQC.R {wdir} {genome} {wildcards.sample}
+        Rscript workflow/scripts/finalQC.R {params.wdir} {params.genome} {wildcards.sample}
         fi
         """
 
@@ -294,7 +312,7 @@ rule light_vcf:
         vcf_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
         html="{wdir}/{sample}/{genome}_finalQC.html",
     output:
-        light_vcf="{wdir}/{sample}/{genome}_final_light.vcf",
+        light_vcf=temp("{wdir}/{sample}/{genome}_final_light.vcf"),
     conda:
         "../envs/pysam_v2.yaml"
     log:

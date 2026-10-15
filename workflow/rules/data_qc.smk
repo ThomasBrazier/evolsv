@@ -65,11 +65,13 @@ rule longqc:
         "{wdir}/{sample}/logs/{run}.longqc.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{run}.longqc.tsv"
+    params:
+        longqc_preset=config["longqc_preset"],
     shell:
         """
         rm -rf {output} || true
         python "$CONDA_PREFIX/share/LongQC/longQC.py" sampleqc \
-        -x {config[longqc_preset]} \
+        -x {params.longqc_preset} \
         -p $(( {threads} < 4 ? 4 : {threads} )) \
         -o {output} \
         --index 1G \
@@ -108,6 +110,8 @@ rule hifiadapterfilt:
     benchmark:
         "{wdir}/{sample}/benchmarks/{run}.hifiadapterfilt.tsv"
     params:
+        hifiadapterfilt_min_length=config["hifiadapterfilt_min_length"],
+        hifiadapterfilt_min_match=config["hifiadapterfilt_min_match"],
         workdir=lambda wildcards, output: os.path.join(
             os.path.dirname(output.stats), f"{wildcards.run}_work"
         ),
@@ -120,8 +124,8 @@ rule hifiadapterfilt:
 
         ( cd {params.workdir} && hifiadapterfilt.sh \
         -p {wildcards.run} \
-        -l {config[hifiadapterfilt_min_length]} \
-        -m {config[hifiadapterfilt_min_match]} \
+        -l {params.hifiadapterfilt_min_length} \
+        -m {params.hifiadapterfilt_min_match} \
         -t {resources.cpus_per_task} \
         -o . ) &> "$log"
 
@@ -237,13 +241,19 @@ rule filter_reads_chopper:
         "{wdir}/{sample}/logs/{genome}.filter_reads_chopper.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.filter_reads_chopper.tsv"
+    params:
+        chopper_quality=config["chopper_quality"],
+        chopper_minlength=config["chopper_minlength"],
+        chopper_maxlength=config["chopper_maxlength"],
+        chopper_headcrop=config["chopper_headcrop"],
+        chopper_tailcrop=config["chopper_tailcrop"],
     shell:
         """
-        chopper -q {config[chopper_quality]} \
-        -l {config[chopper_minlength]} \
-        --maxlength {config[chopper_maxlength]} \
-        --headcrop {config[chopper_headcrop]} \
-        --tailcrop {config[chopper_tailcrop]} \
+        chopper -q {params.chopper_quality} \
+        -l {params.chopper_minlength} \
+        --maxlength {params.chopper_maxlength} \
+        --headcrop {params.chopper_headcrop} \
+        --tailcrop {params.chopper_tailcrop} \
         --threads {resources.cpus_per_task} \
         -i {input.reads} | gzip > {output.filtered_reads}
         """

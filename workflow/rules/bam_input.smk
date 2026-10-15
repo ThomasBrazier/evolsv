@@ -59,11 +59,13 @@ if input_crams:
             "{wdir}/{sample}/logs/{genome}_{aligner}_convert_cram_to_bam.log",
         benchmark:
             "{wdir}/{sample}/benchmarks/{genome}_{aligner}.convert_cram_to_bam.tsv"
+        params:
+            wdir=wdir,
         shell:
             """
-            mkdir --parents {wdir}/{wildcards.sample}/bam/cram
+            mkdir --parents {params.wdir}/{wildcards.sample}/bam/cram
 
-            export REF_PATH="$(realpath {wdir})/genome/no_remote_reference/%s"
+            export REF_PATH="$(realpath {params.wdir})/genome/no_remote_reference/%s"
             unset REF_CACHE
 
             samtools view -b --threads {resources.cpus_per_task} \
@@ -90,6 +92,7 @@ rule stage_bam:
         bai="{wdir}/{sample}/bam/{genome}_{aligner}_sorted.bam.bai",
         report="{wdir}/{sample}/bam/{genome}_{aligner}_bam_check.txt",
     params:
+        wdir=wdir,
         # Where the reads used for genotyping come from, recorded in the report so the
         # provenance of a run is readable from its output alone.
         reads_source=lambda wildcards: (
@@ -104,7 +107,7 @@ rule stage_bam:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.stage_bam.tsv"
     shell:
         """
-        mkdir --parents {wdir}/{wildcards.sample}/bam
+        mkdir --parents {params.wdir}/{wildcards.sample}/bam
 
         python workflow/scripts/check_bam_reference.py \
         --bam {input.bam} --fai {input.fai} \
@@ -146,9 +149,11 @@ if fastq_individuals:
             "{wdir}/{sample}/logs/{genome}_stage_fastq.log",
         benchmark:
             "{wdir}/{sample}/benchmarks/{genome}.stage_fastq.tsv"
+        params:
+            wdir=wdir,
         shell:
             """
-            mkdir --parents {wdir}/{wildcards.sample}/fastq
+            mkdir --parents {params.wdir}/{wildcards.sample}/fastq
 
             nfastq=$(echo {input.fastq} | wc -w)
             if [ "$nfastq" -eq 1 ]
@@ -209,9 +214,11 @@ if bam_fastq_individuals:
             "{wdir}/{sample}/logs/{genome}_bam_to_fastq.log",
         benchmark:
             "{wdir}/{sample}/benchmarks/{genome}.bam_to_fastq.tsv"
+        params:
+            wdir=wdir,
         shell:
             """
-            mkdir --parents {wdir}/{wildcards.sample}/fastq
+            mkdir --parents {params.wdir}/{wildcards.sample}/fastq
 
             samtools fastq -F 0x900 --threads {resources.cpus_per_task} {input.bam} \
             2> {log} | bgzip --threads {resources.cpus_per_task} > {output.fastq}

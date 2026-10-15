@@ -96,6 +96,8 @@ else:
         conda:
             "../envs/download.yaml"
         params:
+            genome=genome,
+            wdir=wdir,
             local_fasta=reference_fasta,
         log:
             "{wdir}/genome/logs/{genome}.download_genome.log",
@@ -103,27 +105,27 @@ else:
             "{wdir}/genome/benchmarks/{genome}.download_genome.tsv"
         shell:
             """
-            datasets download genome accession {genome} --filename {wdir}/genome/{genome}.zip --include genome,gff3,seq-report
-            unzip -o {wdir}/genome/{genome}.zip -d {wdir}/genome/
+            datasets download genome accession {params.genome} --filename {params.wdir}/genome/{params.genome}.zip --include genome,gff3,seq-report
+            unzip -o {params.wdir}/genome/{params.genome}.zip -d {params.wdir}/genome/
 
             if [ -n "{params.local_fasta}" ]
             then
             echo "Using the local reference FASTA {params.local_fasta} instead of the NCBI copy."
-            ln -sf $(realpath {params.local_fasta}) {wdir}/genome/{genome}.fna
+            ln -sf $(realpath {params.local_fasta}) {params.wdir}/genome/{params.genome}.fna
             else
-            cp {wdir}/genome/ncbi_dataset/data/{genome}/*_genomic.fna {wdir}/genome/{genome}.fna
+            cp {params.wdir}/genome/ncbi_dataset/data/{params.genome}/*_genomic.fna {params.wdir}/genome/{params.genome}.fna
             fi
-            samtools faidx {wdir}/genome/{genome}.fna
+            samtools faidx {params.wdir}/genome/{params.genome}.fna
 
-            if test -f {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff
+            if test -f {params.wdir}/genome/ncbi_dataset/data/{params.genome}/genomic.gff
             then
             echo "GFF annotation exists."
-            cp {wdir}/genome/ncbi_dataset/data/{genome}/genomic.gff {wdir}/genome/{genome}.gff
+            cp {params.wdir}/genome/ncbi_dataset/data/{params.genome}/genomic.gff {params.wdir}/genome/{params.genome}.gff
             fi
 
-            cp {wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {wdir}/genome/{genome}_assembly_data_report.jsonl
-            cp {wdir}/genome/ncbi_dataset/data/{genome}/sequence_report.jsonl {wdir}/genome/{genome}_sequence_report.jsonl
-            cp config/config.yaml {wdir}/genome/{genome}_config.yaml
+            cp {params.wdir}/genome/ncbi_dataset/data/assembly_data_report.jsonl {params.wdir}/genome/{params.genome}_assembly_data_report.jsonl
+            cp {params.wdir}/genome/ncbi_dataset/data/{params.genome}/sequence_report.jsonl {params.wdir}/genome/{params.genome}_sequence_report.jsonl
+            cp config/config.yaml {params.wdir}/genome/{params.genome}_config.yaml
             """
 
 
@@ -144,10 +146,12 @@ rule sample_ids:
         "{wdir}/{sample}/logs/{genome}_sample_ids.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.sample_ids.tsv"
+    params:
+        samples=config["samples"],
     shell:
         """
         echo {wildcards.sample} > {output.sampleids}
-        cp {config[samples]} {output.sheet}
+        cp {params.samples} {output.sheet}
         """
 
 

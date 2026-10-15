@@ -22,20 +22,31 @@ rule svim:
         "{wdir}/{sample}/logs/{genome}_{aligner}.svim.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.svim.tsv"
+    params:
+        min_sv_size=config["min_sv_size"],
+        max_sv_size=config["max_sv_size"],
+        minimum_depth=config["minimum_depth"],
+        min_mapq=config["min_mapq"],
+        segment_gap_tolerance=config["segment_gap_tolerance"],
+        segment_overlap_tolerance=config["segment_overlap_tolerance"],
+        svim_quality=config["svim_quality"],
+        svim_min_read_support=config["svim_min_read_support"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
-        svim alignment {wdir}/{wildcards.sample}/calling/{genome}_{wildcards.aligner}_svim {input.bam} {input.fasta} \
+        svim alignment {params.wdir}/{wildcards.sample}/calling/{params.genome}_{wildcards.aligner}_svim {input.bam} {input.fasta} \
         --insertion_sequences --read_names \
-        --min_sv_size {config[min_sv_size]} \
-        --max_sv_size {config[max_sv_size]} \
-        --minimum_depth {config[minimum_depth]} \
-        --min_mapq {config[min_mapq]} \
-        --segment_gap_tolerance {config[segment_gap_tolerance]} \
-        --segment_overlap_tolerance {config[segment_overlap_tolerance]}
+        --min_sv_size {params.min_sv_size} \
+        --max_sv_size {params.max_sv_size} \
+        --minimum_depth {params.minimum_depth} \
+        --min_mapq {params.min_mapq} \
+        --segment_gap_tolerance {params.segment_gap_tolerance} \
+        --segment_overlap_tolerance {params.segment_overlap_tolerance}
 
         # SVIM does not filter SV itself and outputs all variants
         echo "Filter SVIM output"
-        bcftools filter -e "QUAL < {config[svim_quality]} || MIN(DP) < {config[svim_min_read_support]}" -o {output.vcf} -O v {wdir}/{wildcards.sample}/calling/{genome}_{wildcards.aligner}_svim/variants.vcf
+        bcftools filter -e "QUAL < {params.svim_quality} || MIN(DP) < {params.svim_min_read_support}" -o {output.vcf} -O v {params.wdir}/{wildcards.sample}/calling/{params.genome}_{wildcards.aligner}_svim/variants.vcf
         
         echo "Correct the GT field for duplications (change DUP:INT ou DUP:TANDEM to DUP)"
         sed -i 's/DUP:INT/DUP/g' {output.vcf}
@@ -68,6 +79,13 @@ rule sniffles:
         "{wdir}/{sample}/logs/{genome}_{aligner}.sniffles.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.sniffles.tsv"
+    params:
+        min_sv_size=config["min_sv_size"],
+        sniffles_minsupport=config["sniffles_minsupport"],
+        minsvlen_screen_ratio=config["minsvlen-screen-ratio"],
+        mapq=config["mapq"],
+        cluster_binsize=config["cluster-binsize"],
+        min_coverage=config["min_coverage"],
     shell:
         """
         sniffles --input {input.bam} \
@@ -75,12 +93,12 @@ rule sniffles:
         --reference {input.fasta} \
         --threads {resources.cpus_per_task} \
         --allow-overwrite \
-        --minsvlen {config[min_sv_size]} \
-        --minsupport {config[sniffles_minsupport]} \
-        --minsvlen-screen-ratio {config[minsvlen-screen-ratio]} \
-        --mapq {config[mapq]} \
-        --cluster-binsize {config[cluster-binsize]} \
-        --qc-coverage {config[min_coverage]} \
+        --minsvlen {params.min_sv_size} \
+        --minsupport {params.sniffles_minsupport} \
+        --minsvlen-screen-ratio {params.minsvlen_screen_ratio} \
+        --mapq {params.mapq} \
+        --cluster-binsize {params.cluster_binsize} \
+        --qc-coverage {params.min_coverage} \
         --output-rnames
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
@@ -109,23 +127,33 @@ rule cutesv:
         "{wdir}/{sample}/logs/{genome}_{aligner}.cutesv.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.cutesv.tsv"
+    params:
+        max_cluster_bias_INS=config["max_cluster_bias_INS"],
+        diff_ratio_merging_INS=config["diff_ratio_merging_INS"],
+        max_cluster_bias_DEL=config["max_cluster_bias_DEL"],
+        diff_ratio_merging_DEL=config["diff_ratio_merging_DEL"],
+        max_size=config["max_size"],
+        min_coverage=config["min_coverage"],
+        min_sv_size=config["min_sv_size"],
+        min_siglength=config["min_siglength"],
+        wdir=wdir,
     shell:
         """
-        if [ -d "{wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}" ]; then
-        rm -rf {wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}
+        if [ -d "{params.wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}" ]; then
+        rm -rf {params.wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}
           fi
-        mkdir -p {wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}
-        cuteSV --max_cluster_bias_INS {config[max_cluster_bias_INS]} \
-        --diff_ratio_merging_INS {config[diff_ratio_merging_INS]} \
-        --max_cluster_bias_DEL {config[max_cluster_bias_DEL]} \
+        mkdir -p {params.wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}
+        cuteSV --max_cluster_bias_INS {params.max_cluster_bias_INS} \
+        --diff_ratio_merging_INS {params.diff_ratio_merging_INS} \
+        --max_cluster_bias_DEL {params.max_cluster_bias_DEL} \
         --genotype --report_readid \
-        --diff_ratio_merging_DEL {config[diff_ratio_merging_DEL]} \
-        --max_size {config[max_size]} \
-        --min_support {config[min_coverage]} \
-        --min_size {config[min_sv_size]} \
-        --min_siglength {config[min_siglength]} \
+        --diff_ratio_merging_DEL {params.diff_ratio_merging_DEL} \
+        --max_size {params.max_size} \
+        --min_support {params.min_coverage} \
+        --min_size {params.min_sv_size} \
+        --min_siglength {params.min_siglength} \
         --threads {threads} \
-        {input.bam} {input.fasta} {output.vcf} {wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}/
+        {input.bam} {input.fasta} {output.vcf} {params.wdir}/{wildcards.sample}/cutesv_{wildcards.aligner}/
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
         bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
@@ -153,6 +181,10 @@ rule debreak:
         "{wdir}/{sample}/logs/{genome}_{aligner}.debreak.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.debreak.tsv"
+    params:
+        min_sv_size=config["min_sv_size"],
+        min_coverage=config["min_coverage"],
+        wdir=wdir,
     shell:
         """
         echo $PATH
@@ -161,14 +193,14 @@ rule debreak:
         python -c 'import sys; print(sys.prefix), print(sys.path)'
 
         debreak --bam {input.bam} \
-        --outpath {wdir}/{wildcards.sample}/debreak_{wildcards.aligner}/ \
+        --outpath {params.wdir}/{wildcards.sample}/debreak_{wildcards.aligner}/ \
         --rescue_large_ins \
         --rescue_dup \
         -t {resources.cpus_per_task} \
-        --min_size {config[min_sv_size]} \
-        --min_support {config[min_coverage]} --poa \
+        --min_size {params.min_sv_size} \
+        --min_support {params.min_coverage} --poa \
         --ref {input.fasta}
-        mv {wdir}/{wildcards.sample}/debreak_{wildcards.aligner}/debreak.vcf {output.vcf}
+        mv {params.wdir}/{wildcards.sample}/debreak_{wildcards.aligner}/debreak.vcf {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_raw} {output.vcf}
         bcftools view -f PASS --output-file {output.vcf_renamed} {output.vcf_raw}
@@ -197,6 +229,8 @@ rule removeBND:
             if wildcards.caller == "debreak"
             else "grep -v '[a-zA-Z]*.BND'"
         ),
+    conda:
+        "../envs/bcftools.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.removeBND.log",
     benchmark:
@@ -216,7 +250,9 @@ rule vcf_sv_specification:
         vcf="{wdir}/{sample}/calling/{genome}_{aligner}_{caller}_noBND.vcf",
         fasta="{wdir}/genome/{genome}.fna",
     output:
-        vcf=temp("{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"),
+        vcf=temp(
+            "{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess.vcf"
+        ),
         vcf_tmp=temp(
             "{wdir}/{sample}/preprocess/{genome}_{aligner}_{caller}_preprocess_temp.vcf"
         ),
@@ -226,13 +262,16 @@ rule vcf_sv_specification:
         "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.vcf_sv_specification.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.vcf_sv_specification.tsv"
+    params:
+        filter_variant_positions=config["filter_variant_positions"],
+        wdir=wdir,
     shell:
         """
-        mkdir -p {wdir}/{wildcards.sample}/preprocess
+        mkdir -p {params.wdir}/{wildcards.sample}/preprocess
         python workflow/scripts/vcf_sv_specification.py {input.vcf} {output.vcf_tmp} {input.fasta}
-        if [ -f "{config[filter_variant_positions]}" ]; then
-        bcftools view -T ^{config[filter_variant_positions]} {output.vcf_tmp} > {output.vcf}
-        #vcftools --exclude-positions {config[filter_variant_positions]} --vcf {output.vcf_tmp} --recode-INFO-all --stdout > {output.vcf}
+        if [ -f "{params.filter_variant_positions}" ]; then
+        bcftools view -T ^{params.filter_variant_positions} {output.vcf_tmp} > {output.vcf}
+        #vcftools --exclude-positions {params.filter_variant_positions} --vcf {output.vcf_tmp} --recode-INFO-all --stdout > {output.vcf}
         else
         cp {output.vcf_tmp} {output.vcf}
         fi
@@ -292,13 +331,17 @@ rule genotype_svim:
         "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_svim.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_svim.tsv"
+    params:
+        svjedigraph_minsupport=config["svjedigraph_minsupport"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_svim \
+        -q {input.merged_fastq} -p {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_svim \
         -t {resources.cpus_per_task} \
-        --minsupport {config[svjedigraph_minsupport]}
-        mv --force {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
+        --minsupport {params.svjedigraph_minsupport}
+        mv --force {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_svim_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
@@ -328,12 +371,16 @@ rule genotype_cutesv:
         "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_cutesv.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_cutesv.tsv"
+    params:
+        svjedigraph_minsupport=config["svjedigraph_minsupport"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_cutesv \
+        -q {input.merged_fastq} -p {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_cutesv \
         -t {resources.cpus_per_task} \
-        --minsupport {config[svjedigraph_minsupport]}
+        --minsupport {params.svjedigraph_minsupport}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -364,12 +411,16 @@ rule genotype_sniffles:
         "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_sniffles.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_sniffles.tsv"
+    params:
+        svjedigraph_minsupport=config["svjedigraph_minsupport"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_sniffles \
+        -q {input.merged_fastq} -p {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_sniffles \
         -t {resources.cpus_per_task} \
-        --minsupport {config[svjedigraph_minsupport]}
+        --minsupport {params.svjedigraph_minsupport}
         mv {output.vcf_renamed} {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
@@ -400,13 +451,17 @@ rule genotype_debreak:
         "{wdir}/{sample}/logs/{genome}_{aligner}.genotype_debreak.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.genotype_debreak.tsv"
+    params:
+        svjedigraph_minsupport=config["svjedigraph_minsupport"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         svjedi-graph.py -v {input.vcf} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_debreak \
+        -q {input.merged_fastq} -p {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_debreak \
         -t {resources.cpus_per_task} \
-        --minsupport {config[svjedigraph_minsupport]}
-        mv {wdir}/{wildcards.sample}/genotype/{genome}_{wildcards.aligner}_debreak_genotype.vcf {output.vcf_temp}
+        --minsupport {params.svjedigraph_minsupport}
+        mv {params.wdir}/{wildcards.sample}/genotype/{params.genome}_{wildcards.aligner}_debreak_genotype.vcf {output.vcf_temp}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf_temp}
         """
@@ -428,10 +483,15 @@ rule basic_filter:
         "{wdir}/{sample}/logs/{genome}_{aligner}_{caller}.basic_filter.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.basic_filter.tsv"
+    params:
+        max_sv_size=config["max_sv_size"],
+        min_alt_depth=config["min_alt_depth"],
+        min_depth=config["min_depth"],
+        max_depth=config["max_depth"],
     shell:
         """
-        # bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]} || MAX(DP) > {config[max_depth]}" -o {output.vcf} -O v {input.vcf}
-        bcftools filter -e "SVLEN > {config[max_sv_size]} || MIN(AD) < {config[min_alt_depth]} || MIN(DP) < {config[min_depth]}" -o {output.vcf} -O v {input.vcf}
+        # bcftools filter -e "SVLEN > {params.max_sv_size} || MIN(AD) < {params.min_alt_depth} || MIN(DP) < {params.min_depth} || MAX(DP) > {params.max_depth}" -o {output.vcf} -O v {input.vcf}
+        bcftools filter -e "SVLEN > {params.max_sv_size} || MIN(AD) < {params.min_alt_depth} || MIN(DP) < {params.min_depth}" -o {output.vcf} -O v {input.vcf}
         """
 
 
@@ -455,7 +515,6 @@ rule gzip_filtered:
         bgzip -f {input.vcf}
         tabix --csi -f {output.vcf}
         """
-
 
 
 rule gzip_genotype:

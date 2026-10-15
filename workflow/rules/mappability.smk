@@ -13,12 +13,13 @@ rule mosdepth_summary:
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.mosdepth_summary.tsv"
     params:
+        mosdepth_windows_size=config["mosdepth_windows_size"],
         prefix="{wdir}/{sample}/callability/{genome}_{aligner}",
     shell:
         """
         mosdepth --no-per-base \
             -t {threads} \
-            --by {config[mosdepth_windows_size]} \
+            --by {params.mosdepth_windows_size} \
             {params.prefix} \
             {input.bam}
         """
@@ -39,6 +40,8 @@ rule mosdepth_quantize:
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}.mosdepth_quantize.tsv"
     params:
+        wdir=wdir,
+        genome=genome,
         # prefix = "{wdir}/{sample}/callability/{genome}_{aligner}",
         lower=round(config["quantize_cov_threshold_lower"]),
         upper=round(config["quantize_cov_threshold_upper"]),
@@ -55,7 +58,7 @@ rule mosdepth_quantize:
         
         mosdepth --no-per-base -t {threads} \
         --quantize 0:1:{params.lower}:{params.upper_threshold}: \
-        {wdir}/{wildcards.sample}/callability/{genome}_{wildcards.aligner} {input.bam}
+        {params.wdir}/{wildcards.sample}/callability/{params.genome}_{wildcards.aligner} {input.bam}
         """
 
 
@@ -155,8 +158,9 @@ rule add_mappability:
     conda:
         "../envs/mosdepth.yaml"
     params:
+        genome=genome,
         aligners=" ".join(aligners),
-        callability_dir="{wdir}/{sample}/callability",
+        callability_dir=lambda wildcards, output: os.path.dirname(output.callable),
     log:
         "{wdir}/{sample}/logs/add_mappability/{genome}.txt",
     benchmark:
@@ -179,6 +183,6 @@ rule add_mappability:
         bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable} 2>> {log}
 
         for aligner in {params.aligners}; do
-            bedtools intersect -a {params.callability_dir}/{genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge > {params.callability_dir}/{genome}_${{aligner}}_callable_mappable.bed 2>> {log}
+            bedtools intersect -a {params.callability_dir}/{params.genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge > {params.callability_dir}/{params.genome}_${{aligner}}_callable_mappable.bed 2>> {log}
         done
         """
