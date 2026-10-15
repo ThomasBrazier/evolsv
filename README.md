@@ -55,7 +55,7 @@ All these changes are being implemented in the `caterpillar` branch.
 
 There are three config files to set up your analysis:
 * `config/config.yaml`, where you specify the working directory and all the settings for the different tools.
-* `config/samples.tsv`, a three columns data frame to specify the sample name, the SRA accessions and the reference genome accession. Use one row per SRA run. The `sample_name` column identifies the individual: rows with the same `sample_name` are the runs of one individual, and their reads are merged. The sheet can contain many individuals, but all rows must use the same genome accession. A `sample_name` can contain only letters, digits, `.`, `_` and `-`, because it becomes a directory name.
+* `config/samples.tsv`, a three columns data frame to specify the sample name, the SRA accessions and the reference genome accession. Use one row per SRA run. The `sample_name` column identifies the individual (must be the same name as in the BAM/CRAM file if provided): rows with the same `sample_name` are the runs of one individual, and their reads are merged. The sheet can contain many individuals, but all rows must use the same genome accession. A `sample_name` can contain only letters, digits, `.`, `_` and `-`, because it becomes a directory name.
 * a profile under `profiles/`, specifying resources for each rule (number of cpus, memory, runtime) and how jobs reach your job scheduler. One is shipped per scheduler:
 
 | Profile | Scheduler | Executor |
@@ -328,4 +328,4 @@ We also produce an automatic report to assess the quality and empirical performa
 ## Known issues
 
 
-* **high impact/low probability** issue with **SVjdedi-graph**. The current version fails with some SVs close to chromosome boundaries. The fix is to filter these variants with the `filter_variant_positions` option in `config/config.yaml`, until a new corrected version of SVjedi-graph is released.
+* FIXED IN NEW VERSIONS. **high impact/low probability** issue with **SVjdedi-graph**. The current version fails with some SVs close to chromosome boundaries. The fix is to filter these variants with the `filter_variant_positions` option in `config/config.yaml`, until a new corrected version of SVjedi-graph is released.
