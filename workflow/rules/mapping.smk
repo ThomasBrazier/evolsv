@@ -20,12 +20,16 @@ rule minimap2:
         "{wdir}/{sample}/logs/{genome}_minimap2.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.minimap2.tsv"
+    params:
+        minimap_ax=config["minimap_ax"],
+        seed=config["seed"],
+        read_group_platform=config["read_group_platform"],
     shell:
         """
-        minimap2 -ax {config[minimap_ax]} --MD -2 \
-        --seed {config[seed]} --eqx \
+        minimap2 -ax {params.minimap_ax} --MD -2 \
+        --seed {params.seed} --eqx \
         -t {resources.cpus_per_task} \
-        -R "@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:{config[read_group_platform]}" \
+        -R "@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:{params.read_group_platform}" \
         --sam-hit-only {input.fasta} {input.fastq} > {output.sam}
         """
 
@@ -72,14 +76,18 @@ rule ngmlr:
         "{wdir}/{sample}/logs/{genome}_ngmlr.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.ngmlr.tsv"
+    params:
+        ngmlr_preset=config["ngmlr_preset"],
+        min_identity=config["min-identity"],
+        read_group_platform=config["read_group_platform"],
     shell:
         """
         ngmlr -t {resources.cpus_per_task} \
         -r {input.fasta} -q {input.fastq} \
-        --presets {config[ngmlr_preset]} \
-        --min-identity {config[min-identity]} \
+        --presets {params.ngmlr_preset} \
+        --min-identity {params.min_identity} \
         --rg-id {wildcards.sample} --rg-sm {wildcards.sample} \
-        --rg-pl {config[read_group_platform]} \
+        --rg-pl {params.read_group_platform} \
         -o {output.sam}
         """
 

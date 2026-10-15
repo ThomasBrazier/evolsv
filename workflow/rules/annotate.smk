@@ -43,6 +43,8 @@ rule truvari_grm:
     conda:
         "../envs/truvari.yaml"
     params:
+        wdir=wdir,
+        genome=genome,
         kmersize=config["grm_kmersize"],
         min_sv_size=config["min_sv_size"],
     log:
@@ -69,10 +71,10 @@ rule truvari_grm:
 #     Wrapper around RepeatMasker to annotate insertion sequences in a VCF.
 #     """
 #     input:
-#         vcf = "{wdir}/{sample}/{genome}_final.vcf",
-#         fasta = "{wdir}/{sample}/{genome}.fna"
+#         vcf = "{params.wdir}/{sample}/{params.genome}_final.vcf",
+#         fasta = "{params.wdir}/{sample}/{params.genome}.fna"
 #     output:
-#         vcf = "{wdir}/{sample}/{genome}_repmasked.vcf"
+#         vcf = "{params.wdir}/{sample}/{params.genome}_repmasked.vcf"
 #     conda:
 #         "../envs/truvari.yaml"
 #     shell:

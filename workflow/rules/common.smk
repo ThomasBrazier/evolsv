@@ -265,7 +265,7 @@ if bam_mode:
     fastq_individuals = [i for i in individuals if input_fastqs[i]]
     bam_fastq_individuals = [i for i in individuals if not input_fastqs[i]]
 
-    # The alignment rule bam_to_fastq extracts reads from. The first selected aligner:
+    # The alignment that bam_to_fastq extracts reads from. The first selected aligner:
     # with `aligners` in canonical order this is minimap2 whenever minimap2 is selected,
     # and hardcoding it would break an ngmlr-only run, whose minimap2 BAM never exists.
     reads_aligner = aligners[0]

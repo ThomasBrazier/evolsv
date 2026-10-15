@@ -19,11 +19,15 @@ rule svjedigraph:
         "{wdir}/{sample}/logs/{genome}_svjedigraph.log",
     benchmark:
         "{wdir}/{sample}/benchmarks/{genome}.svjedigraph.tsv"
+    params:
+        svjedigraph_minsupport=config["svjedigraph_minsupport"],
+        wdir=wdir,
+        genome=genome,
     shell:
         """
         svjedi-graph.py -v {input.merged} -r {input.fasta} \
-        -q {input.merged_fastq} -p {wdir}/{wildcards.sample}/genotype/{genome}_merged \
-        -t {resources.cpus_per_task} --minsupport {config[svjedigraph_minsupport]}
+        -q {input.merged_fastq} -p {params.wdir}/{wildcards.sample}/genotype/{params.genome}_merged \
+        -t {resources.cpus_per_task} --minsupport {params.svjedigraph_minsupport}
         mv {output.vcf_renamed} {output.vcf}
         # Consistent renaming of VCF header with sample id
         bcftools reheader --samples {input.sampleids} --output {output.vcf_renamed} {output.vcf}
@@ -108,6 +112,7 @@ rule annotate_tool_genotypes:
     output:
         vcf=temp("{wdir}/{sample}/merging/{genome}_merged_toolgt.vcf"),
     params:
+        jasmine_max_dist=config["jasmine_max_dist"],
         callsets=lambda wildcards, input: " ".join(
             f"--callset {aligner}_{caller} {vcf}"
             for (aligner, caller), vcf in zip(callsets, input.vcfs)
@@ -121,7 +126,7 @@ rule annotate_tool_genotypes:
     shell:
         """
         python workflow/scripts/annotate_tool_genotypes.py {input.merged} {output.vcf} \
-        {params.callsets} --max-dist {config[jasmine_max_dist]} 2> {log}
+        {params.callsets} --max-dist {params.jasmine_max_dist} 2> {log}
         """
 
 
@@ -181,8 +186,8 @@ rule final_vcf:
         autosomes="{wdir}/genome/{genome}.autosomes",
     output:
         final_tmp=temp("{wdir}/{sample}/{genome}_final_tmp.vcf"),
-        final="{wdir}/{sample}/{genome}_final.vcf",
-        final_sexchr="{wdir}/{sample}/{genome}_final_sexchr.vcf",
+        final=temp("{wdir}/{sample}/{genome}_final.vcf"),
+        final_sexchr=temp("{wdir}/{sample}/{genome}_final_sexchr.vcf"),
     conda:
         "../envs/bcftools.yaml"
     log:
