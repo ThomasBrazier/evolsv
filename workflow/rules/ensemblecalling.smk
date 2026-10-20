@@ -321,7 +321,7 @@ rule genotype_svim:
         vcf_temp=temp(
             "{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype_tmp.vcf"
         ),
-        vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim_genotype.vcf"),
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_svim.gaf"),
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_svim_informative_aln.json",
@@ -361,7 +361,7 @@ rule genotype_cutesv:
         vcf_temp=temp(
             "{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype_tmp.vcf"
         ),
-        vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_genotype.vcf"),
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv.gaf"),
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_cutesv_informative_aln.json",
@@ -401,7 +401,7 @@ rule genotype_sniffles:
         vcf_temp=temp(
             "{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype_tmp.vcf"
         ),
-        vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_genotype.vcf"),
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles.gaf"),
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_sniffles_informative_aln.json",
@@ -441,7 +441,7 @@ rule genotype_debreak:
         vcf_temp=temp(
             "{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype_tmp.vcf"
         ),
-        vcf_renamed="{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype.vcf",
+        vcf_renamed=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_genotype.vcf"),
         gfa=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak.gfa"),
         gaf=temp("{wdir}/{sample}/genotype/{genome}_{aligner}_debreak.gaf"),
         aln="{wdir}/{sample}/genotype/{genome}_{aligner}_debreak_informative_aln.json",
@@ -534,6 +534,7 @@ rule gzip_genotype:
         "{wdir}/{sample}/benchmarks/{genome}_{aligner}_{caller}.gzip_genotype.tsv"
     shell:
         """
-        bgzip -f {input.vcf}
-        tabix --csi -f {output.vcf}
+        # The genotyper can emit records out of order (e.g. 6577241 before 6577240), which
+        # tabix rejects: coordinate-sort while compressing.
+        bcftools sort -T $(dirname {output.vcf})/bcftools_sort_ -O z --write-index=csi -o {output.vcf} {input.vcf} 2> {log}
         """
