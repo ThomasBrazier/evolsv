@@ -12,6 +12,7 @@ data-lewontin/
 data-lewontin/
 debug/
 results/
+.claude/
 
 config/config_download_fastq.yaml
 config/config_lewontin.yaml
