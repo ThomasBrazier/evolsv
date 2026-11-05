@@ -23,8 +23,12 @@
 # pandas.errors.EmptyDataError after ~30 min of work.
 #
 # Fix: unpack the pinned upstream source into the env and build both binaries in
-# place, which is the layout LongQC hard-codes. Rule longqc runs this copy of
-# longQC.py rather than the one bioconda puts in bin/.
+# place, which is the layout LongQC hard-codes, then install a `longqc` launcher
+# in the env's bin/ that runs this copy of longQC.py rather than the one bioconda
+# puts there. Rule longqc only ever calls `longqc`.
+#
+# The launcher has to be a script, not a symlink: longQC.py:101 uses abspath, not
+# realpath, so through a symlink in bin/ it would look for its binaries in bin/.
 #
 # LongQC's sdust is NOT minimap2's sdust. Upstream patched it (sdust.c, guarded
 # by -D_SDUST_MAIN) to print one line per read -- name, masked bases, length,
@@ -65,3 +69,13 @@ make -C "${dest}/minimap2-coverage" -j"$(nproc)" \
 test -x "${dest}/minimap2-coverage/sdust"
 test -x "${dest}/minimap2-coverage/minimap2-coverage"
 test -f "${dest}/longQC.py"
+
+launcher="${CONDA_PREFIX}/bin/longqc"
+cat > "${launcher}" <<LAUNCHER
+#!/bin/sh
+exec "${CONDA_PREFIX}/bin/python" "${dest}/longQC.py" "\$@"
+LAUNCHER
+chmod +x "${launcher}"
+
+# Fail the env build, not the first job, if LongQC cannot start.
+"${launcher}" sampleqc --help > /dev/null

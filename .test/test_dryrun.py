@@ -425,6 +425,9 @@ def test_longqc_preset_follows_the_technology():
     assert_succeeded(result)
     # config/samples.tsv declares two SRA runs for the one individual.
     assert parse_job_stats(result.stdout)["longqc"] == 2
+    # The launcher from envs/longqc.post-deploy.sh, never bioconda's bin/longQC.py.
+    assert "longqc sampleqc" in result.stdout
+    assert "longQC.py" not in result.stdout
     assert "-x pb-hifi" in result.stdout
     # profiles/ci has 1 core; LongQC exits below 4 CPUs, so -p must be raised to 4.
     assert "-p $(( 1 < 4 ? 4 : 1 ))" in result.stdout
