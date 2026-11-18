@@ -302,6 +302,25 @@ rule final_report:
         """
 
 
+rule gzip_final_tsv:
+    """
+    Compress the final TSV once its readers (merging_qc, final_report) have run
+    """
+    input:
+        tsv="{wdir}/{sample}/{genome}_final.tsv",
+        html="{wdir}/{sample}/{genome}_finalQC.html",
+    output:
+        tsv="{wdir}/{sample}/{genome}_final.tsv.gz",
+    log:
+        "{wdir}/{sample}/logs/{genome}.gzip_final_tsv.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.gzip_final_tsv.tsv"
+    shell:
+        """
+        gzip -f {input.tsv} 2> {log}
+        """
+
+
 rule light_vcf:
     """
     Make a light VCF for faster computation
