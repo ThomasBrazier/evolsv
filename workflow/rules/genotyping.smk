@@ -75,7 +75,7 @@ rule autosomes_sexchromosomes:
     conda:
         "../envs/Renv.yaml"
     params:
-        seq="{wdir}/genome/{genome}_sequence_report.jsonl",
+        seq=lambda w, input: input.seq,
         sexchromosomes="{wdir}/genome/{genome}.sexchromosomes",
         autosomes="{wdir}/genome/{genome}.autosomes",
         scaffolds_to_exclude=config["scaffolds_to_exclude"],

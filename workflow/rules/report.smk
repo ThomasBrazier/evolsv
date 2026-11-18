@@ -311,6 +311,8 @@ rule gzip_final_tsv:
         html="{wdir}/{sample}/{genome}_finalQC.html",
     output:
         tsv="{wdir}/{sample}/{genome}_final.tsv.gz",
+    conda:
+        "../envs/gzip.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}.gzip_final_tsv.log",
     benchmark:
@@ -330,6 +332,8 @@ rule gzip_unmerged_sv:
         html="{wdir}/{sample}/{genome}_finalQC.html",
     output:
         tsv="{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv.gz",
+    conda:
+        "../envs/gzip.yaml"
     log:
         "{wdir}/{sample}/logs/{genome}.gzip_unmerged_sv.log",
     benchmark:
