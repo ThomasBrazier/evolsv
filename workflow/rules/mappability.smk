@@ -114,7 +114,7 @@ rule mappability_bed:
     input:
         mappable="{wdir}/genmap/{genome}_sorted_mappability.bg",
     output:
-        callable_sites="{wdir}/mappability/{genome}_mappable.bed",
+        callable_sites="{wdir}/mappability/{genome}_mappable.bed.gz",
         tmp_map=temp("{wdir}/mappability/{genome}_temp_map.bed"),
     conda:
         "../envs/genmap.yaml"
@@ -128,7 +128,7 @@ rule mappability_bed:
     shell:
         """
         awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map} 2> {log}
-        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites} 2>> {log}
+        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - | gzip > {output.callable_sites} 2>> {log}
         """
 
 
@@ -147,12 +147,12 @@ rule add_mappability:
             "{{wdir}}/{{sample}}/callability/{{genome}}_{aligner}_callable.bed",
             aligner=aligners,
         ),
-        mappable_bed="{wdir}/mappability/{genome}_mappable.bed",
+        mappable_bed="{wdir}/mappability/{genome}_mappable.bed.gz",
     output:
         callable="{wdir}/{sample}/callability/{genome}_callable.bed",
-        callable_mappable="{wdir}/{sample}/callability/{genome}_callable_mappable.bed",
+        callable_mappable="{wdir}/{sample}/callability/{genome}_callable_mappable.bed.gz",
         per_aligner=expand(
-            "{{wdir}}/{{sample}}/callability/{{genome}}_{aligner}_callable_mappable.bed",
+            "{{wdir}}/{{sample}}/callability/{{genome}}_{aligner}_callable_mappable.bed.gz",
             aligner=aligners,
         ),
     conda:
@@ -180,9 +180,9 @@ rule add_mappability:
             fi
         done
 
-        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge > {output.callable_mappable} 2>> {log}
+        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {output.callable_mappable} 2>> {log}
 
         for aligner in {params.aligners}; do
-            bedtools intersect -a {params.callability_dir}/{params.genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge > {params.callability_dir}/{params.genome}_${{aligner}}_callable_mappable.bed 2>> {log}
+            bedtools intersect -a {params.callability_dir}/{params.genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {params.callability_dir}/{params.genome}_${{aligner}}_callable_mappable.bed.gz 2>> {log}
         done
         """

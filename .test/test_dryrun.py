@@ -38,8 +38,8 @@ RULE_ALL_TERMINALS = (
     "light_vcf",  # {genome}_final_light.vcf.gz
     "final_report",  # {genome}_finalQC.html
     "samplot_plot",  # samplot/*/{DUP,INV,DEL}/index.html
-    "callable_bed",  # callability/{genome}_{aligner}_callable_mappable.bed
-    "add_mappability",  # callability/{genome}_callable_mappable.bed
+    "callable_bed",  # callability/{genome}_{aligner}_callable_mappable.bed.gz
+    "add_mappability",  # callability/{genome}_callable_mappable.bed.gz
     "truvari_grm",  # annotate_grm/{genome}_grm.jl
     "samtools_coverage",  # mapping_QC/{genome}_{aligner}_coverage.tsv
 )

@@ -161,10 +161,10 @@ rule all:
             caller=PLOT_CALLERS,
         ),
         per_individual(
-            "{wdir}/{sample}/callability/{genome}_{aligner}_callable_mappable.bed",
+            "{wdir}/{sample}/callability/{genome}_{aligner}_callable_mappable.bed.gz",
             aligner=aligners,
         ),
-        per_individual("{wdir}/{sample}/callability/{genome}_callable_mappable.bed"),
+        per_individual("{wdir}/{sample}/callability/{genome}_callable_mappable.bed.gz"),
         per_individual("{wdir}/{sample}/annotate_grm/{genome}_grm.jl"),
         per_individual(
             "{wdir}/{sample}/mapping_QC/{genome}_{aligner}_coverage.tsv",
