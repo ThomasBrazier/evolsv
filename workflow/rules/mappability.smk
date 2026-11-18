@@ -128,7 +128,7 @@ rule mappability_bed:
     shell:
         """
         awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.mappable} > {output.tmp_map} 2> {log}
-        bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - | gzip > {output.callable_sites} 2>> {log}
+        {{ bedtools sort -i {output.tmp_map} | bedtools merge -d {params.merge} -i - | gzip > {output.callable_sites}; }} 2>> {log}
         """
 
 
@@ -180,9 +180,9 @@ rule add_mappability:
             fi
         done
 
-        bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {output.callable_mappable} 2>> {log}
+        {{ bedtools intersect -a {output.callable} -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {output.callable_mappable}; }} 2>> {log}
 
         for aligner in {params.aligners}; do
-            bedtools intersect -a {params.callability_dir}/{params.genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {params.callability_dir}/{params.genome}_${{aligner}}_callable_mappable.bed.gz 2>> {log}
+            {{ bedtools intersect -a {params.callability_dir}/{params.genome}_${{aligner}}_callable.bed -b {input.mappable_bed} | bedtools sort | bedtools merge | gzip > {params.callability_dir}/{params.genome}_${{aligner}}_callable_mappable.bed.gz; }} 2>> {log}
         done
         """
