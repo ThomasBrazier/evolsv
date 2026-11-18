@@ -67,7 +67,7 @@ def run_dryrun(configfile=None):
         command += ["--configfile", configfile]
 
     return subprocess.run(
-        command, cwd=REPO_ROOT, capture_output=True, text=True
+        command, cwd=REPO_ROOT, capture_output=True, text=True, check=False
     )
 
 
@@ -105,10 +105,8 @@ def parse_job_stats(output):
 def assert_succeeded(result):
     """Fail with the full snakemake output rather than a bare exit code."""
     assert result.returncode == 0, (
-        "snakemake dry run failed with exit code {}\n"
-        "--- stdout ---\n{}\n--- stderr ---\n{}".format(
-            result.returncode, result.stdout, result.stderr
-        )
+        f"snakemake dry run failed with exit code {result.returncode}\n"
+        f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
     )
 
 
@@ -158,7 +156,7 @@ def test_default_uses_the_fastq_entry_point():
     counts = parse_job_stats(run_dryrun().stdout)
 
     for rule in FASTQ_ENTRY_RULES:
-        assert rule in counts, "{} missing from the default DAG".format(rule)
+        assert rule in counts, f"{rule} missing from the default DAG"
     # config/samples.tsv declares two SRA runs for the one individual.
     assert counts["download_sra"] == 2
     # One alignment per aligner, then the eight caller x aligner callsets are merged.
@@ -227,7 +225,7 @@ def test_callset_order_reaching_vcf_to_tsv_is_aligner_major():
     """
     result = run_dryrun()
     assert_succeeded(result)
-    assert f"vcf_to_tsv.sh " in result.stdout
+    assert "vcf_to_tsv.sh " in result.stdout
     assert DEFAULT_CALLSETS in result.stdout, (
         "vcf_to_tsv.sh is not receiving the callsets aligner-major; expected "
         + DEFAULT_CALLSETS
@@ -286,7 +284,7 @@ def test_bam_mode_stages_bams_and_skips_alignment():
     assert counts["stage_bam"] == 2
     assert counts["stage_fastq"] == 1
     for rule in FASTQ_ENTRY_RULES:
-        assert rule not in counts, "{} should be skipped in BAM mode".format(rule)
+        assert rule not in counts, f"{rule} should be skipped in BAM mode"
 
 
 def test_bam_mode_extracts_reads_when_no_fastq_is_declared():
@@ -345,7 +343,7 @@ def test_bam_mode_still_runs_alignment_qc_and_calling():
     counts = parse_job_stats(run_dryrun(".test/config_bam.yaml").stdout)
 
     for rule in ("samtools_coverage", "mosdepth_summary", "svim", "sniffles", "cutesv", "debreak"):
-        assert rule in counts, "{} missing from the BAM-mode DAG".format(rule)
+        assert rule in counts, f"{rule} missing from the BAM-mode DAG"
 
 
 def test_local_reference_reaches_the_shell_command():
@@ -395,7 +393,7 @@ def test_default_technology_is_hifi():
     result = run_dryrun()
     assert_succeeded(result)
     for flag in ("-ax map-hifi", "--presets pacbio", "PL:PACBIO"):
-        assert flag in result.stdout, "{!r} missing from the default shell commands".format(flag)
+        assert flag in result.stdout, f"{flag!r} missing from the default shell commands"
 
 
 def test_adapter_filtering_matches_the_technology():
@@ -492,11 +490,11 @@ def test_ont_presets_reach_the_shell_commands():
     assert_succeeded(result)
 
     for flag in ("-ax map-ont", "--presets ont", "PL:ONT", "--max_cluster_bias_INS 100"):
-        assert flag in result.stdout, "{!r} missing from the ONT shell commands".format(flag)
+        assert flag in result.stdout, f"{flag!r} missing from the ONT shell commands"
 
     # The HiFi values must be gone, not merely joined by the ONT ones.
     for flag in ("-ax map-hifi", "--presets pacbio", "--max_cluster_bias_INS 1000"):
-        assert flag not in result.stdout, "{!r} still present in an ONT run".format(flag)
+        assert flag not in result.stdout, f"{flag!r} still present in an ONT run"
 
 
 def test_explicit_config_key_overrides_the_preset():
@@ -508,7 +506,7 @@ def test_explicit_config_key_overrides_the_preset():
             "--configfile", ".test/config_ont.yaml",
             "--config", "minimap_ax=asm20",
         ],
-        cwd=REPO_ROOT, capture_output=True, text=True,
+        cwd=REPO_ROOT, capture_output=True, text=True, check=False,
     )
     assert_succeeded(result)
     assert "-ax asm20" in result.stdout, "the explicit minimap_ax did not override the ont preset"
@@ -597,7 +595,7 @@ def test_rule_all_targets_are_reachable(configfile):
     counts = parse_job_stats(run_dryrun(configfile).stdout)
 
     missing = [rule for rule in RULE_ALL_TERMINALS if rule not in counts]
-    assert not missing, "rule all targets no longer reachable via: {}".format(missing)
+    assert not missing, f"rule all targets no longer reachable via: {missing}"
 
 
 # ---------------------------------------------------------------------------
@@ -657,9 +655,9 @@ def test_bad_input_is_rejected(name, configfile, message):
     result = run_dryrun(configfile)
 
     assert result.returncode != 0, (
-        "expected the dry run to fail for '{}' but it succeeded:\n{}".format(name, result.stdout)
+        f"expected the dry run to fail for '{name}' but it succeeded:\n{result.stdout}"
     )
     combined = result.stdout + result.stderr
     assert message in combined, (
-        "expected {!r} in the failure output for '{}', got:\n{}".format(message, name, combined)
+        f"expected {message!r} in the failure output for '{name}', got:\n{combined}"
     )

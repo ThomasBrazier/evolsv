@@ -14,7 +14,6 @@ import re
 
 import pytest
 import yaml
-
 from list_envs import REPO_ROOT, referenced_envs
 
 ENVS = referenced_envs()
@@ -30,22 +29,22 @@ def load(env):
 
 def test_some_envs_are_referenced():
     """Guards against the discovery silently matching nothing after a refactor."""
-    assert len(ENVS) > 15, "only found {} referenced envs: {}".format(len(ENVS), ENVS)
+    assert len(ENVS) > 15, f"only found {len(ENVS)} referenced envs: {ENVS}"
 
 
 @pytest.mark.parametrize("env", ENVS)
 def test_env_file_exists(env):
     """Every conda: directive resolves to a file on disk."""
-    assert (REPO_ROOT / env).is_file(), "{} is referenced by a rule but does not exist".format(env)
+    assert (REPO_ROOT / env).is_file(), f"{env} is referenced by a rule but does not exist"
 
 
 @pytest.mark.parametrize("env", ENVS)
 def test_env_file_is_a_valid_spec(env):
     """Every env file parses as YAML and declares channels and dependencies."""
     spec = load(env)
-    assert isinstance(spec, dict), "{} is not a YAML mapping".format(env)
+    assert isinstance(spec, dict), f"{env} is not a YAML mapping"
     for key in ("channels", "dependencies"):
-        assert spec.get(key), "{} declares no {}".format(env, key)
+        assert spec.get(key), f"{env} declares no {key}"
 
 
 @pytest.mark.parametrize("env", ENVS)
@@ -58,7 +57,7 @@ def test_env_declares_bioconda_channel_order(env):
     """
     channels = load(env)["channels"]
     for channel in ("conda-forge", "bioconda"):
-        assert channel in channels, "{} does not list the {} channel".format(env, channel)
+        assert channel in channels, f"{env} does not list the {channel} channel"
 
 
 @pytest.mark.parametrize("env", sorted(PIP_BEARING_ENVS))
@@ -70,8 +69,8 @@ def test_pip_bearing_envs_declare_pip(env):
     """
     dependencies = load(env)["dependencies"]
     pip_blocks = [d for d in dependencies if isinstance(d, dict) and "pip" in d]
-    assert pip_blocks, "{} is listed as pip-bearing but has no pip: block".format(env)
-    assert "pip" in dependencies, "{} has a pip: block but does not depend on pip".format(env)
+    assert pip_blocks, f"{env} is listed as pip-bearing but has no pip: block"
+    assert "pip" in dependencies, f"{env} has a pip: block but does not depend on pip"
 
 
 def test_pip_bearing_env_list_is_complete():
@@ -86,8 +85,8 @@ def test_pip_bearing_env_list_is_complete():
         if any(isinstance(d, dict) and "pip" in d for d in dependencies):
             found.add(env)
     assert found == PIP_BEARING_ENVS, (
-        "envs with a pip: block changed: {} (update PIP_BEARING_ENVS here and the smoke "
-        "checks in the CondaInstall job)".format(found)
+        f"envs with a pip: block changed: {found} (update PIP_BEARING_ENVS here and the smoke "
+        "checks in the CondaInstall job)"
     )
 
 
@@ -100,13 +99,13 @@ def test_post_deploy_scripts_belong_to_a_referenced_env():
     """
     for script in sorted((REPO_ROOT / "workflow" / "envs").glob("*.post-deploy.sh")):
         env = "workflow/envs/{}.yaml".format(script.name[: -len(".post-deploy.sh")])
-        assert env in ENVS, "{} has no referenced env {}".format(script.name, env)
+        assert env in ENVS, f"{script.name} has no referenced env {env}"
 
 
 def test_post_deploy_scripts_are_executable():
     """Snakemake executes these directly, so a lost +x bit fails the env build."""
     for script in sorted((REPO_ROOT / "workflow" / "envs").glob("*.post-deploy.sh")):
-        assert os.access(script, os.X_OK), "{} is not executable".format(script.name)
+        assert os.access(script, os.X_OK), f"{script.name} is not executable"
 
 
 @pytest.mark.parametrize("env", ENVS)
@@ -122,4 +121,4 @@ def test_env_has_no_duplicate_dependencies(env):
         names.append(name)
 
     duplicates = sorted({n for n in names if names.count(n) > 1})
-    assert not duplicates, "{} lists {} more than once".format(env, duplicates)
+    assert not duplicates, f"{env} lists {duplicates} more than once"

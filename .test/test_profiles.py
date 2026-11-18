@@ -17,10 +17,9 @@ import os
 import re
 from pathlib import Path
 
+import list_rules
 import pytest
 import yaml
-
-import list_rules
 
 TEST_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TEST_DIR.parent

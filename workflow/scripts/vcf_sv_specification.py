@@ -1,5 +1,4 @@
 import argparse
-import warnings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input VCF to parse")
@@ -13,6 +12,7 @@ fasta = args.fasta
 
 # Import FASTA
 from pysam import FastaFile
+
  # read FASTA file
 sequences = FastaFile(fasta)
 
@@ -140,5 +140,4 @@ with VcfWriter(output, bcf_in.header) as out, VcfWriter(
 
 
 with open(output + '.dist_to_chromosome_end.txt', 'w') as f:
-    for line in dist_to_chromosome_end:
-        f.write(f"{line}\n")
+    f.writelines(f"{line}\n" for line in dist_to_chromosome_end)

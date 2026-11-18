@@ -111,9 +111,7 @@ def check_contigs(header, reference_lengths):
         )
 
     mismatched = [
-        "{} (BAM {} bp, reference {} bp)".format(
-            name, length, reference_lengths[name]
-        )
+        f"{name} (BAM {length} bp, reference {reference_lengths[name]} bp)"
         for name, length in bam_contigs
         if name in reference_lengths and reference_lengths[name] != length
     ]
@@ -135,9 +133,11 @@ def check_read_group(header, sample_id):
     read_groups = header.get("RG", [])
     if not read_groups:
         return [
-            "BAM header declares no @RG line, so no sample name is attached to the "
-            "reads. Add one with "
-            "`samtools addreplacerg -r 'ID:{0}' -r 'SM:{0}'`.".format(sample_id)
+            (
+                "BAM header declares no @RG line, so no sample name is attached to the "
+                "reads. Add one with "
+                f"`samtools addreplacerg -r 'ID:{sample_id}' -r 'SM:{sample_id}'`."
+            )
         ]
 
     wrong = sorted({rg.get("SM", "<absent>") for rg in read_groups} - {sample_id})
@@ -147,7 +147,7 @@ def check_read_group(header, sample_id):
             "rule samplot_plot selects reads by sample id and would produce empty "
             "plots. Fix the tag with `samtools addreplacerg`, or change sample_name "
             "to match the BAM.".format(
-                ", ".join("'{}'".format(s) for s in wrong), sample_id
+                ", ".join(f"'{s}'" for s in wrong), sample_id
             )
         ]
     return []
@@ -187,12 +187,10 @@ def main():
 
     if problems:
         sys.stderr.write(
-            "\n{} check(s) failed for the {} BAM '{}':\n\n".format(
-                len(problems), args.aligner, args.bam
-            )
+            f"\n{len(problems)} check(s) failed for the {args.aligner} BAM '{args.bam}':\n\n"
         )
         for problem in problems:
-            sys.stderr.write("  * {}\n\n".format(problem))
+            sys.stderr.write(f"  * {problem}\n\n")
         sys.exit(1)
 
     bam_contigs = header.get("SQ", [])
@@ -203,20 +201,18 @@ def main():
     with open(args.report, "w") as report:
         report.write("Pre-aligned BAM accepted by EvolSV (start_from_bam mode)\n")
         report.write("=" * 56 + "\n\n")
-        report.write("aligner:          {}\n".format(args.aligner))
-        report.write("source BAM:       {}\n".format(args.bam))
-        report.write("reference index:  {}\n".format(args.fai))
-        report.write("sample id:        {}\n".format(args.sample_id))
+        report.write(f"aligner:          {args.aligner}\n")
+        report.write(f"source BAM:       {args.bam}\n")
+        report.write(f"reference index:  {args.fai}\n")
+        report.write(f"sample id:        {args.sample_id}\n")
         report.write(
-            "reads:            {}\n".format(
-                READS_SOURCES[args.reads_source].format(aligner=args.reads_aligner)
-            )
+            f"reads:            {READS_SOURCES[args.reads_source].format(aligner=args.reads_aligner)}\n"
         )
         report.write("sort order:       coordinate\n")
-        report.write("BAM contigs:      {}\n".format(len(bam_contigs)))
-        report.write("reference contigs: {}\n".format(len(reference_lengths)))
+        report.write(f"BAM contigs:      {len(bam_contigs)}\n")
+        report.write(f"reference contigs: {len(reference_lengths)}\n")
         report.write(
-            "reference contigs absent from the BAM: {}\n\n".format(absent_from_bam)
+            f"reference contigs absent from the BAM: {absent_from_bam}\n\n"
         )
         report.write(
             "CAVEAT: in start_from_bam mode the chopper read filters\n"

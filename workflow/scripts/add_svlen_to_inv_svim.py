@@ -1,5 +1,4 @@
 import argparse
-import warnings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input VCF to parse")
