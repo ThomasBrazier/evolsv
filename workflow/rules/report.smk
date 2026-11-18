@@ -321,6 +321,25 @@ rule gzip_final_tsv:
         """
 
 
+rule gzip_unmerged_sv:
+    """
+    Compress the unmerged SV table once final_report has read it
+    """
+    input:
+        tsv="{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv",
+        html="{wdir}/{sample}/{genome}_finalQC.html",
+    output:
+        tsv="{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv.gz",
+    log:
+        "{wdir}/{sample}/logs/{genome}.gzip_unmerged_sv.log",
+    benchmark:
+        "{wdir}/{sample}/benchmarks/{genome}.gzip_unmerged_sv.tsv"
+    shell:
+        """
+        gzip -f {input.tsv} 2> {log}
+        """
+
+
 rule light_vcf:
     """
     Make a light VCF for faster computation

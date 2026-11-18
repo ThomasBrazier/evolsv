@@ -149,6 +149,7 @@ rule all:
         ),
         per_individual("{wdir}/{sample}/{genome}_finalQC.html"),
         per_individual("{wdir}/{sample}/{genome}_final.tsv.gz"),
+        per_individual("{wdir}/{sample}/merging_QC/{genome}_unmerged_sv.tsv.gz"),
         per_individual(
             "{wdir}/{sample}/samplot/{aligner}_{genome}/{svtype}/index.html",
             aligner=aligners,
